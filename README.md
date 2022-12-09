@@ -19,7 +19,6 @@ pip install phenopackets
 pip install pandas
 pip install openpyxl
 pip install jupyter
-pip install oaklib
 ipython kernel install --name "venv" --user
 cd notebooks
 jupyter-notebook

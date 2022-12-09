@@ -1,5 +1,7 @@
 import pandas as pd
 
+from .column_mapper import ColumnMapper
+
 
 
 
@@ -16,3 +18,7 @@ class CohortEncoder:
         self._df = df
         self._id_to_primary_d = id_to_primary_d
         self._label_to_id_d = label_to_id_d
+
+
+    def get_cohort_encoder(self, columnname, custom_map_d):
+        return ColumnMapper(columnname, custom_map_d=custom_map_d, id_to_primary_d=self._id_to_primary_d, label_to_id_d=self._label_to_id_d)
