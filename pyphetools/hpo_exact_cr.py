@@ -32,8 +32,12 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             raise ValueError(f"Error: cell_contents argument must be string but was {type(cell_contents)}")
         chunks = cell_contents.split('\n')
         if len(chunks) > 1:
+            results = []
             for chunk in chunks:
-                self._parse_chunk(chunk_content=chunk, custom_d=custom_d)
+                res = self._parse_chunk(chunk_content=chunk, custom_d=custom_d)
+                results.append(res)
+        else:
+            return self._parse_chunk(chunk_content=chunks[0], custom_d=custom_d)
             
             
     def _parse_chunk(self, chunk_content, custom_d) -> List[HpTerm]:
@@ -45,11 +49,14 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         """
         # remove whitespace, convert to lower case (as )
         content = chunk_content.strip().lower() 
+        if content is None or len(content) == 0:
+            return []
+        print(f"parse chunk for {content}")
         if content in self._label_to_id:
             hpo_id = self._label_to_id.get(content)
             label = self._id_to_primary_label.get(hpo_id)
             return [HpTerm(id=hpo_id, label=label)]
-        elif content in custom_d:
+        elif custom_d is not None and content in custom_d:
             hpo_id = self.custom_d.get(content)
             label = self._id_to_primary_label.get(hpo_id)
             return [HpTerm(id=hpo_id, label=label)]
@@ -59,11 +66,11 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             results = []
             for mc  in minichunks:
                 if mc in self._label_to_id:
-                    hpo_id = self._label_to_id.get(content)
+                    hpo_id = self._label_to_id.get(mc)
                     label = self._id_to_primary_label.get(hpo_id)
                     results.append(HpTerm(id=hpo_id, label=label))
-                elif content in custom_d:
-                    hpo_id = self.custom_d.get(content)
+                elif custom_d is not None and mc in custom_d:
+                    hpo_id = self.custom_d.get(mc)
                     label = self._id_to_primary_label.get(hpo_id)
                     results.append(HpTerm(id=hpo_id, label=label))
             return results

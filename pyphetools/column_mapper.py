@@ -34,13 +34,14 @@ class ColumnMapper:
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         preview_d = defaultdict(list)
         for index, value in column.items():
+            print(f"Mapping cell for value={value}")
             preview_d[value]  = self.map_cell(str(value))
         dlist = []
         for k, v in preview_d.items():
             if v is None or len(v) == 0:
                 terms = "n/a"
             else:
-                terms = "; ".join(v)
+                terms = "; ".join([hpo.to_string() for hpo in v])
             dlist.append({"column": k, "terms": terms})
         return pd.DataFrame(dlist)
     
