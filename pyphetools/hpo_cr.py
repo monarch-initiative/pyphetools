@@ -1,5 +1,6 @@
 
-
+from typing import List
+from .hp_term import HpTerm
 
 
 class HpoConceptRecognizer:
@@ -10,9 +11,5 @@ class HpoConceptRecognizer:
     def __init__(self):
         pass
     
-    def parse_cell(self):
-        raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for CR")
-    
-    def preview_column(self, column):
-        raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for preview_column")
-        
+    def parse_cell(self, cell_contents, custom_d=None)-> List[HpTerm]:
+        raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for CR")     

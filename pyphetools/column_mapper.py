@@ -26,7 +26,7 @@ class ColumnMapper:
         it should be possible to implement the algorithm of fenominal that removes stop words
         and searches for ontology concepts in which the remaining tokens occur in any order.
         """
-        return self._concept_recognizer.parse_cell(cell_contents)
+        return self._concept_recognizer.parse_cell(cell_contents=cell_contents, custom_d=self._custom_map_d)
 
 
     def preview_column(self, column):
@@ -34,7 +34,6 @@ class ColumnMapper:
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         preview_d = defaultdict(list)
         for index, value in column.items():
-            print(f"Mapping cell for value={value}")
             preview_d[value]  = self.map_cell(str(value))
         dlist = []
         for k, v in preview_d.items():

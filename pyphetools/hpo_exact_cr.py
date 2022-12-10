@@ -6,6 +6,8 @@ import pandas as pd
 from typing import List
 from collections import defaultdict
 
+
+
 class HpoExactConceptRecognizer(HpoConceptRecognizer):
     #self._label_to_id_d, self._id_to_primary_label
     def __init__(self, label_to_id, id_to_primary_label):
@@ -51,7 +53,6 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         content = chunk_content.strip().lower() 
         if content is None or len(content) == 0:
             return []
-        print(f"parse chunk for {content}")
         if content in self._label_to_id:
             hpo_id = self._label_to_id.get(content)
             label = self._id_to_primary_label.get(hpo_id)
@@ -62,15 +63,22 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             return [HpTerm(id=hpo_id, label=label)]
         else:
             # if we get here, check if we can split the cell on some commonly used separators
-            minichunks = re.split(',;|/', content) 
+            delimiters = ',;|/'
+            regex_pattern = '|'.join(map(re.escape, delimiters))
+            minichunks = re.split(regex_pattern, content) 
             results = []
-            for mc  in minichunks:
-                if mc in self._label_to_id:
-                    hpo_id = self._label_to_id.get(mc)
+            print(f"parse minichunks for {minichunks}")
+            for mc in minichunks:
+                candidate = mc.strip().lower()
+                print(f"parse candidate for '{candidate}'")
+                if candidate in self._label_to_id:
+                    print(f"candidate '{candidate}' in self._label_to_id")
+                    hpo_id = self._label_to_id.get(candidate)
                     label = self._id_to_primary_label.get(hpo_id)
                     results.append(HpTerm(id=hpo_id, label=label))
-                elif custom_d is not None and mc in custom_d:
-                    hpo_id = self.custom_d.get(mc)
+                elif custom_d is not None and candidate in custom_d:
+                    print(f"candidate '{candidate}' in custom_d")
+                    hpo_id = custom_d.get(candidate)
                     label = self._id_to_primary_label.get(hpo_id)
                     results.append(HpTerm(id=hpo_id, label=label))
             return results
