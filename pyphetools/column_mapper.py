@@ -1,16 +1,18 @@
 from collections import defaultdict
 from typing import List
 import pandas as pd
+from .hpo_cr import HpoConceptRecognizer
 
 
 class ColumnMapper:
-    def __init__(self, custom_map_d, id_to_primary_d, label_to_id_d) -> None:
+    def __init__(self, custom_map_d, concept_recognizer) -> None:
         if custom_map_d is None:
             self._custom_map_d = defaultdict()
         else:
             self._custom_map_d = custom_map_d
-        self._id_to_primary_d = id_to_primary_d
-        self._label_to_id_d = label_to_id_d
+        if not isinstance(concept_recognizer, HpoConceptRecognizer):
+            raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+        self._concept_recognizer = concept_recognizer
 
 
     def map_cell(self, cell_contents) -> List:
@@ -24,16 +26,24 @@ class ColumnMapper:
         it should be possible to implement the algorithm of fenominal that removes stop words
         and searches for ontology concepts in which the remaining tokens occur in any order.
         """
-        positive_term_id_hits = []
-        for k, v in self._custom_map_d.items():
-            if k in cell_contents:
-                positive_term_id_hits.append(v)
-
-        return positive_term_id_hits
+        return self._concept_recognizer.parse_cell(cell_contents)
 
 
-    def preview(column):
-        if not isinstance(column, pd.core.series.Series):
-            raise ValueError("column argument needs to be pandas Series")
-        for _, val in column.iteritems():
-            pass
+    def preview_column(self, column):
+        if not isinstance(column, pd.Series):
+            raise ValueError("column argument must be pandas Series, but was {type(column)}")
+        preview_d = defaultdict(list)
+        for index, value in column.items():
+            preview_d[value]  = self.map_cell(str(value))
+        dlist = []
+        for k, v in preview_d.items():
+            if v is None or len(v) == 0:
+                terms = "n/a"
+            else:
+                terms = "; ".join(v)
+            dlist.append({"column": k, "terms": terms})
+        return pd.DataFrame(dlist)
+    
+   
+            
+        

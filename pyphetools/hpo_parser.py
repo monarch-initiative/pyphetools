@@ -1,5 +1,7 @@
 import json
 from collections import defaultdict
+from .hpo_cr import HpoConceptRecognizer
+from .hpo_exact_cr import HpoExactConceptRecognizer
 
 
 
@@ -20,16 +22,16 @@ class HpoParser:
         if id != "http://purl.obolibrary.org/obo/hp.json":
             raise ValueError(f"Expected to get hp.json but got {id}")  
         nodes = hpo.get("nodes")    
-        primary_labels_to_id = defaultdict()
-        label_to_primary_label = defaultdict()
+        id_to_primary_label = defaultdict()
+        label_to_id = defaultdict()
         for n in nodes:
             if 'id' in n and 'HP_' in n.get('id'):
                 hpo_id, label, all_labels = self._extract_node_data(n)
-                primary_labels_to_id[label] = hpo_id
+                id_to_primary_label[hpo_id] =  label
                 for lab in all_labels:
-                    label_to_primary_label[lab] = label
-        self._label_to_id_d = primary_labels_to_id
-        self._labels_to_primary_label_d = label_to_primary_label
+                    label_to_id[lab.lower()] = hpo_id
+        self._id_to_primary_label = id_to_primary_label
+        self._label_to_id = label_to_id
         meta = hpo.get('meta')
         long_version = meta.get('version')
         if 'http://purl.obolibrary.org/obo/hp/releases/' in long_version:
@@ -61,9 +63,6 @@ class HpoParser:
 
     def get_version(self):
         return self._version
-
-    def get_primary_labels_to_id_map(self):
-        return self._label_to_id_d
-
-    def get_label_to_primary_label_map(self):
-        return self._labels_to_primary_label_d
+    
+    def get_hpo_concept_recognizer(self) -> HpoConceptRecognizer:
+        return HpoExactConceptRecognizer(label_to_id=self._label_to_id, id_to_primary_label=self._id_to_primary_label)
