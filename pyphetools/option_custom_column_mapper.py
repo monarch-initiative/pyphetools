@@ -28,8 +28,9 @@ class OptionColumnMapper(ColumnMapper):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         dlist = []
         for _, value in column.items():
-            value  = self.map_cell(str(value))
-            hpterm = value[0]
-            dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
+            results  = self.map_cell(str(value))
+            if len(results) > 0:
+                hpterm = results[0]
+                dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
         return pd.DataFrame(dlist)     
    

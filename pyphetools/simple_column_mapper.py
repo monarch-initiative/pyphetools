@@ -15,10 +15,12 @@ class SimpleColumnMapper(ColumnMapper):
         
     def map_cell(self, cell_contents) -> List[HpTerm]:
         if not isinstance(cell_contents, str):
-            raise ValueError(f"cell_contents must have string datatype but was {type(cell_contents)}")
-        if cell_contents == self._observed:
+            cell_contents = str(cell_contents)   
+            print(f"Error: cell_contents argument must be string but was {type(cell_contents)} -- coerced to string")
+        contents = cell_contents.strip()
+        if contents == self._observed:
             return [HpTerm(id=self._hpo_id, label=self._hpo_label)]
-        elif cell_contents.trim() == self._excluded:
+        elif contents == self._excluded:
             return [HpTerm(id=self._hpo_id, label=self._hpo_label, observed=False)]
         else:
             return [HpTerm(id=self._hpo_id, label=self._hpo_label, measured=False)]

@@ -6,3 +6,4 @@ from .option_custom_column_mapper import OptionColumnMapper
 from .hpo_parser import HpoParser
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
+from .individual import Individual

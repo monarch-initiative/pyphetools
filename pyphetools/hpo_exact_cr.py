@@ -31,7 +31,8 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             ValueError: must be a string
         """
         if not isinstance(cell_contents, str):
-            raise ValueError(f"Error: cell_contents argument must be string but was {type(cell_contents)}")
+            cell_contents = str(cell_contents)   
+            print(f"Error: cell_contents argument must be string but was {type(cell_contents)} -- coerced to string")
         lines = self._split_into_lines(cell_contents)
         if custom_d is None:
             # initialize to empty dictionary if this argument is not passed 
