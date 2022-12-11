@@ -32,53 +32,85 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         """
         if not isinstance(cell_contents, str):
             raise ValueError(f"Error: cell_contents argument must be string but was {type(cell_contents)}")
-        chunks = cell_contents.split('\n')
-        if len(chunks) > 1:
+        lines = self._split_into_lines(cell_contents)
+        if custom_d is None:
+            # initialize to empty dictionary if this argument is not passed 
+            # to avoid needed to check for None in other functions
+            custom_d = defaultdict()
+        if len(lines) > 1:
             results = []
-            for chunk in chunks:
-                res = self._parse_chunk(chunk_content=chunk, custom_d=custom_d)
+            for line in lines:
+                res = self._parse_line(line=line, custom_d=custom_d)
                 results.append(res)
         else:
-            return self._parse_chunk(chunk_content=chunks[0], custom_d=custom_d)
-            
-            
-    def _parse_chunk(self, chunk_content, custom_d) -> List[HpTerm]:
+            # just one line
+            return self._parse_line(line=lines[0], custom_d=custom_d)
+        
+    def _split_into_lines(self, cell_contents):
         """_summary_
-        'private' function to parse one candidate hpo item
-        Args:
-            chunk_content (_type_): _description_
-            custom_d (_type_): _description_
+        Split a cell into lines and remove white space from beginning and end of each line and transform to lower case
         """
-        # remove whitespace, convert to lower case (as )
-        content = chunk_content.strip().lower() 
-        if content is None or len(content) == 0:
-            return []
-        if content in self._label_to_id:
-            hpo_id = self._label_to_id.get(content)
-            label = self._id_to_primary_label.get(hpo_id)
-            return [HpTerm(id=hpo_id, label=label)]
-        elif custom_d is not None and content in custom_d:
-            hpo_id = self.custom_d.get(content)
+        return cell_contents.split('\n')
+    
+    def _split_line_into_chunks(self, line):
+        """_summary_
+        Split a line into chunks and remove white space from beginning and end of each chunk
+        """
+        delimiters = ',;|/'
+        regex_pattern = '|'.join(map(re.escape, delimiters))
+        chunks = re.split(regex_pattern, line) 
+        return [chunk.strip().lower() for chunk in chunks]
+    
+    def _parse_chunk(self, chunk, custom_d) -> List[HpTerm]:
+        if chunk in self._label_to_id:
+            hpo_id = self._label_to_id.get(chunk)
             label = self._id_to_primary_label.get(hpo_id)
             return [HpTerm(id=hpo_id, label=label)]
         else:
-            # if we get here, check if we can split the cell on some commonly used separators
-            delimiters = ',;|/'
-            regex_pattern = '|'.join(map(re.escape, delimiters))
-            minichunks = re.split(regex_pattern, content) 
             results = []
-            print(f"parse minichunks for {minichunks}")
-            for mc in minichunks:
-                candidate = mc.strip().lower()
-                print(f"parse candidate for '{candidate}'")
-                if candidate in self._label_to_id:
-                    print(f"candidate '{candidate}' in self._label_to_id")
-                    hpo_id = self._label_to_id.get(candidate)
-                    label = self._id_to_primary_label.get(hpo_id)
-                    results.append(HpTerm(id=hpo_id, label=label))
-                elif custom_d is not None and candidate in custom_d:
-                    print(f"candidate '{candidate}' in custom_d")
-                    hpo_id = custom_d.get(candidate)
-                    label = self._id_to_primary_label.get(hpo_id)
-                    results.append(HpTerm(id=hpo_id, label=label))
+            # If we get here, we do two things
+            # We may have a long text that includes both custom strings and HPO terms/synonyms
+            # strategy is to first extract the custom terms and then check the remaining text
+            # for HPO terms
+            remaining_text = chunk
+            for k, v in custom_d.items():
+                # We now try to find a custom item in the potentially longer chunk string
+                if k in chunk:
+                    hpo_label = v
+                    hpo_label_lc = hpo_label.lower()    
+                    hpo_id = self._label_to_id.get(hpo_label_lc)
+                    if hpo_id is None:
+                        print(f"Unable to retrieve HPO Id for custom mapping {chunk} -> {hpo_label}")
+                        return []
+                    results.append(HpTerm(id=hpo_id, label=hpo_label))
+                    remaining_text = remaining_text.replace(k, " ")
+            # When we get here, we look for HPO terms in the remaining text
+            if len(remaining_text) > 5:
+                for k, v in self._label_to_id.items():
+                    if k in remaining_text:
+                        hpo_id = v
+                        hpo_label = self._id_to_primary_label.get(hpo_id)
+                        results.append(HpTerm(id=hpo_id, label=hpo_label))
+            return results
+            
+    def _parse_line(self, line, custom_d) -> List[HpTerm]:
+        """_summary_
+        'private' function to parse an entire line or chunk
+        The reason we parse lines first is that we are more likely to get complete HPO terms this way
+        """
+        # remove whitespace, convert to lower case (as )
+        content = line.strip().lower() 
+        if content is None or len(content) == 0:
+            return []
+        results = self._parse_chunk(chunk=content, custom_d=custom_d)
+        if len(results) > 0:
+            return results
+        else:
+            chunks = self._split_line_into_chunks(content)
+            results = []
+            #print(f"parse minichunks for {minichunks}")
+            for chunk in chunks:
+                # Note that chunk has been stripped of whitespace and lower-cased already
+                res = self._parse_chunk(chunk=chunk, custom_d=custom_d)
+                results.extend(res)
             return results

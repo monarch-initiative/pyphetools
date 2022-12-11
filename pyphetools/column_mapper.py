@@ -5,7 +5,7 @@ from .hpo_cr import HpoConceptRecognizer
 
 
 class ColumnMapper:
-    def __init__(self, custom_map_d, concept_recognizer) -> None:
+    def __init__(self, concept_recognizer, custom_map_d=None) -> None:
         if custom_map_d is None:
             self._custom_map_d = defaultdict()
         else:
