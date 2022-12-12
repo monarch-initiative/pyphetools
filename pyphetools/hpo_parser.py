@@ -5,6 +5,76 @@ from .hpo_exact_cr import HpoExactConceptRecognizer
 
 
 
+
+def extract_curie(url):
+    if not url.startswith('http://purl.obolibrary.org/obo/HP'):
+        return None
+    return url[31:].replace("_", ":")
+
+class Edge:
+    """_summary_
+    This class represents an is-a link in the HPO graph.
+    Note that instances of this class are not intended for use outside of parsing, where we use them to 
+    restrict the terms that are return to descendants of Phenotypic abnormality (HP:0000118).
+    """
+    def __init__(self, e) -> None:
+        self._subject = extract_curie(e.get('sub'))
+        self._object = extract_curie(e.get('obj'))
+        
+    def is_valid(self):
+        return self._subject is not None and self._object is not None
+    
+    @property
+    def subject(self):
+        return self._subject
+    
+    @property
+    def object(self):
+        return self._object
+
+def is_phenotype(hpo_id, subject_to_edge_d):
+    """_summary_
+    return True if hpo_id is a descendant of HP:0000118, Phenotypic abnormality, otherwise return False
+    Args:
+        hpo_id (str): a candidate HPO term
+        subject_to_edge_d (dict): subject: HPO CURIE; object: list of Edges with this CURIE as subject
+
+    Returns:
+        bool: return True if hpo_id is a descendant of HP:0000118, otherwise False
+    """
+    stack = [hpo_id]
+    while len(stack) > 0:
+        id = stack.pop()
+        parent_edges = subject_to_edge_d.get(id, [])
+        for p in parent_edges:
+            if p.object == "HP:0000118":
+                return True
+            stack.append(p.object)
+    return False
+   
+    
+def extract_phenotype_descendant_ids(nodes, edges):
+    """_summary_
+    Create a simple graph structure and extract those HPO terms that are descendants
+    of the Phenotypic abnormality
+    Returns:
+        Set: set of valid HPO terms describing only phenotypic abnormalities
+    """
+    # subject: HPO CURIE; object: list of Edges with this CURIE as subject
+    subject_to_edge_d = defaultdict(list)
+    for e in edges:
+        edge = Edge(e)
+        if edge.is_valid():
+            subject_to_edge_d[edge.subject].append(edge)
+    valid_nodes = set() 
+    for n in nodes:
+        node_id = extract_curie(n.get('id'))
+        if node_id is not None and node_id.startswith("HP:"):
+            if is_phenotype(node_id, subject_to_edge_d): 
+                valid_nodes.add(node_id)
+    return valid_nodes
+
+
 class HpoParser:
     """
     Extract maps of labels and ids from the hp.json file.
@@ -21,12 +91,17 @@ class HpoParser:
         id = hpo.get("id")
         if id != "http://purl.obolibrary.org/obo/hp.json":
             raise ValueError(f"Expected to get hp.json but got {id}")  
-        nodes = hpo.get("nodes")    
+        nodes = hpo.get("nodes") 
+        edges = hpo.get("edges")
+        valid_node_curies = extract_phenotype_descendant_ids(nodes=nodes, edges=edges)  
+        print(f"Length of valid_node_curies {len(valid_node_curies)}")
         id_to_primary_label = defaultdict()
         label_to_id = defaultdict()
         for n in nodes:
             if 'id' in n and 'HP_' in n.get('id'):
                 hpo_id, label, all_labels = self._extract_node_data(n)
+                if not hpo_id in valid_node_curies:
+                    continue # This restricts us to descendants of Phenotypic abnormality
                 id_to_primary_label[hpo_id] =  label
                 for lab in all_labels:
                     label_to_id[lab.lower()] = hpo_id
