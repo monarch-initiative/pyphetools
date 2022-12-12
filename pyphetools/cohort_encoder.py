@@ -1,8 +1,9 @@
 import pandas as pd
+from typing import List
 
 from .column_mapper import ColumnMapper
 from .hpo_cr import HpoConceptRecognizer
-
+from .individual import Individual
 
 
 
@@ -46,6 +47,23 @@ class CohortEncoder:
                  'phenotypic features': hpo_string}
             individuals.append(d)
         return pd.DataFrame(individuals)
+    
+    def get_individuals(self) -> List[Individual]:
+        df = self._df.reset_index()  # make sure indexes pair with number of rows
+        individuals = []
+        for index, row in df.iterrows():
+            individual_id = row[self._id_column]
+            sex = row[self._sex_column]
+            age = row[self._age_column]
+            hpo_terms = []
+            for column_name, column_mapper in self._column_mapper_d.items():
+                terms = column_mapper.map_cell(row[column_name])
+                hpo_terms.extend(terms)
+            indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms)
+            individuals.append(indi)
+        return individuals
+        
+    
             
 
 
