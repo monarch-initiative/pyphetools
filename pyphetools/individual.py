@@ -1,5 +1,5 @@
 import phenopackets 
-
+from .variant import Variant
 
 
 
@@ -7,7 +7,7 @@ class Individual:
     """
     A class to represent one individual of the cohort
     """
-    def __init__(self, individual_id, sex, age, hpo_terms) -> None:
+    def __init__(self, individual_id, sex, age, hpo_terms, variant_list) -> None:
         """
         Represents all of the data we will transform into a single phenopacket
         """
@@ -15,6 +15,7 @@ class Individual:
         self._sex = sex
         self._age = age
         self._hpo_terms = hpo_terms
+        self._variant_list = variant_list
         
     @property
     def id(self):
@@ -31,6 +32,10 @@ class Individual:
     @property
     def hpo_terms(self):
         return self._hpo_terms
+    
+    @property
+    def variant_list(self):
+        return self._variant_list
     
     def to_ga4gh_phenopacket(self):
         """_summary_
@@ -55,4 +60,7 @@ class Individual:
             if not hp.observed:
                 pf.excluded = True
             php.phenotypic_features.append(pf)
+        #if len(self._variant_list) > 0:
+        #    for var in self._variant_list:
+                
         return php
