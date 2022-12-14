@@ -2,7 +2,6 @@ from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from typing import List
 import pandas as pd
-from collections import defaultdict
 
 class SimpleColumnMapper(ColumnMapper):
     
@@ -15,8 +14,7 @@ class SimpleColumnMapper(ColumnMapper):
         
     def map_cell(self, cell_contents) -> List[HpTerm]:
         if not isinstance(cell_contents, str):
-            cell_contents = str(cell_contents)   
-            print(f"Error: cell_contents argument must be string but was {type(cell_contents)} -- coerced to string")
+            raise ValueError(f"Error: cell_contents argument ({cell_contents}) must be string but was {type(cell_contents)} -- coerced to string")
         contents = cell_contents.strip()
         if contents == self._observed:
             return [HpTerm(id=self._hpo_id, label=self._hpo_label)]
@@ -26,7 +24,7 @@ class SimpleColumnMapper(ColumnMapper):
             return [HpTerm(id=self._hpo_id, label=self._hpo_label, measured=False)]
 
 
-    def preview_column(self, column):
+    def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         dlist = []
