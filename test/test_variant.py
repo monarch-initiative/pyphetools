@@ -17,8 +17,20 @@ class TestVariantValidator(unittest.TestCase):
         
     def test_assembly(self):
         var = self._variant
-        self.assertEquals(GENOME_ASSEMBLY, var.assembly)
+        self.assertEqual(GENOME_ASSEMBLY, var.assembly)
+        
+    def test_chr(self):
+        var = self._variant
+        self.assertEqual('16', var.chr)
         
     def test_position(self):
-        self.assertEquals(1756403, self._variant.position)
+        self.assertEqual(1756403, self._variant.position)
+        
+    def test_ref(self):
+        var = self._variant
+        self.assertEqual('CG', var.ref)
+        
+    def test_alt(self):
+        var = self._variant
+        self.assertEqual('C', var.alt)
 

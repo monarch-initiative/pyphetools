@@ -22,24 +22,23 @@ class Variant:
         
     @property
     def assembly(self):
-        self._assembly
+        return self._assembly
         
     @property
     def chr(self):
-        self._chr
+        return self._chr
         
     @property
     def position(self):
-        self._position
+        return self._position
         
     @property
     def ref(self):
-        self._ref
-        
+        return self._ref
         
     @property
     def alt(self):
-        self._alt
+        return self._alt
         
     def __str__(self):
         return f"{self._chr}:{self._position}{self._ref}-{self._alt}"
