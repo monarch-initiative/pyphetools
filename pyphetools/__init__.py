@@ -8,6 +8,7 @@ from .hpo_parser import HpoParser
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .individual_mapper import IndividualMapper
 from .variant_validator import VariantValidator
 from .variant_column_mapper import VariantColumnMapper
 from .variant import Variant

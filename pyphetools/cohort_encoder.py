@@ -14,7 +14,7 @@ from .individual import Individual
 
 class CohortEncoder:
     
-    def __init__(self, df, hpo_cr, column_mapper_d,  individual_d, variant_mapper=None, pmid=None):
+    def __init__(self, df, hpo_cr, column_mapper_d, individual_mapper_d, individual_d, variant_mapper=None, pmid=None):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
         if not isinstance(hpo_cr, HpoConceptRecognizer):
@@ -34,6 +34,7 @@ class CohortEncoder:
         self._disease_id = None
         self._disease_label = None
         self._variant_mapper = variant_mapper
+        self._individual_mapper_d = individual_mapper_d
         self._pmid = pmid
         
     def preview_dataframe(self):

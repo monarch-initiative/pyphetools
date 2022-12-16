@@ -2,7 +2,7 @@
 from collections import defaultdict
 from typing import List
 import pandas as pd
-from .column_mapper import ColumnMapper
+from .individual_mapper import IndividualMapper
 from .hpo_cr import HpoConceptRecognizer
 import re
 
@@ -13,8 +13,9 @@ AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'CUSTOM'])
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 
-class AgeColumnMapper(ColumnMapper):
+class AgeColumnMapper(IndividualMapper):
     def __init__(self, ageEncodingType) -> None:
+        super.__init__(individual_type="age")
         self._age_econding = ageEncodingType
     
     
