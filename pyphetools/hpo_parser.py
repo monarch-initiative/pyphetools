@@ -2,8 +2,11 @@ import json
 from collections import defaultdict
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_exact_cr import HpoExactConceptRecognizer
+import urllib.request 
+import os
 
 
+HPO_JSON_URL = "https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/hp.json"
 
 
 def extract_curie(url):
@@ -81,7 +84,9 @@ class HpoParser:
     Note that we do not need to have the ontological structure of the HPO for this
     application and so only nodes and version are extracted.
     """
-    def __init__(self, hpo_json_file):
+    def __init__(self, hpo_json_file=None):
+        if hpo_json_file is None:
+            hpo_json_file = self._download_to_disk_if_necessary()
         with open(hpo_json_file) as f:
             data = json.load(f)  
             graphs = data.get('graphs')
@@ -135,6 +140,16 @@ class HpoParser:
                 synonym = syn.get('val')
                 all_labels.append(synonym)
         return hpo_id, label, all_labels 
+    
+    def _download_to_disk_if_necessary(self):
+        local_dir = "hpo_data"
+        if not os.path.exists(local_dir):
+            os.makedirs(local_dir)
+        hpo_json_file = os.path.join(local_dir, "hp.json")
+        if not os.path.isfile(hpo_json_file):
+            urllib.request.urlretrieve(HPO_JSON_URL, hpo_json_file)
+        return hpo_json_file
+        
 
     def get_version(self):
         return self._version

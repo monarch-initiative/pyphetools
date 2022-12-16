@@ -1,0 +1,35 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "pyphetools"
+version = "0.1.0"
+description = "Generate GA4GH phenopackets from tabular data"
+readme = "README.md"
+authors = [{ name = "pyphetolls", email = "peter.robinson@jax.org" }]
+license = { file = "LICENSE" }
+classifiers = [
+    "License :: OSI Approved :: BSD 3-Clause License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+]
+keywords = ["feed", "reader", "tutorial"]
+dependencies = [
+    "pandas",
+    "phenopackets",
+    "ooenpyxl",
+]
+requires-python = ">=3.6"
+
+#[project.optional-dependencies]
+#dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
+
+[project.urls]
+Homepage = "https://github.com/monarch-initiative/pyphetools"
+
+#[project.scripts]
+# ... = "reader.__main__:main"

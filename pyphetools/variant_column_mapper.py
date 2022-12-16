@@ -31,6 +31,8 @@ class VariantColumnMapper:
         for item in items:
             try:
                 variant = self._validator.encode_hgvs(item)
+                if self._genotype is not None:
+                    variant.set_genotype(self._genotype)
                 results.append(variant)
             except Exception as exc:
                 print(f"Not able to get variant for {item}: {exc}")

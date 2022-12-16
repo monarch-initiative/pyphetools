@@ -25,6 +25,7 @@ class Variant:
         self._hgvs = hgvs
         self._transcript = transcript
         self._g_hgvs = g_hgvs
+        self._genotype = None
         
     @property
     def assembly(self):
@@ -45,6 +46,14 @@ class Variant:
     @property
     def alt(self):
         return self._alt
+    
+    @property
+    def genotype(self):
+        return self._genotype
+    
+    def set_genotype(self, gt):
+        self._genotype = gt
+        
         
     def __str__(self):
         return f"{self._chr}:{self._position}{self._ref}-{self._alt}"
@@ -52,7 +61,7 @@ class Variant:
     def to_string(self):
         return self.__str__()
     
-    def to_ga4gh(self, genotype=None, acmg=None):
+    def to_ga4gh(self, acmg=None):
         """
         Transform this Variant object into a "variantInterpretation" message of the GA4GH Phenopacket schema
         """
@@ -70,18 +79,18 @@ class Variant:
             hgvs_expression.value = self._g_hgvs
             vdescriptor.expressions.append(hgvs_expression) 
         vdescriptor.molecule_context =  phenopackets.MoleculeContext.genomic
-        if genotype is not None:
-            if genotype == 'heterozygous':
+        if self._genotype is not None:
+            if self._genotype == 'heterozygous':
                 vdescriptor.allelic_state.id = "GENO:0000135"
                 vdescriptor.allelic_state.label = "heterozygous"
-            elif genotype == 'homozygous':
+            elif self._genotype == 'homozygous':
                 vdescriptor.allelic_state.id = "GENO:0000136"
                 vdescriptor.allelic_state.label = "homozygous" 
-            elif genotype == 'hemizygous':
+            elif self._genotype == 'hemizygous':
                 vdescriptor.allelic_state.id = "GENO:0000134"
                 vdescriptor.allelic_state.label = "hemizygous" 
             else:
-                print(f"Did not recognize genotype {genotype}")  
+                print(f"Did not recognize genotype {self._genotype}")  
         vinterpretation = phenopackets.VariantInterpretation() 
         if acmg is not None:
             if acmg.lower() == 'benign':

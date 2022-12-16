@@ -1,6 +1,8 @@
 import pandas as pd
 from math import isnan
 from typing import List
+import os
+from google.protobuf.json_format import MessageToJson
 
 from .column_mapper import ColumnMapper
 from .variant_column_mapper import VariantColumnMapper
@@ -12,7 +14,7 @@ from .individual import Individual
 
 class CohortEncoder:
     
-    def __init__(self, df, hpo_cr, column_mapper_d,  individual_d, variant_mapper=None):
+    def __init__(self, df, hpo_cr, column_mapper_d,  individual_d, variant_mapper=None, pmid=None):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
         if not isinstance(hpo_cr, HpoConceptRecognizer):
@@ -32,6 +34,7 @@ class CohortEncoder:
         self._disease_id = None
         self._disease_label = None
         self._variant_mapper = variant_mapper
+        self._pmid = pmid
         
     def preview_dataframe(self):
         """
@@ -100,7 +103,32 @@ class CohortEncoder:
                               disease_id=self._disease_id, disease_label=self._disease_label)
             individuals.append(indi)
         return individuals
-        
+    
+    def output_phenopackets(self, outdir, individual_list=None):
+        """_summary_
+
+        Args:
+            outdir (_type_): name of directory to write phenopackets
+            individual_list (_type_, optional): List of individuals. If None, recreate
+        """
+        if not os.path.exists(outdir):
+            os.makedirs(outdir)
+        if individual_list is None:
+            individual_list = self.get_individuals()
+        written = 0
+        for individual in individual_list:
+            phenopckt = individual.to_ga4gh_phenopacket()
+            json_string = MessageToJson(phenopckt)
+            if self._pmid is None:
+                fname = "phenopacket_" + individual.id + ".json"
+            else:
+                pmid = self._pmid.replace(" ", "").replace(":","_")
+                fname = pmid + "_" + individual.id + ".json"
+            outpth = os.path.join(outdir, fname)
+            with open(outpth, "wt") as fh:
+                fh.write(json_string)
+                written += 1
+        print(f"Wrote {written} phenopackets to {outdir}")
     
             
 
