@@ -60,14 +60,14 @@ class CohortEncoder:
         df = pd.DataFrame(individuals)
         return df.set_index('id')
     
-    def set_disease(self, id, label):
+    def set_disease(self, disease_id, label):
         """_summary_
         If all patients in the cohort have the same disease we can set it with this method
         Args:
             id (str): disease identifier, e.g., OMIM:600123
             label (str): disease name
         """
-        self._disease_id = id,
+        self._disease_id = disease_id
         self._disease_label = label
     
     
@@ -95,7 +95,9 @@ class CohortEncoder:
                 variant_list = self._variant_mapper.map_cell(variant_col)
             else:
                 variant_list = []
-            indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list)
+            print("size of variant_list is {len(variant_list)}")
+            indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
+                              disease_id=self._disease_id, disease_label=self._disease_label)
             individuals.append(indi)
         return individuals
         

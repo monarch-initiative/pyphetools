@@ -7,7 +7,7 @@ class Individual:
     """
     A class to represent one individual of the cohort
     """
-    def __init__(self, individual_id, sex, age, hpo_terms, variant_list) -> None:
+    def __init__(self, individual_id, sex, age, hpo_terms, variant_list=None, disease_id=None, disease_label=None):
         """
         Represents all of the data we will transform into a single phenopacket
         """
@@ -16,6 +16,8 @@ class Individual:
         self._age = age
         self._hpo_terms = hpo_terms
         self._variant_list = variant_list
+        self._disease_id = disease_id
+        self._disease_label = disease_label
         
     @property
     def id(self):
@@ -60,7 +62,20 @@ class Individual:
             if not hp.observed:
                 pf.excluded = True
             php.phenotypic_features.append(pf)
-        #if len(self._variant_list) > 0:
-        #    for var in self._variant_list:
-                
+        print(f"Individual, size of variants {len(self._variant_list)}")
+        if len(self._variant_list) > 0:
+            interpretation = phenopackets.Interpretation()
+            interpretation.id = self._individual_id
+            interpretation.progress_status = phenopackets.Interpretation.ProgressStatus.SOLVED
+            if self._disease_id is not None and self._disease_label is not None:
+                interpretation.diagnosis.disease.id = self._disease_id
+                interpretation.diagnosis.disease.label = self._disease_label
+            for var in self._variant_list:
+                genomic_interpretation = phenopackets.GenomicInterpretation()
+                genomic_interpretation.subject_or_biosample_id = self._individual_id
+                # by assumption, variants passed to this package are all causative
+                genomic_interpretation.interpretation_status = phenopackets.GenomicInterpretation.InterpretationStatus.CAUSATIVE
+                genomic_interpretation.variant_interpretation.CopyFrom(var.to_ga4gh())
+                interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
+            php.interpretations.append(interpretation)
         return php

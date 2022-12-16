@@ -48,9 +48,21 @@ class VariantValidator:
         if not self._genome_assembly in assemblies:
             raise ValueError(f"Could not identified {self._genome_assembly} in Variant Validator response")
         assembly = assemblies[self._genome_assembly]
+        hgvs_transcript_var = var.get('hgvs_transcript_variant', None)
+        genomic_hgvs = assembly.get('hgvs_genomic_description', None)
+        reference_sequence_records = var.get('reference_sequence_records', None)
+        if reference_sequence_records is not None:
+            transcript = reference_sequence_records['transcript']
+            if transcript.startswith('https://www.ncbi.nlm.nih.gov/nuccore/'):
+                transcript = transcript[37:]
+        else:
+            transcript = None
+       
         # 'vcf': {'alt': 'C', 'chr': '16', 'pos': '1756403', 'ref': 'CG'}},
         if not 'vcf' in assembly:
             raise ValueError(f"Could not identify vcf element in Variant Validator genome assembly response")
-        return Variant(assembly=self._genome_assembly, vcf_d=assembly['vcf'])
+        return Variant(assembly=self._genome_assembly, vcf_d=assembly['vcf'], symbol=symbol, 
+                       hgnc=hgnc, transcript=transcript, hgvs=hgvs_transcript_var, g_hgvs=genomic_hgvs)
+  
 
         
