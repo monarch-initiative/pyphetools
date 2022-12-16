@@ -1,3 +1,4 @@
+from .age_column_mapper import AgeColumnMapper
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
