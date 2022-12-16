@@ -3,6 +3,7 @@ from typing import List
 from .column_mapper import ColumnMapper
 
 
+
 IndividualSeriesType = Enum('IndividualSeriesType', ['AGE', 'SEX', 'IDENTIFIER'])
 
 class IndividualMapper(ColumnMapper):
@@ -10,7 +11,7 @@ class IndividualMapper(ColumnMapper):
     An 'abstract superclass' for SeriesMappers that deal with data about the individuals (age, sex, identifier)
     """
     def __init__(self, individual_type) -> None:
-        super.__init__()
+        super().__init__()
         if individual_type.lower() == 'age':
             self._individual_type = IndividualSeriesType.AGE
         elif individual_type.lower() == 'sex':

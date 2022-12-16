@@ -1,6 +1,6 @@
 import phenopackets 
 from .variant import Variant
-
+from .constants import *
 
 
 class Individual:
@@ -48,11 +48,16 @@ class Individual:
         php = phenopackets.Phenopacket()
         php.id = self._individual_id
         php.subject.id = self._individual_id
-        if self._sex == 'M':
+        if self._sex == MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE
-        elif self._sex == 'F':
+        elif self._sex == FEMALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.FEMALE
-        php.subject.time_at_last_encounter.age.iso8601duration = "P2Y"  ## TODO -- we need to code age with ISO
+        elif self._sex == OTHER_SEX_SYMBOL:
+            php.subject.sex = phenopackets.Sex.OTHER
+        elif self._sex == UNKOWN_SEX_SYMBOL:
+            php.subject.sex = phenopackets.Sex.UNKNOWN
+        if self._age is not None:
+            php.subject.time_at_last_encounter.age.iso8601duration = self._age
         for hp in self._hpo_terms:
             if not hp.measured:
                 continue

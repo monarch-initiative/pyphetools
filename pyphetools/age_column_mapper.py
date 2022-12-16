@@ -15,7 +15,7 @@ ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 class AgeColumnMapper(IndividualMapper):
     def __init__(self, ageEncodingType) -> None:
-        super.__init__(individual_type="age")
+        super().__init__(individual_type="age")
         self._age_econding = ageEncodingType
     
     
