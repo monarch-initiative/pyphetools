@@ -14,27 +14,27 @@ from .individual import Individual
 
 class CohortEncoder:
     
-    def __init__(self, df, hpo_cr, column_mapper_d, individual_mapper_d, individual_d, variant_mapper=None, pmid=None):
+    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, variant_mapper=None, pmid=None):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(f"hpo_cr argument must be a HpoConceptRecognizer but was {type(hpo_cr)}")
         if not isinstance(column_mapper_d, dict):
-            raise ValueError(f"column_mapper_d argument must be a diction but was {type(column_mapper_d)}")
-        if not isinstance(individual_d, dict):
-            raise ValueError(f"metadata argument must be a diction but was {type(individual_d)}")
+            raise ValueError(f"column_mapper_d argument must be a dictionary but was {type(column_mapper_d)}")
+        if not isinstance(individual_column_name, str):
+            raise ValueError(f"individual_column_name argument must be a string but was {type(individual_column_name)}")
         if variant_mapper is not None and not isinstance(variant_mapper, VariantColumnMapper):
             raise ValueError(f"variant_mapper argument must be VariantColumnMapper but was {type(variant_mapper)}")
         self._df = df
         self._hpo_concept_recognizer = hpo_cr
         self._column_mapper_d = column_mapper_d
-        self._id_column = individual_d.get('id')
-        self._sex_column = individual_d.get('sex')
-        self._age_column = individual_d.get('age')
+        self._id_column_name = individual_column_name
+        #self._sex_column = individual_d.get('sex')
+        self._age_mapper = agemapper
+        self._sex_mapper = sexmapper
         self._disease_id = None
         self._disease_label = None
         self._variant_mapper = variant_mapper
-        self._individual_mapper_d = individual_mapper_d
         self._pmid = pmid
         
     def preview_dataframe(self):
@@ -43,10 +43,14 @@ class CohortEncoder:
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
+        age_column_name = self._age_mapper.get_column_name()
+        sex_column_name = self._sex_mapper.get_column_name()
         for index, row in df.iterrows():
-            individual_id = row[self._id_column]
-            sex = row[self._sex_column]
-            age = row[self._age_column]
+            individual_id = row[self._id_column_name]
+            age_cell_contents = row[age_column_name]
+            age = self._age_mapper.map_cell(age_cell_contents)
+            sex_cell_contents = row[sex_column_name]
+            sex = self._sex_mapper.map_cell(sex_cell_contents)
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 cell_contents = row[column_name]
@@ -78,14 +82,18 @@ class CohortEncoder:
     def get_individuals(self) -> List[Individual]:
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
+        age_column_name = self._age_mapper.get_column_name()
+        sex_column_name = self._sex_mapper.get_column_name()
         if self._variant_mapper is None:
             variant_colname = None
         else:
             variant_colname = self._variant_mapper.get_column_name()
         for index, row in df.iterrows():
-            individual_id = row[self._id_column]
-            sex = row[self._sex_column]
-            age = row[self._age_column]
+            individual_id = row[self._id_column_name]
+            age_cell_contents = row[age_column_name]
+            age = self._age_mapper.map_cell(age_cell_contents)
+            sex_cell_contents = row[sex_column_name]
+            sex = self._sex_mapper.map_cell(sex_cell_contents)
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 cell_contents = row[column_name]
@@ -99,7 +107,7 @@ class CohortEncoder:
                 variant_list = self._variant_mapper.map_cell(variant_col)
             else:
                 variant_list = []
-            print("size of variant_list is {len(variant_list)}")
+            print(f"size of variant_list is {len(variant_list)}")
             indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
                               disease_id=self._disease_id, disease_label=self._disease_label)
             individuals.append(indi)
@@ -125,6 +133,7 @@ class CohortEncoder:
             else:
                 pmid = self._pmid.replace(" ", "").replace(":","_")
                 fname = pmid + "_" + individual.id + ".json"
+            fname = fname.replace(" ", "_")
             outpth = os.path.join(outdir, fname)
             with open(outpth, "wt") as fh:
                 fh.write(json_string)

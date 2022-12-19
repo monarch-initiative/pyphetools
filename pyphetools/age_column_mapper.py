@@ -2,8 +2,6 @@
 from collections import defaultdict
 from typing import List
 import pandas as pd
-from .individual_mapper import IndividualMapper
-from .hpo_cr import HpoConceptRecognizer
 import re
 
 
@@ -13,14 +11,19 @@ AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'CUSTOM'])
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 
-class AgeColumnMapper(IndividualMapper):
-    def __init__(self, ageEncodingType) -> None:
-        super().__init__(individual_type="age")
+class AgeColumnMapper():
+    def __init__(self, ageEncodingType, column_name) -> None:
         self._age_econding = ageEncodingType
+        if column_name is None:
+            raise ValueError("Must provide non-null column_name argument")
+        self._column_name = column_name
     
     
     def map_cell(self, cell_contents) -> List:
-        contents = cell_contents.strip()
+        if isinstance(cell_contents, str):
+            contents = cell_contents.strip()
+        else:
+            contents = cell_contents
         if self._age_econding == AgeEncodingType.YEAR:
             try:
                 years = int(contents)
@@ -54,12 +57,15 @@ class AgeColumnMapper(IndividualMapper):
                 dlist.append({"original column contents": k, "age": v})
         return pd.DataFrame(dlist)
     
-    @staticmethod
-    def by_year():
-        return AgeColumnMapper(ageEncodingType=AgeEncodingType.YEAR)
+    def get_column_name(self):
+        return self._column_name
     
     @staticmethod
-    def iso8601():
-        return AgeColumnMapper(ageEncodingType=AgeEncodingType.ISO8601)
+    def by_year(column_name):
+        return AgeColumnMapper(ageEncodingType=AgeEncodingType.YEAR, column_name=column_name)
+    
+    @staticmethod
+    def iso8601(column_name):
+        return AgeColumnMapper(ageEncodingType=AgeEncodingType.ISO8601, column_name=column_name)
 
    

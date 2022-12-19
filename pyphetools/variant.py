@@ -56,7 +56,7 @@ class Variant:
         
         
     def __str__(self):
-        return f"{self._chr}:{self._position}{self._ref}-{self._alt}"
+        return f"{self._chr}:{self._position}{self._ref}>{self._alt}"
     
     def to_string(self):
         return self.__str__()
