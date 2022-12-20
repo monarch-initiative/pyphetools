@@ -7,8 +7,12 @@ import re
 
 from enum import Enum
 
-AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'CUSTOM'])
+AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'YEAR_AND_MONTH', 'CUSTOM'])
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
+# e.g., 14 y 8 m or 8 y
+YEAR_AND_MONTH_REGEX = r"(\d+)\s*[Yy]\s*(\d+)\s*[Mm]"
+YEAR_REGEX = r"(\d+)\s*[Yy]"
+MONTH_REGEX = r"(\d+)\s*[Mm]"
 
 
 class AgeColumnMapper():
@@ -31,6 +35,25 @@ class AgeColumnMapper():
             except ValueError as verr:  
                 print(f"Could not parse {contents} as integer (year): {verr}")
                 return None
+        if self._age_econding == AgeEncodingType.YEAR_AND_MONTH:
+            try:
+                match = re.search(YEAR_AND_MONTH_REGEX, contents)
+                if match:
+                    years = int(match.group(1))
+                    months = int(match.group(2))
+                    return f"P{years}Y{months}M"
+                match = re.search(YEAR_REGEX, contents)
+                if match:
+                    years = int(match.group(1))
+                    return f"P{years}Y"
+                match = re.search(MONTH_REGEX, contents)
+                if match:
+                    months = int(match.group(1))
+                    return f"P{months}M"
+            except ValueError as verr:  
+                print(f"Could not parse {contents} as year/month: {verr}")
+                return None      
+    
         elif self._age_econding == AgeEncodingType.ISO8601:
             match = re.search(ISO8601_REGEX, contents)
             if match:
@@ -63,6 +86,11 @@ class AgeColumnMapper():
     @staticmethod
     def by_year(column_name):
         return AgeColumnMapper(ageEncodingType=AgeEncodingType.YEAR, column_name=column_name)
+    
+    
+    @staticmethod
+    def by_year_and_month(column_name):
+        return AgeColumnMapper(ageEncodingType=AgeEncodingType.YEAR_AND_MONTH, column_name=column_name)
     
     @staticmethod
     def iso8601(column_name):
