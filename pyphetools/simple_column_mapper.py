@@ -9,11 +9,11 @@ class SimpleColumnMapper(ColumnMapper):
         """_summary_
 
         Args:
-            hpo_id (_type_): _description_
-            hpo_label (_type_): _description_
-            observed (_type_): _description_
-            excluded (_type_): _description_
-            non_measured (_type_, optional): _description_. Defaults to None.
+            hpo_id (_type_): HPO  id, e.g., HP:0004321
+            hpo_label (_type_): Corresponding term label
+            observed (_type_): symbol used in table if the phenotypic feature was observed
+            excluded (_type_): symbol used if the feature was excluded
+            non_measured (_type_, optional): symbol used if the feature was not measured or is N/A. Defaults to None.
             constant (bool, optional): If true, all patients have this feature. Defaults to False.
         """
         self._hpo_id = hpo_id
