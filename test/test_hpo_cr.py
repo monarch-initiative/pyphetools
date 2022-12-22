@@ -85,6 +85,23 @@ class TestOptionMapper(unittest.TestCase):
                     'ESES': 'Status epilepticus'}
         cell_contents = "Absence and GTC"
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=seizure_d)
+        ## Expect
+        # Typical absence seizure (HP:0011147)
+        # Bilateral tonic-clonic seizure (HP:0002069)
+        self.assertEqual(2, len(results))
+        results = sorted(results, key=lambda x: x.id)     
+        self.assertEqual("HP:0002069", results[0].id)
+        self.assertEqual("Bilateral tonic-clonic seizure", results[0].label) 
+        self.assertTrue(results[0].observed)
+        self.assertTrue(results[0].measured)
+        self.assertEqual("HP:0011147", results[1].id)
+        self.assertEqual("Typical absence seizure", results[1].label) 
+        self.assertTrue(results[1].observed)
+        self.assertTrue(results[1].measured)
+            
+    def test_get_longest_overlapping(self):
+        cell_contents = "Cryptorchidism, micropenis, bilateral talipes equinovarus"
+        results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
         for r in results:
             print(r)
         

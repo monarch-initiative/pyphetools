@@ -99,7 +99,6 @@ class HpoParser:
         nodes = hpo.get("nodes") 
         edges = hpo.get("edges")
         valid_node_curies = extract_phenotype_descendant_ids(nodes=nodes, edges=edges)  
-        print(f"Length of valid_node_curies {len(valid_node_curies)}")
         id_to_primary_label = defaultdict()
         label_to_id = defaultdict()
         for n in nodes:
