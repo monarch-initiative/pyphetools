@@ -17,28 +17,28 @@ class TestThresholdedColumnMapper(unittest.TestCase):
     def test_threshold_of_3(self):
         res = self.mapper.map_cell(3)
         self.assertIsNotNone(res)
-        self.assertEquals(1, len(res))
+        self.assertEqual(1, len(res))
         result = res[0]
-        self.assertEquals("HP:0032988", result.id)
-        self.assertEquals("Persistent head lag", result.label)
+        self.assertEqual("HP:0032988", result.id)
+        self.assertEqual("Persistent head lag", result.label)
         self.assertFalse(result.observed)
         
     def test_threshold_of_4(self):
         res = self.mapper.map_cell(4)
         self.assertIsNotNone(res)
-        self.assertEquals(1, len(res))
+        self.assertEqual(1, len(res))
         result = res[0]
-        self.assertEquals("HP:0032988", result.id)
-        self.assertEquals("Persistent head lag", result.label)
+        self.assertEqual("HP:0032988", result.id)
+        self.assertEqual("Persistent head lag", result.label)
         self.assertFalse(result.observed)
         
     def test_threshold_of_4_point_1(self):
         res = self.mapper.map_cell(4.1)
         self.assertIsNotNone(res)
-        self.assertEquals(1, len(res))
+        self.assertEqual(1, len(res))
         result = res[0]
-        self.assertEquals("HP:0032988", result.id)
-        self.assertEquals("Persistent head lag", result.label)
+        self.assertEqual("HP:0032988", result.id)
+        self.assertEqual("Persistent head lag", result.label)
         self.assertTrue(result.observed)
         
     def test_threshold_with_na(self):
@@ -47,8 +47,8 @@ class TestThresholdedColumnMapper(unittest.TestCase):
         """
         res = self.mapper.map_cell("NA")
         self.assertIsNotNone(res)
-        self.assertEquals(1, len(res))
+        self.assertEqual(1, len(res))
         result = res[0]
-        self.assertEquals("HP:0032988", result.id)
-        self.assertEquals("Persistent head lag", result.label)
+        self.assertEqual("HP:0032988", result.id)
+        self.assertEqual("Persistent head lag", result.label)
         self.assertFalse(result.measured)

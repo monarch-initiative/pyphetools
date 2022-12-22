@@ -76,8 +76,9 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             # for HPO terms
             remaining_text = chunk
             for k, v in custom_d.items():
+                key = k.lower()
                 # We now try to find a custom item in the potentially longer chunk string
-                if k in chunk:
+                if key in chunk:
                     hpo_label = v
                     hpo_label_lc = hpo_label.lower()    
                     hpo_id = self._label_to_id.get(hpo_label_lc)
@@ -85,7 +86,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                         print(f"Unable to retrieve HPO Id for custom mapping {chunk} -> {hpo_label}")
                         return []
                     results.append(HpTerm(id=hpo_id, label=hpo_label))
-                    remaining_text = remaining_text.replace(k, " ")
+                    remaining_text = remaining_text.replace(key, " ")
             # When we get here, we look for HPO terms in the remaining text
             if len(remaining_text) > 5:
                 for k, v in self._label_to_id.items():

@@ -12,6 +12,9 @@ class HpTerm:
         self._observed = observed
         self._measured = measured
         
+    def __hash__(self):
+        return hash((self._id, self._label, self._observed, self._measured))
+        
     @property
     def id(self):
         return self._id
