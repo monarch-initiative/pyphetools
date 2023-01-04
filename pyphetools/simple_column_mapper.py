@@ -60,8 +60,8 @@ class SimpleColumnMapper(ColumnMapper):
             self._observed = set()
             self._excluded = set()
         else:
-            self._observed = set(observed)
-            self._excluded = set(excluded)
+            self._observed = observed
+            self._excluded = excluded
         self._not_measured = non_measured
         self._constant = constant
 
