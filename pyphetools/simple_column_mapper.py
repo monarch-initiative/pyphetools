@@ -26,12 +26,12 @@ def try_mapping_columns(df, observed, excluded, hpo_cr, preview=True):
         hpo_term = hpo_cr.parse_cell(col)
         if len(hpo_term) > 0:
             hpo_term = hpo_term[0]
-            simple_mappers[hpo_term.label] = SimpleColumnMapper(hpo_id=hpo_term.id,
+            simple_mappers[col] = SimpleColumnMapper(hpo_id=hpo_term.id,
                                                                 hpo_label=hpo_term.label,
                                                                 observed=observed,
                                                                 excluded=excluded)
             if preview:
-                print(simple_mappers[hpo_term.label].preview_column(df[col]))
+                print(simple_mappers[col].preview_column(df[col]))
         else:
             col_not_found.append(col)
     return simple_mappers, col_not_found
