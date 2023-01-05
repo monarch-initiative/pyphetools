@@ -74,11 +74,11 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             # We may have a long text that includes both custom strings and HPO terms/synonyms
             # strategy is to first extract the custom terms and then check the remaining text
             # for HPO terms
-            remaining_text = chunk
+            remaining_text = chunk.lower()
             for k, v in custom_d.items():
                 key = k.lower()
                 # We now try to find a custom item in the potentially longer chunk string
-                if key in chunk:
+                if key in remaining_text:
                     hpo_label = v
                     hpo_label_lc = hpo_label.lower()    
                     hpo_id = self._label_to_id.get(hpo_label_lc)
@@ -90,10 +90,13 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             # When we get here, we look for HPO terms in the remaining text
             if len(remaining_text) > 5:
                 for k, v in self._label_to_id.items():
-                    if k in remaining_text:
+                    key = k.lower()
+                    if key in remaining_text:
                         hpo_id = v
                         hpo_label = self._id_to_primary_label.get(hpo_id)
                         results.append(HpTerm(id=hpo_id, label=hpo_label))
+                        remaining_text = remaining_text.replace(key, " ")
+                        #print(f"hpo {hpo_label} key {key} remaining {remaining_text}")
             return results
             
     def _parse_line(self, line, custom_d) -> List[HpTerm]:
@@ -111,7 +114,6 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         else:
             chunks = self._split_line_into_chunks(content)
             results = []
-            #print(f"parse minichunks for {minichunks}")
             for chunk in chunks:
                 # Note that chunk has been stripped of whitespace and lower-cased already
                 res = self._parse_chunk(chunk=chunk, custom_d=custom_d)

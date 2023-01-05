@@ -102,8 +102,7 @@ class TestOptionMapper(unittest.TestCase):
     def test_get_longest_overlapping(self):
         cell_contents = "Cryptorchidism, micropenis, bilateral talipes equinovarus"
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
-        for r in results:
-            print(r)
+        self.assertEqual(3, len(results))
         
 
         

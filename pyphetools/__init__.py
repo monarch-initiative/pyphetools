@@ -1,4 +1,5 @@
 from .age_column_mapper import AgeColumnMapper
+from .case_parser import CaseParser
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
 from .custom_column_mapper import CustomColumnMapper

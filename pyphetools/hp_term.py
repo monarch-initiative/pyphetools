@@ -1,4 +1,4 @@
-
+import pandas as pd
 
 
 class HpTerm:
@@ -54,3 +54,20 @@ class HpTerm:
     
     def to_string(self):
         return self.__str__()
+
+
+    @staticmethod
+    def term_list_to_dataframe(hpo_list):
+        if not isinstance(hpo_list, list):
+            raise ValueError(f"hpo_list argument must be a list but was {type(hpo_list)}")
+        if len(hpo_list) > 0:
+            hpo1 = hpo_list[0]
+            if not isinstance(hpo1, HpTerm):
+                raise ValueError(f"hpo_list argument must consist of HpTerm objects but had {type(hpo1)}")
+        if len(hpo_list) == 0:
+            return pd.DataFrame(columns=['Col1', 'Col2', 'Col3'])
+        items = []
+        for hp in hpo_list:
+            d = { "id": hp._id, "label": hp._label, "observed":hp._observed, "measured": hp._measured }
+            items.append(d)
+        return pd.DataFrame(items)

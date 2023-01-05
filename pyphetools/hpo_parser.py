@@ -133,11 +133,16 @@ class HpoParser:
         hpo_id = id[31:].replace("_", ":")
         label = json_node.get("lbl","NA")
         all_labels = [label]
-        if 'synonyms' in json_node:
-            syns = json_node.get('synonyms')
-            for syn in syns:
-                synonym = syn.get('val')
-                all_labels.append(synonym)
+        # synonyms are nest
+        metadata = json_node.get('meta')
+        if metadata is not None:
+            synonyms = metadata.get('synonyms', None)
+            if synonyms is not None:
+                for syn in synonyms:
+                    synonym = syn.get('val')
+                    if len(synonym) < 5:
+                        continue
+                    all_labels.append(synonym)
         return hpo_id, label, all_labels 
     
     def _download_to_disk_if_necessary(self):

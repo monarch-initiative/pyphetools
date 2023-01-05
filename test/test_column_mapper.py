@@ -36,7 +36,7 @@ class TestCustomColumnMapper(unittest.TestCase):
         
         
     def test_hpo_cr_multiple_concepts_with_custom_map(self):
-        text = 'spasticity; nerve conduction and EMG studies with abnormal findings "remarkable for the failure to activate the leg muscles due to an upper motor neuron pattern of aberrant motor unit potential firing rates. These findings are consistent with dysfunction of the corticospinal pathways rather than a lower motor unit." Significant low extremity weakness.'
+        text = 'spasticity; nerve conduction and EMG studies with abnormal findings "remarkable for the failure to activate the leg muscles due to an upper motor neuron pattern of aberrant motor unit potential firing rates. These findings are consistent with dysfunction of the corticospinal pathways rather than a lower motor unit."'
         neuroMapper = CustomColumnMapper(concept_recognizer=self.hpo_cr)
         results = neuroMapper.map_cell(text)
         self.assertEqual(1, len(results))

@@ -1,5 +1,6 @@
 import re
 from typing import List
+from collections import defaultdict
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 
@@ -30,13 +31,18 @@ class CaseParser:
         else:
             self._age_at_last_examination = None
 
-        self._annotations = []
+        self._annotations = defaultdict(list)
 
 
-    def add_vignette(self, vignette, custom_d=None) -> List[HpTerm]:
+    def add_vignette(self, vignette, custom_d=None, custom_age=None) -> List[HpTerm]:
         if custom_d is None:
             custom_d = {}
         results =  self._concept_recognizer._parse_chunk(chunk=vignette, custom_d=custom_d)
-        self._annotations.extend(results)
+        if custom_age is not None:
+            self._annotations[custom_age].extend(results)
+        elif self._age_at_last_examination is not None:
+            self._annotations[self._age_at_last_examination].extend(results)
+        else:
+            self._annotations["N/A"].extend(results)
         return HpTerm.term_list_to_dataframe(results)
         
