@@ -46,3 +46,17 @@ class CaseParser:
             self._annotations["N/A"].extend(results)
         return HpTerm.term_list_to_dataframe(results)
         
+    def add_term(self, label=None, id=None, excluded=False, custom_age=None):
+        if label is not None:
+            results =  self._concept_recognizer._parse_chunk(chunk=label, custom_d={})
+        if len(results) != 1:
+            raise ValueError(f"Malformed label {label}  we got {len(results)} results")
+        hpo_term = results[0]
+        hpo_term._observed = False
+        if custom_age is not None:
+            self._annotations[custom_age].append(hpo_term)
+        elif self._age_at_last_examination is not None:
+            self._annotations[self._age_at_last_examination].extend(hpo_term)
+        else:
+            self._annotations["N/A"].extend(hpo_term)
+        return HpTerm.term_list_to_dataframe([hpo_term])

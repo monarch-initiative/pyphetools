@@ -132,7 +132,8 @@ class HpoParser:
             raise ValueError(f"HpoNode id must begin with 'http://purl.obolibrary.org/obo/' but we got {id}")
         hpo_id = id[31:].replace("_", ":")
         label = json_node.get("lbl","NA")
-        all_labels = [label]
+        all_labels = set()
+        all_labels.add(label)
         # synonyms are nest
         metadata = json_node.get('meta')
         if metadata is not None:
@@ -142,8 +143,8 @@ class HpoParser:
                     synonym = syn.get('val')
                     if len(synonym) < 5:
                         continue
-                    all_labels.append(synonym)
-        return hpo_id, label, all_labels 
+                    all_labels.add(synonym)
+        return hpo_id, label, list(all_labels)
     
     def _download_to_disk_if_necessary(self):
         local_dir = "hpo_data"

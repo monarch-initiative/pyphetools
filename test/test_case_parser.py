@@ -29,4 +29,5 @@ class TestCaseParse(unittest.TestCase):
         self.assertTrue(isinstance(results, pd.DataFrame))
         id = results.loc[(results['id'] == 'HP:0000365')]['id'].values[0]
         self.assertEqual("HP:0000365", id)
+
        
