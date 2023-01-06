@@ -1,9 +1,9 @@
 from datetime import datetime
 from collections import defaultdict
-# Getting the current date and time
+import phenopackets 
+from google import protobuf
+import time
 
-
-# getting the timestamp
 
 
 class Resource:
@@ -11,12 +11,36 @@ class Resource:
         self._id = id
         self._name = name
         self._namespace_prefix = namespace_prefix
-        self._iriprefix = iriprefix
-        self._url = name
+        self._iri_prefix = iriprefix
+        self._url = url
         self._version = version
         
     def to_ga4gh(self):
         pass
+
+    @property
+    def id(self):
+        return self._id
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def namespace_prefix(self):
+        return self._namespace_prefix
+
+    @property
+    def iri_prefix(self):
+        return self._iri_prefix
+
+    @property
+    def url(self):
+        return self._url
+
+    @property
+    def version(self):
+        return self._version
         
         
     
@@ -24,13 +48,8 @@ class Resource:
 
 class MetaData:
     
-    def __init__(self, created_by, created=None) -> None:
+    def __init__(self, created_by) -> None:
         self._created_by = created_by
-        if created is None:
-            dt = datetime.now()
-            self._created = dt # datetime.timestamp(dt)
-        else:
-            self._created = created
         self._schema_version = "2.0"
         self._resource_d = defaultdict(Resource)
         
@@ -84,6 +103,34 @@ class MetaData:
                         iriprefix="http://purl.obolibrary.org/obo/MONDO_",
                         url="http://purl.obolibrary.org/obo/mondo.obo",
                         version=version)
+
+    def to_ga4gh(self):
+        """
+        Use a time stamp for the current instant
+        """
+        metadata = phenopackets.MetaData()
+        metadata.created_by = self._created_by
+        now = time.time()
+        seconds = int(now)
+        nanos = int((now - seconds) * 10**9)
+        timestamp = protobuf.timestamp_pb2.Timestamp(seconds=seconds, nanos=nanos)
+        metadata.created.CopyFrom(timestamp)
+        metadata.phenopacket_schema_version = self._schema_version
+        for _, resource in self._resource_d.items():
+            res = phenopackets.Resource()
+            res.id = resource.id
+            res.name = resource.name
+            res.namespace_prefix = resource.namespace_prefix
+            res.iri_prefix = resource.iri_prefix
+            res.url = resource.url
+            res.version = resource.version
+            metadata.resources.append(res)
+        return metadata
+
+
+
+          
+
     
     
  

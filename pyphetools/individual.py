@@ -11,7 +11,9 @@ class Individual:
         """
         Represents all of the data we will transform into a single phenopacket
         """
-        self._individual_id = str(individual_id) 
+        if not isinstance(individual_id, str):
+            raise ValueError(f"individual_id argument must be string but was {type(individual_id)}")
+        self._individual_id = individual_id
         self._sex = sex
         self._age = age
         self._hpo_terms = hpo_terms
@@ -39,14 +41,17 @@ class Individual:
     def variant_list(self):
         return self._variant_list
     
-    def to_ga4gh_phenopacket(self):
+    def to_ga4gh_phenopacket(self, metadata=None, phenopacket_id=None):
         """_summary_
         Transform the data into GA4GH Phenopacket format
         Returns:
             _type_: _description_
         """
         php = phenopackets.Phenopacket()
-        php.id = self._individual_id
+        if phenopacket_id is None:
+            php.id = self._individual_id
+        else:
+            php.id = phenopacket_id
         php.subject.id = self._individual_id
         if self._sex == MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE
@@ -58,16 +63,32 @@ class Individual:
             php.subject.sex = phenopackets.Sex.UNKNOWN
         if self._age is not None:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
-        for hp in self._hpo_terms:
-            if not hp.measured:
-                continue
-            pf = phenopackets.PhenotypicFeature()
-            pf.type.id = hp.id
-            pf.type.label = hp.label
-            if not hp.observed:
-                pf.excluded = True
-            php.phenotypic_features.append(pf)
-        print(f"Individual, size of variants {len(self._variant_list)}")
+        if isinstance(self._hpo_terms, list):
+            for hp in self._hpo_terms:
+                if not hp.measured:
+                    continue
+                pf = phenopackets.PhenotypicFeature()
+                pf.type.id = hp.id
+                pf.type.label = hp.label
+                if not hp.observed:
+                    pf.excluded = True
+                if self._age is not None:
+                    pf.onset.age.iso8601duration = self._age
+                php.phenotypic_features.append(pf)
+        elif isinstance(self._hpo_terms, dict):
+            for age_key, hpoterm_list in self._hpo_terms.items():
+                for hp in hpoterm_list:
+                    if not hp.measured:
+                        continue
+                    pf = phenopackets.PhenotypicFeature()
+                    pf.type.id = hp.id
+                    pf.type.label = hp.label
+                    if not hp.observed:
+                        pf.excluded = True
+                    if age_key.startswith("P"):
+                        # Note sometimes we have no age, then use N/A -- TODO think of robust way to do this
+                        pf.onset.age.iso8601duration = age_key
+                    php.phenotypic_features.append(pf)
         if len(self._variant_list) > 0:
             interpretation = phenopackets.Interpretation()
             interpretation.id = self._individual_id
@@ -83,4 +104,6 @@ class Individual:
                 genomic_interpretation.variant_interpretation.CopyFrom(var.to_ga4gh())
                 interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
             php.interpretations.append(interpretation)
+        if metadata is not None:
+            php.meta_data.CopyFrom(metadata)
         return php

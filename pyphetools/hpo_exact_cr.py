@@ -119,3 +119,11 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                 res = self._parse_chunk(chunk=chunk, custom_d=custom_d)
                 results.extend(res)
             return results
+
+    def get_term_from_id(self, id) -> HpTerm:
+        if not id.startswith("HP:"):
+            raise ValueError(f"Malformed HP id '{id}' - must start with HP:")
+        if not id in self._id_to_primary_label:
+            raise ValueError(f"Could not find id {id} in dictionary")
+        label = self._id_to_primary_label.get(id)
+        return HpTerm(id=id, label=label)
