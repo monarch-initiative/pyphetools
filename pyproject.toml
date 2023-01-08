@@ -35,9 +35,10 @@ classifiers = [
 ]
 keywords = ["feed", "reader", "tutorial"]
 dependencies = [
+    "openpyxl",
     "pandas",
     "phenopackets",
-    "openpyxl",
+    "requests"
 ]
 requires-python = ">=3.6"
 

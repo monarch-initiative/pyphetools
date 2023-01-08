@@ -16,7 +16,8 @@ we are using phenopackets version 2.0.2. openpyxl is needed to read Excel files.
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-ipython kernel install --name "venv" --user
+pip install jupyter
+python -m ipykernel install --name "venv" --display-name "venv"
 cd notebooks
 jupyter-notebook
 ```
