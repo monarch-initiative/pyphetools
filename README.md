@@ -21,3 +21,5 @@ python -m ipykernel install --name "venv" --display-name "venv"
 cd notebooks
 jupyter-notebook
 ```
+
+We have installed the package in the Python Package Index (pypi) at [pyphentools](https://pypi.org/project/pyphetools/).

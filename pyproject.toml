@@ -2,20 +2,9 @@
 
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
-requires-python = ">=3.5"
-license.file = "LICENSE"
 build-backend = "setuptools.build_meta"
-urls.homepage = "https://github.com/monarch-initiative/pyphetools"
-urls.repository = "https://github.com/monarch-initiative/pyphetools.git"
-urls.documentation = "https://github.com/monarch-initiative/pyphetools"
-urls.bugtracker = "https://github.com/monarch-initiative/pyphetools/issues"
 
-keywords = [
-    "Global Alliance for Genomics and Health",
-    "GA4GH Phenopacket Schema",
-    "Human Phenotype Ontology",
-    "GA4GH",
-    "HPO"]
+
 
 [tool.setuptools.packages.find]
 where = ["."]
@@ -24,29 +13,42 @@ exclude = ["notebooks", "test"]
 [project]
 name = "pyphetools"
 version = "0.1.0"
-description = "Generate GA4GH phenopackets from tabular data"
+requires-python = ">=3.5"
+description = "Generate and work with GA4GH phenopackets"
 readme = "README.md"
-authors = [{ name = "pyphetolls", email = "peter.robinson@jax.org" }]
+authors = [
+    {name = "Peter Robinson", email="peter.robinson@jax.org"},
+     ]
 license = { file = "LICENSE" }
 classifiers = [
-    "License :: OSI Approved :: BSD 3-Clause License",
-    "Programming Language :: Python",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
 ]
-keywords = ["feed", "reader", "tutorial"]
+keywords = [
+    "Global Alliance for Genomics and Health",
+    "GA4GH Phenopacket Schema",
+    "Human Phenotype Ontology",
+    "GA4GH",
+    "HPO"]
 dependencies = [
     "openpyxl",
     "pandas",
     "phenopackets",
     "requests"
 ]
-requires-python = ">=3.6"
+
+
+
 
 #[project.optional-dependencies]
 #dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [project.urls]
-Homepage = "https://github.com/monarch-initiative/pyphetools"
+homepage = "https://github.com/monarch-initiative/pyphetools"
+repository = "https://github.com/monarch-initiative/pyphetools.git"
+documentation = "https://github.com/monarch-initiative/pyphetools"
+bugtracker = "https://github.com/monarch-initiative/pyphetools/issues"
 
 #[project.scripts]
 # ... = "reader.__main__:main"

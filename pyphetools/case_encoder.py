@@ -37,7 +37,10 @@ class CaseEncoder:
         self._annotations = defaultdict(list)
 
 
-    def add_vignette(self, vignette, custom_d=None, custom_age=None) -> List[HpTerm]:
+    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive = []) -> List[HpTerm]:
+        """
+        false_positive: words or phrases that should not be parsed to HP terms
+        """
         if custom_d is None:
             custom_d = {}
         # replace new lines and multiple consecutive spaces with a single space
@@ -49,6 +52,8 @@ class CaseEncoder:
             self._annotations[self._age_at_last_examination].extend(results)
         else:
             self._annotations["N/A"].extend(results)
+        for fp in false_positive:
+            results = results.replace(fp, " ")
         return HpTerm.term_list_to_dataframe(results)
         
     def add_term(self, label=None, id=None, excluded=False, custom_age=None):
@@ -57,7 +62,7 @@ class CaseEncoder:
             if len(results) != 1:
                 raise ValueError(f"Malformed label {label}  we got {len(results)} results")
             hpo_term = results[0]
-            hpo_term._observed = False
+            hpo_term._observed = not excluded
             if custom_age is not None:
                 self._annotations[custom_age].append(hpo_term)
             elif self._age_at_last_examination is not None:
@@ -68,7 +73,7 @@ class CaseEncoder:
         elif id is not None:
             hpo_term = self._concept_recognizer.get_term_from_id(id)
             if excluded:
-                hpo_term._observed = False
+                hpo_term._observed = not excluded
             return HpTerm.term_list_to_dataframe([hpo_term])
         else:
             return ValueError("Must call function with non-None value for either id or label argument")
