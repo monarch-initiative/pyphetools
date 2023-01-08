@@ -37,7 +37,7 @@ class CaseEncoder:
         self._annotations = defaultdict(list)
 
 
-    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive = [], excluded_terms = set) -> List[HpTerm]:
+    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive = [], excluded_terms = set()) -> List[HpTerm]:
         """
         false_positive: words or phrases that should not be parsed to HP terms
         """
@@ -47,6 +47,7 @@ class CaseEncoder:
         text = re.sub('\s+',' ',vignette.replace('\n', ' '))
         for fp in false_positive:
             text = text.replace(fp, " ")
+        # results will be a list with HpTerm elements
         results =  self._concept_recognizer._parse_chunk(chunk=text, custom_d=custom_d)
         if custom_age is not None:
             self._annotations[custom_age].extend(results)

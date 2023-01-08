@@ -23,3 +23,16 @@ jupyter-notebook
 ```
 
 We have installed the package in the Python Package Index (pypi) at [pyphentools](https://pypi.org/project/pyphetools/).
+
+### Updating package in PyPI
+Make sure the build and twine packages are installed.
+```
+python3 -m pip install --upgrade build
+python3 -m pip install --upgrade twine
+```
+Update the version number in the pyproject.toml file
+Build and install
+```
+python3 -m build
+python3 -m twine upload dist/*
+```
