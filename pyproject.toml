@@ -2,8 +2,24 @@
 
 [build-system]
 requires = ["setuptools>=61.0.0", "wheel"]
+requires-python = ">=3.5"
+license.file = "LICENSE"
 build-backend = "setuptools.build_meta"
+urls.homepage = "https://github.com/monarch-initiative/pyphetools"
+urls.repository = "https://github.com/monarch-initiative/pyphetools.git"
+urls.documentation = "https://github.com/monarch-initiative/pyphetools"
+urls.bugtracker = "https://github.com/monarch-initiative/pyphetools/issues"
 
+keywords = [
+    "Global Alliance for Genomics and Health",
+    "GA4GH Phenopacket Schema",
+    "Human Phenotype Ontology",
+    "GA4GH",
+    "HPO"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+exclude = ["notebooks", "test"]
 
 [project]
 name = "pyphetools"
@@ -21,7 +37,7 @@ keywords = ["feed", "reader", "tutorial"]
 dependencies = [
     "pandas",
     "phenopackets",
-    "ooenpyxl",
+    "openpyxl",
 ]
 requires-python = ">=3.6"
 
