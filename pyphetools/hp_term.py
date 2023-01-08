@@ -55,6 +55,9 @@ class HpTerm:
     def to_string(self):
         return self.__str__()
 
+    def excluded(self):
+        self._observed = False
+
 
     @staticmethod
     def term_list_to_dataframe(hpo_list):

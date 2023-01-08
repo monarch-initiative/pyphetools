@@ -14,12 +14,12 @@ class TestCaseParse(unittest.TestCase):
         hpo_cr = hpparser.get_hpo_concept_recognizer()
         cls._parser = CaseEncoder(concept_recognizer=hpo_cr, pmid="PMID:1")
 
-    def test_chief_complait(self):
+    def test_chief_complaint(self):
         """
         Expect to get
         HP:0000365 	Hearing impairment 	True 	True
-1 	    HP:0001742 	Nasal congestion 	True 	True
-2 	    HP:0025267 	Snoring
+        HP:0001742 	Nasal congestion 	True 	True
+        HP:0025267 	Snoring
         """
         vignette = "A 17-mo-old boy presented with progressive nasal obstruction, snoring and hearing loss symptoms when referred to the hospital."
         results = self._parser.add_vignette(vignette=vignette)
@@ -28,4 +28,22 @@ class TestCaseParse(unittest.TestCase):
         id = results.loc[(results['id'] == 'HP:0000365')]['id'].values[0]
         self.assertEqual("HP:0000365", id)
 
-       
+    def test_excluded(self):
+        """
+        Currently, our text mining does not attempt to detect negation, but users can enter a set of term labels that are excluded
+        In this case, He had no nasal obstruction should lead to excluded/Nasal congestion
+        """
+        vignette = "He had no nasal obstruction and he stated that his smell sensation was intact."
+        excluded = set()
+        excluded.add("Nasal congestion")
+        results = self._parser.add_vignette(vignette=vignette, excluded_terms=excluded)
+        print(results)
+        self.assertEqual(1, len(results))
+        id = results.loc[(results['id'] == 'HP:0001742')]['id'].values[0]
+        self.assertEqual("HP:0001742", id)
+        label = results.loc[(results['id'] == 'HP:0001742')]['label'].values[0]
+        self.assertEqual("Nasal congestion", label)
+        observed = results.loc[(results['id'] == 'HP:0001742')]['observed'].values[0]
+        self.assertFalse(observed)
+        measured = results.loc[(results['id'] == 'HP:0001742')]['measured'].values[0]
+        self.assertTrue(measured)
