@@ -40,7 +40,9 @@ class CaseEncoder:
     def add_vignette(self, vignette, custom_d=None, custom_age=None) -> List[HpTerm]:
         if custom_d is None:
             custom_d = {}
-        results =  self._concept_recognizer._parse_chunk(chunk=vignette, custom_d=custom_d)
+        # replace new lines and multiple consecutive spaces with a single space
+        text = re.sub('\s+',' ',vignette.replace('\n', ' '))
+        results =  self._concept_recognizer._parse_chunk(chunk=text, custom_d=custom_d)
         if custom_age is not None:
             self._annotations[custom_age].extend(results)
         elif self._age_at_last_examination is not None:
@@ -95,7 +97,7 @@ class CaseEncoder:
             os.makedirs(outdir)
         phenopacket_id = phenopacket.id
         json_string = MessageToJson(phenopacket)
-        fname = phenopacket_id.replace(" ", "_")
+        fname = phenopacket_id.replace(" ", "_") + ".json"
         outpth = os.path.join(outdir, fname)
         with open(outpth, "wt") as fh:
             fh.write(json_string)
