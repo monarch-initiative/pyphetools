@@ -6,6 +6,8 @@ import time
 
 
 
+
+
 class Resource:
     def __init__(self, id, name, namespace_prefix, iriprefix, url, version) -> None:
         self._id = id
@@ -41,17 +43,42 @@ class Resource:
     @property
     def version(self):
         return self._version
+
+
+# current versions of ontologies used for these phenopackets
+# if the user does not specify versions, these versions will be
+# used.
+# for our purposes, the one version that will change a lot is that
+# of the HPO and users can get that from the HPO file and this should be
+# provided in the constructor of metadata
         
-        
-    
+default_versions = {
+    'geno': '2022-03-05',
+    'hgnc': '06/01/23',
+    'omim': 'January 4, 2023',
+    'mondo': 'v2023-01-04'
+}  
    
 
 class MetaData:
+    """
+    A representation of the MetaData element of the GA4GH Phenopacket Schema
+    """
     
     def __init__(self, created_by) -> None:
         self._created_by = created_by
         self._schema_version = "2.0"
         self._resource_d = defaultdict(Resource)
+
+    def default_versions_with_hpo(self, version):
+        """
+        Add resources for HPO (with specified version), GENO, HGNC, and OMIM (with default versions)
+        The HPO version can be easily obtained from the HpoParser using the get_version() function
+        """
+        self.geno()
+        self.hgnc()
+        self.omim()
+        self.hpo(version=version)
         
     def hpo(self, version):
         self._resource_d["hp"] = Resource(id="hp", 
@@ -62,7 +89,7 @@ class MetaData:
                         version=version)
 
         
-    def geno(self, version="2022-03-05"):
+    def geno(self, version=default_versions.get('geno')):
         """_summary_
         GENO is used for three terms: homozygous, heterozygous, hemizygous
         For this reason, we use a default version, since we assume these terms will not change.
@@ -79,7 +106,7 @@ class MetaData:
                         url="http://purl.obolibrary.org/obo/geno.owl",
                         version=version)
         
-    def hgnc(self, version):
+    def hgnc(self, version=default_versions.get('hgnc')):
         self._resource_d["hgnc"] =  Resource(id="hgnc", 
                         name="HUGO Gene Nomenclature Committee",
                         namespace_prefix="HGNC",
@@ -88,7 +115,7 @@ class MetaData:
                         version=version)
     
     
-    def omim(self, version):
+    def omim(self, version=default_versions.get('omim')):
         self._resource_d["omim"] = Resource(id="omim", 
                         name="An Online Catalog of Human Genes and Genetic Disorders",
                         namespace_prefix="OMIM",
@@ -96,7 +123,7 @@ class MetaData:
                         url="https://www.omim.org",
                         version=version)
     
-    def mondo(self, version):
+    def mondo(self, version=default_versions.get('mondo')):
         self._resource_d["mondo"] = Resource(id="mondo", 
                         name="Mondo Disease Ontology",
                         namespace_prefix="MONDO",

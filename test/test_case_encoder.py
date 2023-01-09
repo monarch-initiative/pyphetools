@@ -37,7 +37,6 @@ class TestCaseParse(unittest.TestCase):
         excluded = set()
         excluded.add("Nasal congestion")
         results = self._parser.add_vignette(vignette=vignette, excluded_terms=excluded)
-        print(results)
         self.assertEqual(1, len(results))
         id = results.loc[(results['id'] == 'HP:0001742')]['id'].values[0]
         self.assertEqual("HP:0001742", id)
