@@ -1,6 +1,6 @@
 import unittest
 import json
-from pyphetools import Variant
+from pyphetools.creation import Variant
 
 # The following dictionary has the same structure as a subelement of the response from Variant Validator
 VCF_DICTIONARY =  {'alt': 'C', 'chr': '16', 'pos': '1756403', 'ref': 'CG'}

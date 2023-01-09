@@ -1,6 +1,6 @@
 import unittest
 import os
-from pyphetools import HpoParser
+from pyphetools.creation import HpoParser
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 

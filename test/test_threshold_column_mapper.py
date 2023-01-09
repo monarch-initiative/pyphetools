@@ -1,6 +1,6 @@
 import unittest
 import os
-from pyphetools import ThresholdedColumnMapper
+from pyphetools.creation import ThresholdedColumnMapper
 
 
 
