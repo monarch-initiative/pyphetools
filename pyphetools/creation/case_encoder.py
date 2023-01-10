@@ -86,7 +86,7 @@ class CaseEncoder:
     def get_hpo_term_dict(self):
         return self._annotations
 
-    def get_phenopacket(self, individual_id, sex, age, disease_id, disease_label, variants, metadata):
+    def get_phenopacket(self, individual_id, sex, age, metadata, disease_id=None, disease_label=None, variants=None):
         if not isinstance(variants, list):
             variants = [variants]
         individual = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=self._annotations,
