@@ -8,7 +8,7 @@ from .hpo_parser import HpoParser
 from .hp_term import HpTerm
 from .individual import Individual
 from .metadata import MetaData
-from .option_custom_column_mapper import OptionColumnMapper
+from .option_column_mapper import OptionColumnMapper
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
 from .thresholded_column_mapper import ThresholdedColumnMapper

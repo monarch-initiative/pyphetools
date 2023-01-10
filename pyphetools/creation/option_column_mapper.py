@@ -21,7 +21,7 @@ class OptionColumnMapper(ColumnMapper):
         
     def map_cell(self, cell_contents) -> List[HpTerm]:
         chunk = cell_contents.strip()
-        return self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
+        return self._hpo_cr.parse_cell(cell_contents=chunk, custom_d=self._option_d)
         
     def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):
@@ -30,7 +30,10 @@ class OptionColumnMapper(ColumnMapper):
         for _, value in column.items():
             column_val = []
             results  = self.map_cell(str(value))
-            if len(results) > 0:
+            if results is None:
+                print(f"Got None results for {str(value)}")
+                dlist.append({"terms": "n/a"})  
+            elif len(results) > 0:
                 for hpterm in results:
                     column_val.append(f"{hpterm.id} ({hpterm.label}/{hpterm.display_value})")
                 dlist.append({"terms": "; ".join(column_val)})  
