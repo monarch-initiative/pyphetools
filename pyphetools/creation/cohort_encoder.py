@@ -124,17 +124,17 @@ class CohortEncoder:
             individuals.append(indi)
         return individuals
     
-    def output_phenopackets(self, outdir, individual_list=None):
-        """_summary_
+
+    
+    def output_phenopackets(self, outdir="phenopackets"):
+        """Output data about all individuals as GA4GH phenopackets
 
         Args:
-            outdir (_type_): name of directory to write phenopackets
-            individual_list (_type_, optional): List of individuals. If None, recreate
+            outdir (str): name of directory to write phenopackets (default: 'phenopackets')
         """
         if not os.path.exists(outdir):
             os.makedirs(outdir)
-        if individual_list is None:
-            individual_list = self.get_individuals()
+        individual_list = self.get_individuals()
         written = 0
         for individual in individual_list:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=self._metadata)
