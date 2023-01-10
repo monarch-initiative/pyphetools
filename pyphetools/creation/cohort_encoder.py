@@ -2,19 +2,21 @@ import pandas as pd
 from math import isnan
 from typing import List
 import os
+import phenopackets
 from google.protobuf.json_format import MessageToJson
 
 from .column_mapper import ColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .metadata import MetaData
 
 
 
 
 class CohortEncoder:
     
-    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, variant_mapper=None, pmid=None):
+    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, metadata, variant_mapper=None, pmid=None):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
         if not isinstance(hpo_cr, HpoConceptRecognizer):
@@ -25,6 +27,14 @@ class CohortEncoder:
             raise ValueError(f"individual_column_name argument must be a string but was {type(individual_column_name)}")
         if variant_mapper is not None and not isinstance(variant_mapper, VariantColumnMapper):
             raise ValueError(f"variant_mapper argument must be VariantColumnMapper but was {type(variant_mapper)}")
+        if metadata is None:
+            raise ValueError("Must pass a metadata object to constructor")
+        if isinstance(metadata, MetaData):
+            self._metadata = metadata.to_ga4gh()
+        elif isinstance(metadata, phenopackets.schema.v2.core.meta_data_pb2.MetaData):
+            self._metadata = metadata
+        else:
+            raise ValueError(f"metadata argument must be Metadata (pyphetools) or phenopackets.MetaData but was {type(metadata)}")
         self._df = df
         self._hpo_concept_recognizer = hpo_cr
         self._column_mapper_d = column_mapper_d
@@ -36,6 +46,7 @@ class CohortEncoder:
         self._disease_label = None
         self._variant_mapper = variant_mapper
         self._pmid = pmid
+        self._metadata = metadata
         
     def preview_dataframe(self):
         """
@@ -126,7 +137,7 @@ class CohortEncoder:
             individual_list = self.get_individuals()
         written = 0
         for individual in individual_list:
-            phenopckt = individual.to_ga4gh_phenopacket()
+            phenopckt = individual.to_ga4gh_phenopacket(metadata=self._metadata)
             json_string = MessageToJson(phenopckt)
             if self._pmid is None:
                 fname = "phenopacket_" + individual.id + ".json"
