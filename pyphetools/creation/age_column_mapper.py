@@ -23,7 +23,7 @@ class AgeColumnMapper():
         self._column_name = column_name
     
     
-    def map_cell(self, cell_contents) -> List:
+    def map_cell(self, cell_contents) -> str:
         if isinstance(cell_contents, str):
             contents = cell_contents.strip()
         else:

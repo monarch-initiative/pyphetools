@@ -27,7 +27,11 @@ class CustomColumnMapper(ColumnMapper):
         it should be possible to implement the algorithm of fenominal that removes stop words
         and searches for ontology concepts in which the remaining tokens occur in any order.
         """
-        return self._concept_recognizer.parse_cell(cell_contents=cell_contents, custom_d=self._custom_map_d)
+        results = self._concept_recognizer.parse_cell(cell_contents=cell_contents, custom_d=self._custom_map_d)
+        if results is None:
+            return []
+        else:
+            return results
 
 
     def preview_column(self, column):

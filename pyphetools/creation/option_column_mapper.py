@@ -21,7 +21,11 @@ class OptionColumnMapper(ColumnMapper):
         
     def map_cell(self, cell_contents) -> List[HpTerm]:
         chunk = cell_contents.strip()
-        return self._hpo_cr.parse_cell(cell_contents=chunk, custom_d=self._option_d)
+        results = self._hpo_cr.parse_cell(cell_contents=chunk, custom_d=self._option_d)
+        if results is None:
+            return []
+        else:
+            return results
         
     def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):
