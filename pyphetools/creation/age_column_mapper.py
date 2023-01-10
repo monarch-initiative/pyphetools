@@ -29,12 +29,10 @@ class AgeColumnMapper():
         else:
             contents = cell_contents
         if self._age_econding == AgeEncodingType.YEAR:
-            try:
-                years = int(contents)
-                return f"P{years}Y"
-            except ValueError as verr:  
+            isostring = self.get_iso8601_from_int_or_float_year(contents)
+            if isostring is None:  
                 print(f"Could not parse {contents} as integer (year): {verr}")
-                return None
+            return isostring
         if self._age_econding == AgeEncodingType.YEAR_AND_MONTH:
             try:
                 match = re.search(YEAR_AND_MONTH_REGEX, contents)
@@ -63,6 +61,22 @@ class AgeColumnMapper():
                 return None
         elif self._age_econding == AgeEncodingType.CUSTOM:
             raise ValueError("TODO NOT IMPLEMENTED YET")   
+
+    def get_iso8601_from_int_or_float_year(self, age_string) -> str:
+        int_or_float = r"(\d+)(\.\d+)?"
+        p=re.compile(int_or_float)
+        results = p.search(age_string).groups()
+        if len(results) != 2:
+            return None
+        if results[0] is None:
+            return None
+        y = int(results[0])
+        if results[1] is None:
+            return  f"P{y}Y"
+        else:
+            m = float(results[1]) # something like .25
+            months = round(12*m)
+            return f"P{y}Y{months}M"
 
 
 
