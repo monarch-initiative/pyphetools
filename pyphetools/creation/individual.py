@@ -11,9 +11,13 @@ class Individual:
         """
         Represents all of the data we will transform into a single phenopacket
         """
-        if not isinstance(individual_id, str):
-            raise ValueError(f"individual_id argument must be string but was {type(individual_id)}")
-        self._individual_id = individual_id
+        if isinstance(individual_id, int):
+            self._individual_id = str(individual_id)
+        elif isinstance(individual_id, str):
+            self._individual_id = individual_id
+        else:
+            raise ValueError(f"individual_id argument must be int or string but was {type(individual_id)}")
+        
         self._sex = sex
         self._age = age
         self._hpo_terms = hpo_terms
@@ -41,12 +45,14 @@ class Individual:
     def variant_list(self):
         return self._variant_list
     
-    def to_ga4gh_phenopacket(self, metadata=None, phenopacket_id=None):
+    def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_
         Transform the data into GA4GH Phenopacket format
         Returns:
             _type_: _description_
         """
+        if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
+            raise ValueError(f"metadata argument must be GA4GH Phenopacket Schema MetaData but was {type(metadata)}")
         php = phenopackets.Phenopacket()
         if phenopacket_id is None:
             php.id = self._individual_id

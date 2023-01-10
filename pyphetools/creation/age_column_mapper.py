@@ -63,6 +63,15 @@ class AgeColumnMapper():
             raise ValueError("TODO NOT IMPLEMENTED YET")   
 
     def get_iso8601_from_int_or_float_year(self, age_string) -> str:
+        """
+        Extract an iso8601 string for age recorded as a year (either an int such as 4 or a float such as 4.25 for P4Y3M)
+        """
+        if isinstance(age_string, int):
+            return  f"P{age_string}Y"
+        elif isinstance(age_string, float):
+            age_string = str(age_string)
+        elif not isinstance(age_string, str):
+            raise ValueError(f"Malformed agestring {age_string}, type={type(age_string)}")
         int_or_float = r"(\d+)(\.\d+)?"
         p=re.compile(int_or_float)
         results = p.search(age_string).groups()

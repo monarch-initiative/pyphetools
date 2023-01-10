@@ -13,7 +13,6 @@ from .metadata import MetaData
 
 
 
-
 class CohortEncoder:
     
     def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, metadata, variant_mapper=None, pmid=None):
@@ -29,12 +28,13 @@ class CohortEncoder:
             raise ValueError(f"variant_mapper argument must be VariantColumnMapper but was {type(variant_mapper)}")
         if metadata is None:
             raise ValueError("Must pass a metadata object to constructor")
-        if isinstance(metadata, MetaData):
-            self._metadata = metadata.to_ga4gh()
-        elif isinstance(metadata, phenopackets.schema.v2.core.meta_data_pb2.MetaData):
+        # the following workaround is needed because isinstance gets confused about the two following classes
+        elif str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
             self._metadata = metadata
+        elif str(type(metadata)) == "<class 'pyphetools.creation.metadata.MetaData'>":
+            self._metadata = metadata.to_ga4gh()
         else:
-            raise ValueError(f"metadata argument must be Metadata (pyphetools) or phenopackets.MetaData but was {type(metadata)}")
+            raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
         self._df = df
         self._hpo_concept_recognizer = hpo_cr
         self._column_mapper_d = column_mapper_d
@@ -46,7 +46,6 @@ class CohortEncoder:
         self._disease_label = None
         self._variant_mapper = variant_mapper
         self._pmid = pmid
-        self._metadata = metadata
         
     def preview_dataframe(self):
         """
@@ -107,6 +106,8 @@ class CohortEncoder:
             sex = self._sex_mapper.map_cell(sex_cell_contents)
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
+                if column_name not in df.columns:
+                    raise ValueError(f"Did not find column name '{column_name}' in dataframe -- check spelling!")
                 cell_contents = row[column_name]
                 ## Empty cells are often represented as float non-a-number by Pandas
                 if isinstance(cell_contents, float) and isnan(cell_contents):
@@ -118,7 +119,6 @@ class CohortEncoder:
                 variant_list = self._variant_mapper.map_cell(variant_col)
             else:
                 variant_list = []
-            print(f"size of variant_list is {len(variant_list)}")
             indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
                               disease_id=self._disease_id, disease_label=self._disease_label)
             individuals.append(indi)
