@@ -11,8 +11,8 @@ class TestCaseParse(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         hpparser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
-        hpo_cr = hpparser.get_hpo_concept_recognizer()
-        cls._parser = CaseEncoder(concept_recognizer=hpo_cr, pmid="PMID:1")
+        cls._hpo_cr = hpparser.get_hpo_concept_recognizer()
+        cls._parser = CaseEncoder(concept_recognizer=cls._hpo_cr, pmid="PMID:1")
 
     def test_chief_complaint(self):
         """
@@ -46,3 +46,20 @@ class TestCaseParse(unittest.TestCase):
         self.assertFalse(observed)
         measured = results.loc[(results['id'] == 'HP:0001742')]['measured'].values[0]
         self.assertTrue(measured)
+
+    def test_excluded2(self):
+        """
+        The goal if this test is to enzure that 'Seizure' is annotated as 'excluded'
+        """
+        vignette = "The patient is not on seizure medication at this time."
+        excluded = set()
+        excluded.add("Seizure")
+        encoder = CaseEncoder(concept_recognizer=self._hpo_cr, pmid="PMID:1")
+        df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded)
+        self.assertEqual(1, len(df))
+        
+        self.assertEqual("HP:0001250", df.iloc[0]['id'])
+        self.assertEqual("Seizure",df.iloc[0]['label'])
+        self.assertFalse(df.iloc[0]['observed'])
+        self.assertTrue(df.iloc[0]['measured'])
+
