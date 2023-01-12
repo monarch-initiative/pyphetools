@@ -91,10 +91,10 @@ class SimplePatient:
     def get_age(self):
         return self._time_at_last_encounter
 
-    def get_observed_hpo(self):
+    def get_observed_hpo_d(self):
         return self._observed
 
-    def get_excluded_hpo(self):
+    def get_excluded_hpo_d(self):
         return self._excluded
 
     def get_variant_d(self):

@@ -12,7 +12,7 @@ exclude = ["notebooks", "test"]
 
 [project]
 name = "pyphetools"
-version = "0.2.6"
+version = "0.2.7"
 requires-python = ">=3.5"
 description = "Generate and work with GA4GH phenopackets"
 readme = "README.md"
@@ -32,6 +32,7 @@ keywords = [
     "GA4GH",
     "HPO"]
 dependencies = [
+    "hpo-toolkit",
     "openpyxl",
     "pandas",
     "phenopackets",
