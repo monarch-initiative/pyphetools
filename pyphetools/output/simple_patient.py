@@ -92,6 +92,9 @@ class SimplePatient:
         return self._time_at_last_encounter
 
     def get_observed_hpo_d(self):
+        """
+        returns map with key (string) HP id, value, HpTerm from creation submodule
+        """
         return self._observed
 
     def get_excluded_hpo_d(self):

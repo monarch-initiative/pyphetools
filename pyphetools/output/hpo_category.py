@@ -1,13 +1,22 @@
 from collections import defaultdict
 from hpotk.constants.hpo.organ_system import *
 from hpotk.model import TermId
+from hpotk.ontology import Ontology
+from hpotk.algorithm import exists_path
 
 
 
 class HpoCategorySet:
 
-    def __init__(self) -> None:
-        self._organ_d = defaultdict(TermId)
+    def __init__(self, ontology, organ_d = None) -> None:
+        if not isinstance(ontology, Ontology):
+            raise ValueError(f"ontology argument must be an hpo-toolkit Ontology object but was {type(ontology)}")
+        self._ontology = ontology
+        if organ_d is None:
+            self._organ_d = defaultdict(TermId)
+        else:
+            self._organ_d = organ_d
+        self._id_to_cat_d = defaultdict()
         
 
 
@@ -37,3 +46,19 @@ class HpoCategorySet:
         organ_d['growth'] = GROWTH_ABNORMALITY
         organ_d['neoplasm'] = NEOPLASM
         return organ_d
+
+    def get_category(self, termid):
+        if isinstance(termid, str):
+            hpo_term_id = termid
+        elif isinstance(termid, TermId):
+            hpo_term_id = termid.value
+        else:
+            raise ValueError(f"termid argument must be string (CURIE) or TermId object but was {type(termid)}")
+        if hpo_term_id in self._id_to_cat_d:
+            return self._id_to_cat_d.get(hpo_term_id)
+        for cat, cat_hp_id in self._organ_d.items():
+            if exists_path(self._ontology, hpo_term_id, cat_hp_id) or hpo_term_id == cat_hp_id:
+                self._id_to_cat_d[hpo_term_id] = cat_hp_id
+                return cat
+        print(f"Could not find category for {hpo_term_id}")
+        return "not_found"
