@@ -1,3 +1,4 @@
+from .detailed_suppl_table import DetailedSupplTable
 from .focus_count_table import FocusCountTable
 from .phenopacket_ingestor import PhenopacketIngestor
 from .simple_patient import SimplePatient
