@@ -11,9 +11,9 @@ class TestHpoCategorySet(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls._hpo_ontology = load_ontology('https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/hp.json')
+        cls._hpo_ontology = load_ontology(HP_JSON_FILENAME)
         cls._category_set = HpoCategorySet(ontology=cls._hpo_ontology)
-    
+       
     def check_ataxia(self):
         """
         Ataxia HP:0001251

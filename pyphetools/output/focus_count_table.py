@@ -6,9 +6,10 @@ from hpotk.algorithm import get_ancestors
 from collections import defaultdict
 from hpotk.algorithm import exists_path
 
-# typing.Union[GraphAware, OntologyGraph],
-              #  source: CURIE_OR_TERM_ID,
-               # destination: TermId) -> bo
+ALL_ROOT = TermId.from_curie("HP:0000001")
+PHENOTYPIC_ABNORMALITY_ROOT = TermId.from_curie("HP:0000118")
+
+
 
 
 class FocusCountTable:
@@ -54,8 +55,8 @@ class FocusCountTable:
                     self._non_focus_counts[hp_id] += 1
                 self._total_counts[hp_id] += 1
             for hp_id in anc_set:
-                if isinstance(hp_id, str):
-                    print(f"got string hp for {hp_id}")
+                if hp_id == ALL_ROOT or hp_id == PHENOTYPIC_ABNORMALITY_ROOT:
+                    continue
                 if pat_id in focus_id:
                     self._focus_counts_propagated[hp_id.value] += 1
                 else:
@@ -66,23 +67,15 @@ class FocusCountTable:
                 var_d[var] += 1
 
             # TODO figure out what to do with biallelic
-        self._id_to_cat_d = defaultdict()
-        hcs = HpoCategorySet(ontology=ontology)
-        self._organ_d = hcs.get_default_organ_categories()
+        self._hpo_category_set = HpoCategorySet(ontology=ontology)
        
     
-    
-
-
     def get_category(self, termid):
-        if termid in self._id_to_cat_d:
-            return self._id_to_cat_d.get(termid)
-        for cat, cat_hp_id in self._organ_d.items():
-            if exists_path(self._ontology , termid, cat_hp_id) or termid == cat_hp_id:
-                self._id_to_cat_d[cat_hp_id] = termid
-                return cat
-        print(f"Could not find category for {termid}")
-        return "not_found"
+            # TODO figure out what to do with biallelic
+        cat = self._hpo_category_set.get_category(termid=termid)
+        if cat == "not_found":
+            print(f"could not find category for {termid}")
+        return cat
 
     def get_simple_table(self):
         """

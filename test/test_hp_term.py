@@ -1,7 +1,5 @@
 
 import unittest
-import os
-import pandas as pd
 from pyphetools.creation import HpTerm
 
 class TestHpTerm(unittest.TestCase):
