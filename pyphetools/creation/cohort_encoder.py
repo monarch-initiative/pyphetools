@@ -4,6 +4,7 @@ from typing import List
 import os
 import phenopackets
 from google.protobuf.json_format import MessageToJson
+import re
 
 from .column_mapper import ColumnMapper
 from .variant_column_mapper import VariantColumnMapper
@@ -144,6 +145,7 @@ class CohortEncoder:
             else:
                 pmid = self._pmid.replace(" ", "").replace(":","_")
                 fname = pmid + "_" + individual.id + ".json"
+            fname = re.sub('[^\w_.)( -]', '', fname) #remove any illegal characters from filename
             fname = fname.replace(" ", "_")
             outpth = os.path.join(outdir, fname)
             with open(outpth, "wt") as fh:
