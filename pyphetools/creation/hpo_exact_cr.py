@@ -65,12 +65,8 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
     
     def _parse_chunk(self, chunk, custom_d) -> List[HpTerm]:
         if chunk in custom_d:
-            if 'hp' not in chunk:
-                hpo_id = custom_d.get(chunk)
-                label = self._id_to_primary_label[hpo_id]
-            else:
-                label = custom_d.get(chunk)
-                hpo_id = self._label_to_id[label.lower()]
+            label = custom_d.get(chunk)
+            hpo_id = self._label_to_id[label.lower()]
             return [HpTerm(id=hpo_id, label=label)]
         else:
             results = []
