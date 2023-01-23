@@ -65,9 +65,9 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
     
     def _parse_chunk(self, chunk, custom_d) -> List[HpTerm]:
         if chunk in custom_d:
-            hpo_id = custom_d.get(chunk)
-            label = self._id_to_primary_label.get(hpo_id)
-            # return [HpTerm(id=hpo_id, label=label)]
+            label = custom_d.get(chunk)
+            hpo_id = self._label_to_id[label.lower()]
+            return [HpTerm(id=hpo_id, label=label)]
         else:
             results = []
             # If we get here, we do two things
@@ -82,9 +82,9 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                     hpo_label = v
                     hpo_label_lc = hpo_label.lower()    
                     hpo_id = self._label_to_id.get(hpo_label_lc)
-                    # if hpo_id is None:
-                    #     print(f"Unable to retrieve HPO Id for custom mapping {chunk} -> {hpo_label}")
-                    #     return []
+                    if hpo_id is None:
+                        print(f"Unable to retrieve HPO Id for custom mapping {chunk} -> {hpo_label}")
+                        return []
                     results.append(HpTerm(id=hpo_id, label=hpo_label))
                     remaining_text = remaining_text.replace(key, " ")
             # When we get here, we look for HPO terms in the remaining text
@@ -117,7 +117,6 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             for chunk in chunks:
                 # Note that chunk has been stripped of whitespace and lower-cased already
                 res = self._parse_chunk(chunk=chunk, custom_d=custom_d)
-                print(res)
                 results.extend(res)
             return results
 
