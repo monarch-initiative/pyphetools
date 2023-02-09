@@ -70,14 +70,20 @@ class CaseEncoder:
             if custom_age is not None:
                 self._annotations[custom_age].append(hpo_term)
             elif self._age_at_last_examination is not None:
-                self._annotations[self._age_at_last_examination].extend(hpo_term)
+                self._annotations[self._age_at_last_examination].append(hpo_term)
             else:
-                self._annotations["N/A"].extend(hpo_term)
+                self._annotations["N/A"].append(hpo_term)
             return HpTerm.term_list_to_dataframe([hpo_term])
         elif id is not None:
             hpo_term = self._concept_recognizer.get_term_from_id(id)
             if excluded:
                 hpo_term._observed = not excluded
+            if custom_age is not None:
+                self._annotations[custom_age].append(hpo_term)
+            elif self._age_at_last_examination is not None:
+                self._annotations[self._age_at_last_examination].append(hpo_term)
+            else:
+                self._annotations["N/A"].append(hpo_term)
             return HpTerm.term_list_to_dataframe([hpo_term])
         else:
             return ValueError("Must call function with non-None value for either id or label argument")
