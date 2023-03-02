@@ -3,7 +3,7 @@ import json
 from .variant import Variant
 
 
-URL_SCHEME = "https://rest.variantvalidator.org/VariantValidator/variantvalidator/%s/%s%%3A%s/%s"
+URL_SCHEME = "https://rest.variantvalidator.org/VariantValidator/variantvalidator/%s/%s%%3A%s/%s?content-type=application%%2Fjson"
 ACCEBTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 
 

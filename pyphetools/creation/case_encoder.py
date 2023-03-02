@@ -65,7 +65,7 @@ class CaseEncoder:
         if label is not None:
             results =  self._concept_recognizer._parse_chunk(chunk=label, custom_d={})
             if len(results) != 1:
-                raise ValueError(f"Malformed label {label}  we got {len(results)} results")
+                raise ValueError(f"Malformed label \"{label}\" we got {len(results)} results")
             hpo_term = results[0]
             hpo_term._observed = not excluded
             if custom_age is not None:

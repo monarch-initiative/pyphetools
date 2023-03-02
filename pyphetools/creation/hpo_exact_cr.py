@@ -89,7 +89,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                     remaining_text = remaining_text.replace(key, " ")
             # When we get here, we look for HPO terms in the remaining text
             if len(remaining_text) > 5:
-                for k, v in custom_d.items():
+                for k, v in self._label_to_id.items():
                     key = k.lower()
                     if key in remaining_text:
                         hpo_id = v
