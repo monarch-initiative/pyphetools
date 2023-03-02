@@ -17,8 +17,10 @@ class Individual:
             self._individual_id = individual_id
         else:
             raise ValueError(f"individual_id argument must be int or string but was {type(individual_id)}")
-        
-        self._sex = sex
+        if sex is None:
+            self._sex = phenopackets.Sex.UNKNOWN_SEX
+        else:
+            self._sex = sex
         self._age = age
         self._hpo_terms = hpo_terms
         self._variant_list = variant_list
