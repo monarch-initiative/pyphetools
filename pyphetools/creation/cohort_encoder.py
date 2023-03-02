@@ -12,8 +12,6 @@ from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
 from .metadata import MetaData
 
-
-
 class CohortEncoder:
     
     def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, metadata, variant_mapper=None, pmid=None):
@@ -90,7 +88,7 @@ class CohortEncoder:
         self._disease_label = label
     
     
-    def get_individuals(self) -> List[Individual]:
+    def get_individuals(self, additional_hpo=None) -> List[Individual]:
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
         age_column_name = self._age_mapper.get_column_name()
@@ -99,13 +97,17 @@ class CohortEncoder:
             variant_colname = None
         else:
             variant_colname = self._variant_mapper.get_column_name()
+        count = 0
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
             age_cell_contents = row[age_column_name]
             age = self._age_mapper.map_cell(age_cell_contents)
             sex_cell_contents = row[sex_column_name]
             sex = self._sex_mapper.map_cell(sex_cell_contents)
-            hpo_terms = []
+            if additional_hpo is None:
+                hpo_terms = []
+            else:
+                hpo_terms = additional_hpo[count]
             for column_name, column_mapper in self._column_mapper_d.items():
                 if column_name not in df.columns:
                     raise ValueError(f"Did not find column name '{column_name}' in dataframe -- check spelling!")
@@ -123,10 +125,9 @@ class CohortEncoder:
             indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
                               disease_id=self._disease_id, disease_label=self._disease_label)
             individuals.append(indi)
+            count += 1
         return individuals
-    
 
-    
     def output_phenopackets(self, outdir="phenopackets"):
         """Output data about all individuals as GA4GH phenopackets
 
@@ -152,8 +153,3 @@ class CohortEncoder:
                 fh.write(json_string)
                 written += 1
         print(f"Wrote {written} phenopackets to {outdir}")
-    
-            
-
-
-   

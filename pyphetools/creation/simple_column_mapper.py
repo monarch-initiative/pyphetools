@@ -5,6 +5,29 @@ import pandas as pd
 from collections import defaultdict
 
 
+def get_separate_hpos_from_df(df, hpo_cr):
+    """Loop through all the cells in a dataframe or series and try to parse each cell as HPO term.
+    Useful when the seperate HPO terms are in the cells themselves.
+
+      Args:
+         df (dataframe): dataframe with phenotypic data
+         hpo_cr (HpoConceptRecognizer): instance of HpoConceptRecognizer to match HPO term and get label/id
+
+      Returns:
+          additional_hpos: list of lists with the additional HPO terms per individual
+      """
+    additional_hpos = []
+
+    for i in range(len(df)):
+        temp_hpos = []
+        for y in range(df.shape[1]):
+            hpo_term = hpo_cr.parse_cell(df.iloc[i, y])
+            if len(hpo_term) > 0:
+                temp_hpos.extend(hpo_term)
+        additional_hpos.append(list(set(temp_hpos)))
+    return additional_hpos
+
+
 def try_mapping_columns(df, observed, excluded, hpo_cr, preview=True):
     """Try to map the columns in a dataframe by matching the name of the column to correct HPO term.
     Wrapper for SimpleColumnMapper below
