@@ -16,3 +16,6 @@ class HpoConceptRecognizer:
 
     def get_term_from_id(self, id) -> HpTerm:
         raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for CR")   
+    
+    def get_term_from_label(self, label) -> HpTerm:
+        raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for CR")   

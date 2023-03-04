@@ -120,10 +120,16 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                 results.extend(res)
             return results
 
-    def get_term_from_id(self, id) -> HpTerm:
-        if not id.startswith("HP:"):
-            raise ValueError(f"Malformed HP id '{id}' - must start with HP:")
-        if not id in self._id_to_primary_label:
-            raise ValueError(f"Could not find id {id} in dictionary")
-        label = self._id_to_primary_label.get(id)
-        return HpTerm(id=id, label=label)
+    def get_term_from_id(self, hpo_id) -> HpTerm:
+        if not hpo_id.startswith("HP:"):
+            raise ValueError(f"Malformed HP id '{hpo_id}' - must start with HP:")
+        if not hpo_id in self._id_to_primary_label:
+            raise ValueError(f"Could not find id {hpo_id} in dictionary")
+        label = self._id_to_primary_label.get(hpo_id)
+        return HpTerm(id=hpo_id, label=label)
+    
+    def get_term_from_label(self, label) -> HpTerm:
+        if label not in self._label_to_id:
+            raise ValueError(f"Could not find HPO id for {label}")
+        hpo_id = self._label_to_id.get(label)
+        return HpTerm(id=hpo_id, label=label)

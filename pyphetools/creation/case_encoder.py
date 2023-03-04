@@ -4,6 +4,8 @@ from typing import List
 from collections import defaultdict
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
+from .simple_column_mapper import SimpleColumnMapper
+from .column_mapper import ColumnMapper
 from google.protobuf.json_format import MessageToJson
 from .individual import Individual
 import phenopackets
@@ -89,6 +91,20 @@ class CaseEncoder:
         else:
             return ValueError("Must call function with non-None value for either id or label argument")
 
+
+    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
+        if observed is None or excluded is None:
+            raise ValueError("Symbols for observed (e.g., +, Y, yes) and excluded (e.g., -, N, no) required")
+        if not isinstance(column_name_to_hpo_label_map, dict):
+            raise ValueError("column_name_to_hpo_label_map must be a dict with column to HPO label mappings")
+        simple_mapper_d = defaultdict(ColumnMapper)
+        for column_name, hpo_label in column_name_to_hpo_label_map.items():
+            hp_term = self._concept_recognizer.get_term_from_label(hpo_label)
+            mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=None, non_measured=non_measured)
+            simple_mapper_d[column_name] = mpr
+        return simple_mapper_d
+
+    
 
     def get_hpo_term_dict(self):
         return self._annotations

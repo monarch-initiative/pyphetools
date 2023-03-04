@@ -111,3 +111,4 @@ class SimpleColumnMapper(ColumnMapper):
             hpterm = value[0]
             dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
         return pd.DataFrame(dlist)
+    
