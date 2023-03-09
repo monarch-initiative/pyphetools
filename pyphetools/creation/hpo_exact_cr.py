@@ -1,6 +1,9 @@
 from .hpo_cr import HpoConceptRecognizer
 from .hp_term import HpTerm
+from .column_mapper import ColumnMapper
+from .simple_column_mapper import SimpleColumnMapper
 
+from collections import defaultdict
 import re
 import pandas as pd
 from typing import List
@@ -129,7 +132,26 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         return HpTerm(id=hpo_id, label=label)
     
     def get_term_from_label(self, label) -> HpTerm:
-        if label not in self._label_to_id:
+        label_lc = label.lower() # the dictionary was constructed in lower case!
+        if label_lc not in self._label_to_id:
             raise ValueError(f"Could not find HPO id for {label}")
-        hpo_id = self._label_to_id.get(label)
+        hpo_id = self._label_to_id.get(label_lc)
         return HpTerm(id=hpo_id, label=label)
+    
+    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
+        if observed is None or excluded is None:
+            raise ValueError("Symbols for observed (e.g., +, Y, yes) and excluded (e.g., -, N, no) required")
+        if not isinstance(column_name_to_hpo_label_map, dict):
+            raise ValueError("column_name_to_hpo_label_map must be a dict with column to HPO label mappings")
+        simple_mapper_d = defaultdict(ColumnMapper)
+        for column_name, hpo_label_and_id in column_name_to_hpo_label_map.items():
+            if not isinstance(hpo_label_and_id, list):
+                raise ValueError(f"Expected {hpo_label_and_id} to be a two-item list with HPO label and id")
+            hpo_label = hpo_label_and_id[0]
+            expected_id = hpo_label_and_id[1]
+            hp_term = self.get_term_from_label(hpo_label)
+            if hp_term.id != expected_id:
+                raise ValueError(f"Got {hp_term.id} but was expecting {expected_id} for {hpo_label}")
+            mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=excluded)
+            simple_mapper_d[column_name] = mpr
+        return simple_mapper_d

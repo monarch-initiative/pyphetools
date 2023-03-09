@@ -19,12 +19,15 @@ ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 
 class CaseEncoder:
+    """encode a single case report with HPO terms in Phenopacket format
+    Args:
+        PyPheToolsEncoder (_type_): _description_
+    """
     
-    
-    def __init__(self, concept_recognizer, pmid, age_at_last_exam=None) -> None:
-        if not isinstance(concept_recognizer, HpoConceptRecognizer):
+    def __init__(self, hpo_cr:HpoConceptRecognizer, pmid:str, age_at_last_exam=None) -> None:
+        if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
-        self._concept_recognizer = concept_recognizer
+        self._hpo_concept_recognizer = hpo_cr
         if not pmid.startswith("PMID:"):
             raise ValueError(f"Malformed pmid argument ({pmid}). Must start with PMID:")
         self._pmid = pmid
@@ -51,7 +54,7 @@ class CaseEncoder:
         for fp in false_positive:
             text = text.replace(fp, " ")
         # results will be a list with HpTerm elements
-        results =  self._concept_recognizer._parse_chunk(chunk=text, custom_d=custom_d)
+        results =  self._hpo_concept_recognizer._parse_chunk(chunk=text, custom_d=custom_d)
         if custom_age is not None:
             self._annotations[custom_age].extend(results)
         elif self._age_at_last_examination is not None:
@@ -65,7 +68,7 @@ class CaseEncoder:
         
     def add_term(self, label=None, id=None, excluded=False, custom_age=None):
         if label is not None:
-            results =  self._concept_recognizer._parse_chunk(chunk=label, custom_d={})
+            results =  self._hpo_concept_recognizer._parse_chunk(chunk=label, custom_d={})
             if len(results) != 1:
                 raise ValueError(f"Malformed label \"{label}\" we got {len(results)} results")
             hpo_term = results[0]
@@ -78,7 +81,7 @@ class CaseEncoder:
                 self._annotations["N/A"].append(hpo_term)
             return HpTerm.term_list_to_dataframe([hpo_term])
         elif id is not None:
-            hpo_term = self._concept_recognizer.get_term_from_id(id)
+            hpo_term = self._hpo_concept_recognizer.get_term_from_id(id)
             if excluded:
                 hpo_term._observed = not excluded
             if custom_age is not None:
@@ -99,7 +102,7 @@ class CaseEncoder:
             raise ValueError("column_name_to_hpo_label_map must be a dict with column to HPO label mappings")
         simple_mapper_d = defaultdict(ColumnMapper)
         for column_name, hpo_label in column_name_to_hpo_label_map.items():
-            hp_term = self._concept_recognizer.get_term_from_label(hpo_label)
+            hp_term = self._hpo_concept_recognizer.get_term_from_label(hpo_label)
             mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=None, non_measured=non_measured)
             simple_mapper_d[column_name] = mpr
         return simple_mapper_d

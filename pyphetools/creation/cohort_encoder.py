@@ -5,7 +5,6 @@ import os
 import phenopackets
 from google.protobuf.json_format import MessageToJson
 import re
-
 from .column_mapper import ColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 from .hpo_cr import HpoConceptRecognizer
@@ -15,10 +14,11 @@ from .metadata import MetaData
 class CohortEncoder:
     
     def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, metadata, variant_mapper=None, pmid=None):
+        if not isinstance(hpo_cr, HpoConceptRecognizer):
+            raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+        self._hpo_concept_recognizer = hpo_cr
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
-        if not isinstance(hpo_cr, HpoConceptRecognizer):
-            raise ValueError(f"hpo_cr argument must be a HpoConceptRecognizer but was {type(hpo_cr)}")
         if not isinstance(column_mapper_d, dict):
             raise ValueError(f"column_mapper_d argument must be a dictionary but was {type(column_mapper_d)}")
         if not isinstance(individual_column_name, str):
@@ -35,7 +35,6 @@ class CohortEncoder:
         else:
             raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
         self._df = df
-        self._hpo_concept_recognizer = hpo_cr
         self._column_mapper_d = column_mapper_d
         self._id_column_name = individual_column_name
         #self._sex_column = individual_d.get('sex')

@@ -19,3 +19,6 @@ class HpoConceptRecognizer:
     
     def get_term_from_label(self, label) -> HpTerm:
         raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for CR")   
+    
+    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
+        raise NotImplementedError("Need to implement a subclass of HpoConceptRecognizer for CR")   
