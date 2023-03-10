@@ -66,9 +66,9 @@ class Individual:
         elif self._sex == FEMALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.FEMALE
         elif self._sex == OTHER_SEX_SYMBOL:
-            php.subject.sex = phenopackets.Sex.OTHER
+            php.subject.sex = phenopackets.Sex.OTHER_SEX
         elif self._sex == UNKOWN_SEX_SYMBOL:
-            php.subject.sex = phenopackets.Sex.UNKNOWN
+            php.subject.sex = phenopackets.Sex.UNKNOWN_SEX
         if self._age is not None:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
         if isinstance(self._hpo_terms, list):
