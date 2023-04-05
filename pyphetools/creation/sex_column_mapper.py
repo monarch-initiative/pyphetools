@@ -18,7 +18,7 @@ class SexColumnMapper():
         self._column_name = column_name
     
     def map_cell(self, cell_contents) -> List:
-        contents = str(cell_contents).strip()
+        contents = cell_contents.strip()
         if contents == self._female_symbol:
             return FEMALE_SYMBOL
         elif contents == self._male_symbol:
