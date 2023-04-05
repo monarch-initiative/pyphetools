@@ -34,7 +34,7 @@ class CohortEncoder:
             self._metadata = metadata.to_ga4gh()
         else:
             raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
-        self._df = df
+        self._df = df.astype(str)
         self._column_mapper_d = column_mapper_d
         self._id_column_name = individual_column_name
         #self._sex_column = individual_d.get('sex')
@@ -94,8 +94,10 @@ class CohortEncoder:
         sex_column_name = self._sex_mapper.get_column_name()
         if self._variant_mapper is None:
             variant_colname = None
+            genotype_colname = None
         else:
             variant_colname = self._variant_mapper.get_column_name()
+            genotype_colname = self._variant_mapper.get_genotype_colname()
         count = 0
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
@@ -118,7 +120,11 @@ class CohortEncoder:
                 hpo_terms.extend(terms)
             if variant_colname is not None:
                 variant_col = row[variant_colname]
-                variant_list = self._variant_mapper.map_cell(variant_col)
+                if genotype_colname is not None:
+                    genotype_colname = row[genotype_colname]
+                else:
+                    genotype_colname = None
+                variant_list = self._variant_mapper.map_cell(variant_col, genotype_colname)
             else:
                 variant_list = []
             indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
