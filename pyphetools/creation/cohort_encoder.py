@@ -121,10 +121,10 @@ class CohortEncoder:
             if variant_colname is not None:
                 variant_col = row[variant_colname]
                 if genotype_colname is not None:
-                    genotype_colname = row[genotype_colname]
+                    genotype_col = row[genotype_colname]
                 else:
-                    genotype_colname = None
-                variant_list = self._variant_mapper.map_cell(variant_col, genotype_colname)
+                    genotype_col = None
+                variant_list = self._variant_mapper.map_cell(variant_col, genotype_col)
             else:
                 variant_list = []
             indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
