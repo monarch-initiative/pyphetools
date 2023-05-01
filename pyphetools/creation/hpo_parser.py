@@ -6,7 +6,7 @@ import urllib.request
 import os
 
 
-HPO_JSON_URL = "https://raw.githubusercontent.com/obophenotype/human-phenotype-ontology/master/hp.json"
+HPO_JSON_URL = "http://purl.obolibrary.org/obo/hp/hp.json"
 
 
 def extract_curie(url):
