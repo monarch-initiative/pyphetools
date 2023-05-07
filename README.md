@@ -36,3 +36,10 @@ Build and install
 python3 -m build
 python3 -m twine upload dist/*
 ```
+
+
+## Testing
+Unit tests were written for pytest, which can be installed with pip and run from the top-level directory as
+```
+pytest
+```

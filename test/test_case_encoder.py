@@ -12,7 +12,7 @@ class TestCaseParse(unittest.TestCase):
     def setUpClass(cls) -> None:
         hpparser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
         cls._hpo_cr = hpparser.get_hpo_concept_recognizer()
-        cls._parser = CaseEncoder(concept_recognizer=cls._hpo_cr, pmid="PMID:1")
+        cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr, pmid="PMID:1")
 
     def test_chief_complaint(self):
         """
@@ -54,7 +54,7 @@ class TestCaseParse(unittest.TestCase):
         vignette = "The patient is not on seizure medication at this time."
         excluded = set()
         excluded.add("Seizure")
-        encoder = CaseEncoder(concept_recognizer=self._hpo_cr, pmid="PMID:1")
+        encoder = CaseEncoder(hpo_cr=self._hpo_cr, pmid="PMID:1")
         df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded)
         self.assertEqual(1, len(df))
         

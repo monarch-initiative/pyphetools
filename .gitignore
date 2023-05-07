@@ -130,3 +130,5 @@ dmypy.json
 .vscode/
 notebooks/hpo_data/
 notebooks/phenopackets/
+.idea/
+hpo_data/

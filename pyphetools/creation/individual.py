@@ -1,13 +1,13 @@
 import phenopackets 
 from .variant import Variant
-from .constants import *
+from .constants import Constants
 
 
 class Individual:
     """
     A class to represent one individual of the cohort
     """
-    def __init__(self, individual_id, sex, age, hpo_terms, variant_list=None, disease_id=None, disease_label=None):
+    def __init__(self, individual_id, hpo_terms, sex, age=Constants.NOT_PROVIDED, variant_list=None, disease_id=None, disease_label=None):
         """
         Represents all of the data we will transform into a single phenopacket
         """
@@ -61,15 +61,15 @@ class Individual:
         else:
             php.id = phenopacket_id
         php.subject.id = self._individual_id
-        if self._sex == MALE_SYMBOL:
+        if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE
-        elif self._sex == FEMALE_SYMBOL:
+        elif self._sex == Constants.FEMALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.FEMALE
-        elif self._sex == OTHER_SEX_SYMBOL:
+        elif self._sex == Constants.OTHER_SEX_SYMBOL:
             php.subject.sex = phenopackets.Sex.OTHER_SEX
-        elif self._sex == UNKOWN_SEX_SYMBOL:
+        elif self._sex == Constants.UNKOWN_SEX_SYMBOL:
             php.subject.sex = phenopackets.Sex.UNKNOWN_SEX
-        if self._age is not None:
+        if self._age != Constants.NOT_PROVIDED:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
         if isinstance(self._hpo_terms, list):
             for hp in self._hpo_terms:
@@ -80,7 +80,7 @@ class Individual:
                 pf.type.label = hp.label
                 if not hp.observed:
                     pf.excluded = True
-                if self._age is not None:
+                if self._age != Constants.NOT_PROVIDED:
                     pf.onset.age.iso8601duration = self._age
                 php.phenotypic_features.append(pf)
         elif isinstance(self._hpo_terms, dict):

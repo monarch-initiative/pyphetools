@@ -2,7 +2,7 @@
 from collections import defaultdict
 from typing import List
 import pandas as pd
-from .constants import *
+from .constants import Constants
 
 
 
@@ -20,16 +20,16 @@ class SexColumnMapper():
     def map_cell(self, cell_contents) -> List:
         contents = cell_contents.strip()
         if contents == self._female_symbol:
-            return FEMALE_SYMBOL
+            return Constants.FEMALE_SYMBOL
         elif contents == self._male_symbol:
-            return MALE_SYMBOL
+            return Constants.MALE_SYMBOL
         elif contents == self._other_symbol:
-            return OTHER_SEX_SYMBOL
+            return Constants.OTHER_SEX_SYMBOL
         elif contents == self._unknown_symbol:
-            return UNKOWN_SEX_SYMBOL
+            return Constants.UNKOWN_SEX_SYMBOL
         else:
             print(f"Could not map sex symbol {contents}")
-            return UNKOWN_SEX_SYMBOL        
+            return Constants.UNKOWN_SEX_SYMBOL        
 
     def preview_column(self, column):
         if not isinstance(column, pd.Series):

@@ -3,11 +3,12 @@ from collections import defaultdict
 from typing import List
 import pandas as pd
 import re
+from .constants import Constants
 
 
 from enum import Enum
 
-AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'YEAR_AND_MONTH', 'CUSTOM'])
+AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'YEAR_AND_MONTH', 'CUSTOM', 'NOT_PROVIDED'])
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 # e.g., 14 y 8 m or 8 y
 YEAR_AND_MONTH_REGEX = r"(\d+)\s*[Yy]\s*(\d+)\s*[Mm]"
@@ -33,7 +34,7 @@ class AgeColumnMapper():
             if isostring is None:  
                 print(f"Could not parse {contents} as integer (year): {verr}")
             return isostring
-        if self._age_econding == AgeEncodingType.YEAR_AND_MONTH:
+        elif self._age_econding == AgeEncodingType.YEAR_AND_MONTH:
             try:
                 match = re.search(YEAR_AND_MONTH_REGEX, contents)
                 if match:
@@ -51,7 +52,6 @@ class AgeColumnMapper():
             except ValueError as verr:  
                 print(f"Could not parse {contents} as year/month: {verr}")
                 return None      
-    
         elif self._age_econding == AgeEncodingType.ISO8601:
             match = re.search(ISO8601_REGEX, contents)
             if match:
@@ -60,7 +60,9 @@ class AgeColumnMapper():
                 print(f"Could not parse {contents} as ISO8601 period")
                 return None
         elif self._age_econding == AgeEncodingType.CUSTOM:
-            raise ValueError("TODO NOT IMPLEMENTED YET")   
+            raise ValueError("TODO NOT IMPLEMENTED YET")
+        elif self._age_econding == AgeEncodingType.NOT_PROVIDED:
+            return Constants.NOT_PROVIDED
 
     def get_iso8601_from_int_or_float_year(self, age_string) -> str:
         """
@@ -105,6 +107,13 @@ class AgeColumnMapper():
     
     def get_column_name(self):
         return self._column_name
+    
+    
+    @staticmethod
+    def not_provided():
+        """Create an object for cases where Age is not provided.
+        """
+        return AgeColumnMapper(ageEncodingType=AgeEncodingType.NOT_PROVIDED, column_name=Constants.NOT_PROVIDED)
     
     @staticmethod
     def by_year(column_name):

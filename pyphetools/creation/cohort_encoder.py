@@ -5,15 +5,18 @@ import os
 import phenopackets
 from google.protobuf.json_format import MessageToJson
 import re
+from .age_column_mapper import AgeColumnMapper
 from .column_mapper import ColumnMapper
-from .variant_column_mapper import VariantColumnMapper
+from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
 from .metadata import MetaData
+from .variant_column_mapper import VariantColumnMapper
+
 
 class CohortEncoder:
     
-    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, agemapper, sexmapper, metadata, variant_mapper=None, pmid=None):
+    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, metadata, agemapper=AgeColumnMapper.not_provided(), sexmapper=None, variant_mapper=None, pmid=None):
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._hpo_concept_recognizer = hpo_cr
@@ -37,7 +40,6 @@ class CohortEncoder:
         self._df = df.astype(str)
         self._column_mapper_d = column_mapper_d
         self._id_column_name = individual_column_name
-        #self._sex_column = individual_d.get('sex')
         self._age_mapper = agemapper
         self._sex_mapper = sexmapper
         self._disease_id = None
@@ -55,8 +57,11 @@ class CohortEncoder:
         sex_column_name = self._sex_mapper.get_column_name()
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
-            age_cell_contents = row[age_column_name]
-            age = self._age_mapper.map_cell(age_cell_contents)
+            if age_column_name == Constants.NOT_PROVIDED:
+                age = Constants.NOT_PROVIDED
+            else:
+                age_cell_contents = row[age_column_name]
+                age = self._age_mapper.map_cell(age_cell_contents)
             sex_cell_contents = row[sex_column_name]
             sex = self._sex_mapper.map_cell(sex_cell_contents)
             hpo_terms = []
@@ -101,8 +106,11 @@ class CohortEncoder:
         count = 0
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
-            age_cell_contents = row[age_column_name]
-            age = self._age_mapper.map_cell(age_cell_contents)
+            if age_column_name == Constants.NOT_PROVIDED:
+                age = Constants.NOT_PROVIDED
+            else:
+                age_cell_contents = row[age_column_name]
+                age = self._age_mapper.map_cell(age_cell_contents)
             sex_cell_contents = row[sex_column_name]
             sex = self._sex_mapper.map_cell(sex_cell_contents)
             if additional_hpo is None:
