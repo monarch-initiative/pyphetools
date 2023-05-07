@@ -22,7 +22,7 @@ jobs:
 
     - name: Build documentation.
       run: |
-        sphinx-apidoc -f -o docs/ src/wn2vec "**/tests/*"
+        sphinx-apidoc -f -o docs/ pyphetools "**/tests/*"
         cd docs/
         sphinx-build -b html . _build
         touch _build/.nojekyll
