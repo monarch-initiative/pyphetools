@@ -8,8 +8,7 @@ ACCEPTABLE_GENOTYPES = {"heterozygous", "homozygous", "hemizygous"}
 
 class VariantColumnMapper:
 
-    def __init__(self, assembly, transcript, column_name, default_genotype=None, genotype_column=None, delimiter=None,
-                 variant_symbol_d=None) -> None:
+    def __init__(self, assembly, transcript, column_name, default_genotype=None, genotype_column=None, delimiter=None) -> None:
         """Column mapper for HGVS expressions containing the variants identified in individuals
 
         Args:
@@ -30,10 +29,8 @@ class VariantColumnMapper:
         self._column_name = column_name
         self._genotype_column = genotype_column
         self._delimiter = delimiter
-        if variant_symbol_d is None:
-            self._variant_symbol_d = {}
-        else:
-            self._variant_symbol_d = variant_symbol_d
+        self._variant_symbol_d = {}
+
 
     def map_cell(self, cell_contents, genotype_contents=None, delimiter=None) -> List[Variant]:
         if delimiter is None:
@@ -45,9 +42,10 @@ class VariantColumnMapper:
         results = []
         for item in items:
             if item in self._variant_symbol_d:
-                variant = self._variant_symbol_d.get(item)
-                variant.set_genotype(self._default_genotype)
-                results.append(variant)
+                variant_list = self._variant_symbol_d.get(item)
+                for v in variant_list:
+                    v.set_genotype(self._default_genotype)
+                results.extend(variant_list)
             else:
                 try:
                     variant = self._validator.encode_hgvs(item)
@@ -88,3 +86,6 @@ class VariantColumnMapper:
 
     def get_genotype_colname(self):
         return self._genotype_column
+
+    def set_variant_symbol_dictionary(self, variant_sym_d):
+        self._variant_symbol_d = variant_sym_d

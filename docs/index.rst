@@ -22,6 +22,8 @@ See :ref:`installation` for instructions on how to set up the package.
 
     installation
     custom_column_mapper
+    simple_column_mapper
+    variant_column_mapper
     contributing
     authors
     history

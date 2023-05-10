@@ -1,5 +1,0 @@
-phenopackets
-pandas
-openpyxl
-jupyter
-requests

@@ -2,15 +2,13 @@ import pandas as pd
 from math import isnan
 from typing import List
 import os
-import phenopackets
-from google.protobuf.json_format import MessageToJson
 import re
+from google.protobuf.json_format import MessageToJson
+
 from .age_column_mapper import AgeColumnMapper
-from .column_mapper import ColumnMapper
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
-from .metadata import MetaData
 from .variant_column_mapper import VariantColumnMapper
 
 
@@ -48,6 +46,7 @@ class CohortEncoder:
         self._disease_label = None
         self._variant_mapper = variant_mapper
         self._pmid = pmid
+        self._disease_dictionary = None
 
     def preview_dataframe(self):
         """
@@ -87,11 +86,17 @@ class CohortEncoder:
         """_summary_
         If all patients in the cohort have the same disease we can set it with this method
         Args:
-            id (str): disease identifier, e.g., OMIM:600123
+            disease_id (str): disease identifier, e.g., OMIM:600123
             label (str): disease name
         """
         self._disease_id = disease_id
         self._disease_label = label
+        self._disease_dictionary = None
+
+    def set_disease_dictionary(self, disease_d):
+        self._disease_dictionary = disease_d
+        self._disease_id = None
+        self._disease_label = None
 
     def get_individuals(self, additional_hpo=None) -> List[Individual]:
         df = self._df.reset_index()  # make sure indexes pair with number of rows
@@ -136,10 +141,23 @@ class CohortEncoder:
                 variant_list = self._variant_mapper.map_cell(variant_col, genotype_col)
             else:
                 variant_list = []
-            indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
-                              variant_list=variant_list,
-                              disease_id=self._disease_id, disease_label=self._disease_label)
-            individuals.append(indi)
+            if self._disease_dictionary is not None and self._disease_id is None and self._disease_label is None:
+                if individual_id not in self._disease_dictionary:
+                    raise ValueError(f"Could not find disease link for {individual_id}")
+                disease = self._disease_dictionary.get(individual_id)
+                disease_id = disease.get('id')
+                disease_label = disease.get('label')
+                indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
+                                  variant_list=variant_list,
+                                  disease_id=disease_id, disease_label=disease_label)
+                individuals.append(indi)
+            elif self._disease_dictionary is None and self._disease_id is not None and self._disease_label is not None:
+                indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
+                                  variant_list=variant_list, disease_id=self._disease_id,
+                                  disease_label=self._disease_label)
+                individuals.append(indi)
+            else:
+                raise ValueError(f"Could not find variant data for '{individual_id}'")
             count += 1
         return individuals
 
