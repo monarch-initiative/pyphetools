@@ -15,10 +15,12 @@ from .variant_column_mapper import VariantColumnMapper
 
 
 class CohortEncoder:
-    
-    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, metadata, agemapper=AgeColumnMapper.not_provided(), sexmapper=None, variant_mapper=None, pmid=None):
+
+    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, metadata,
+                 agemapper=AgeColumnMapper.not_provided(), sexmapper=None, variant_mapper=None, pmid=None):
         if not isinstance(hpo_cr, HpoConceptRecognizer):
-            raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+            raise ValueError(
+                "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._hpo_concept_recognizer = hpo_cr
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
@@ -46,7 +48,7 @@ class CohortEncoder:
         self._disease_label = None
         self._variant_mapper = variant_mapper
         self._pmid = pmid
-        
+
     def preview_dataframe(self):
         """
         Generate a dataframe with a preview of the parsed contents
@@ -80,7 +82,7 @@ class CohortEncoder:
             individuals.append(d)
         df = pd.DataFrame(individuals)
         return df.set_index('id')
-    
+
     def set_disease(self, disease_id, label):
         """_summary_
         If all patients in the cohort have the same disease we can set it with this method
@@ -90,8 +92,7 @@ class CohortEncoder:
         """
         self._disease_id = disease_id
         self._disease_label = label
-    
-    
+
     def get_individuals(self, additional_hpo=None) -> List[Individual]:
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
@@ -135,7 +136,8 @@ class CohortEncoder:
                 variant_list = self._variant_mapper.map_cell(variant_col, genotype_col)
             else:
                 variant_list = []
-            indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms, variant_list=variant_list,
+            indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
+                              variant_list=variant_list,
                               disease_id=self._disease_id, disease_label=self._disease_label)
             individuals.append(indi)
             count += 1
@@ -157,9 +159,9 @@ class CohortEncoder:
             if self._pmid is None:
                 fname = "phenopacket_" + individual.id + ".json"
             else:
-                pmid = self._pmid.replace(" ", "").replace(":","_")
+                pmid = self._pmid.replace(" ", "").replace(":", "_")
                 fname = pmid + "_" + individual.id + ".json"
-            fname = re.sub('[^\w_.)( -]', '', fname) #remove any illegal characters from filename
+            fname = re.sub('[^\w_.)( -]', '', fname)  # remove any illegal characters from filename
             fname = fname.replace(" ", "_")
             outpth = os.path.join(outdir, fname)
             with open(outpth, "wt") as fh:

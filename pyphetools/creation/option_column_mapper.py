@@ -9,7 +9,7 @@ class OptionColumnMapper(ColumnMapper):
     
     def __init__(self, concept_recognizer, option_d):
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
-            raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+            raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._hpo_cr = concept_recognizer
         # Either have self._option_d be an empty dictionary or it must be a valid dictionary
         if option_d is None:

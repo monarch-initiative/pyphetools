@@ -7,7 +7,7 @@ from collections import defaultdict
 
 def get_separate_hpos_from_df(df, hpo_cr):
     """Loop through all the cells in a dataframe or series and try to parse each cell as HPO term.
-    Useful when the seperate HPO terms are in the cells themselves.
+    Useful when the separate HPO terms are in the cells themselves.
 
       Args:
          df (dataframe): dataframe with phenotypic data
@@ -63,7 +63,7 @@ def try_mapping_columns(df, observed, excluded, hpo_cr, preview=True):
 class SimpleColumnMapper(ColumnMapper):
 
     def __init__(self, hpo_id, hpo_label, observed=None, excluded=None, non_measured=None, constant=False):
-        """_summary_
+        """ColumnMapper for columns that contain information about a single phenotypic abnormality only
 
         Args:
             hpo_id (_type_): HPO  id, e.g., HP:0004321

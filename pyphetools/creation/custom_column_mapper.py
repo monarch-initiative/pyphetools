@@ -21,6 +21,7 @@ class CustomColumnMapper(ColumnMapper):
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
             raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._concept_recognizer = concept_recognizer
+        self._excluded_set = excluded_set
 
     def map_cell(self, cell_contents) -> List:
         """Perform concept recognition on one cell of the table
@@ -37,6 +38,8 @@ class CustomColumnMapper(ColumnMapper):
         it should be possible to implement the algorithm of fenominal that removes stop words
         and searches for ontology concepts in which the remaining tokens occur in any order.
         """
+        for excl in self._excluded_set:
+            cell_contents = cell_contents.replace(excl, " ")
         results = self._concept_recognizer.parse_cell(cell_contents=cell_contents, custom_d=self._custom_map_d)
         if results is None:
             return []
