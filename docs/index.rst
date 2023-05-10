@@ -21,7 +21,7 @@ See :ref:`installation` for instructions on how to set up the package.
     :maxdepth: 1
 
     installation
-    marea
+    custom_column_mapper
     contributing
     authors
     history

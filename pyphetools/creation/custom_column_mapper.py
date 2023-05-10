@@ -6,18 +6,28 @@ from .hpo_cr import HpoConceptRecognizer
 
 
 class CustomColumnMapper(ColumnMapper):
-    def __init__(self, concept_recognizer, custom_map_d=None) -> None:
+    def __init__(self, concept_recognizer, custom_map_d=None, excluded_set=set()) -> None:
+        """Column mapper for concept recognition (CR) augmented by custom maps for concepts missed by automatic CR
+
+        Args:
+            concept_recognizer (HpoConceptRecognizer):  Concept Recognition object.
+            custom_map_d (dict): keys -- label of a concept in the original text; values -- corresponding HPO label
+            excluded_set (set): set of strings to be excluded from concept recognition
+        """
         if custom_map_d is None:
             self._custom_map_d = defaultdict()
         else:
             self._custom_map_d = custom_map_d
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
-            raise ValueError("concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+            raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._concept_recognizer = concept_recognizer
 
-
     def map_cell(self, cell_contents) -> List:
-        """
+        """Perform concept recognition on one cell of the table
+
+        Args:
+            cell_contents (str): text to be used for concept recognition.
+
         This method should not be used by client code. Instead, it is called
         by the CohortEncoder object, which should provide the id_to_primary_d, label_to_id_d
         objects representing the automatic HPO dictionaries. It is designed to take
@@ -33,13 +43,12 @@ class CustomColumnMapper(ColumnMapper):
         else:
             return results
 
-
     def preview_column(self, column):
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         preview_d = defaultdict(list)
         for index, value in column.items():
-            preview_d[value]  = self.map_cell(str(value))
+            preview_d[value] = self.map_cell(str(value))
         dlist = []
         for k, v in preview_d.items():
             if v is None or len(v) == 0:
@@ -48,7 +57,3 @@ class CustomColumnMapper(ColumnMapper):
                 terms = "; ".join([hpo.to_string() for hpo in v])
             dlist.append({"column": k, "terms": terms})
         return pd.DataFrame(dlist)
-    
-   
-            
-        

@@ -60,4 +60,15 @@ class TestCustomColumnMapper(unittest.TestCase):
         self.assertEqual("Lower limb muscle weakness", term_d.get("HP:0007340"))
         self.assertTrue("HP:0002493" in term_d)
         self.assertEqual("Upper motor neuron dysfunction", term_d.get("HP:0002493"))
+
+    def test_SETD2(self):
+        text = """Extra fluid in the back of the cerebellum at 35 weeks; fetal MRI at 35 weeks showed VSD, 
+        small cerebellum, and agenesis of the corpus callosum; pre-eclampsia; \nIUGR 	n/a """
+        prenatal_custom_map = {'agenesis of the corpus callosum': 'Agenesis of corpus callosum',
+                               '\nIUGR': 'Intrauterine growth retardation',
+                               'small cerebellum': 'Cerebellar hypoplasia',
+                               }
+        prenatalMapper = CustomColumnMapper(concept_recognizer=self.hpo_cr, custom_map_d=prenatal_custom_map)
+        results = prenatalMapper.map_cell(text)
+        self.assertEqual(3, len(results))
         
