@@ -1,5 +1,4 @@
 import unittest
-import json
 from pyphetools.creation import Variant
 
 # The following dictionary has the same structure as a subelement of the response from Variant Validator

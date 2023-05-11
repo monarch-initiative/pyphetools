@@ -1,11 +1,9 @@
 import os
 import random
 import time
-import phenopackets
 from phenopackets import Phenopacket
 from google.protobuf.json_format import Parse
 from google.protobuf.json_format import MessageToJson
-from google.protobuf.message import *
 import json
 
 

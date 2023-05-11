@@ -3,10 +3,15 @@ from hpotk.model import TermId
 
 class TermCount:
 
-    def __init__(self, id) -> None:
-        if not isinstance(id, TermId):
-            raise ValueError(f"id argument must be TermId but was {type(id)}")
-        self._hpo_id = id
+    def __init__(self, tid) -> None:
+        """Counts the number of usages of an ontology term
+
+        Args:
+            tid: An ontology term identifier
+        """
+        if not isinstance(tid, TermId):
+            raise ValueError(f"id argument must be TermId but was {type(tid)}")
+        self._hpo_id = tid
         self._count = 0
 
     def increment(self):

@@ -8,6 +8,7 @@ from collections import defaultdict
 class OptionColumnMapper(ColumnMapper):
     
     def __init__(self, concept_recognizer, option_d):
+        super().__init__()
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
             raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._hpo_cr = concept_recognizer

@@ -73,6 +73,7 @@ class SimpleColumnMapper(ColumnMapper):
             non_measured (_type_, optional): symbol used if the feature was not measured or is N/A. Defaults to None.
             constant (bool, optional): If true, all patients have this feature. Defaults to False.
         """
+        super().__init__()
         self._hpo_id = hpo_id
         self._hpo_label = hpo_label
         if observed is None or excluded is None:
@@ -90,17 +91,17 @@ class SimpleColumnMapper(ColumnMapper):
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
         if self._constant:
-            return [HpTerm(id=self._hpo_id, label=self._hpo_label)]
+            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
         if not isinstance(cell_contents, str):
             raise ValueError(
                 f"Error: cell_contents argument ({cell_contents}) must be string but was {type(cell_contents)} -- coerced to string")
         contents = cell_contents.strip()
         if contents in self._observed:
-            return [HpTerm(id=self._hpo_id, label=self._hpo_label)]
+            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
         elif contents in self._excluded:
-            return [HpTerm(id=self._hpo_id, label=self._hpo_label, observed=False)]
+            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
         else:
-            return [HpTerm(id=self._hpo_id, label=self._hpo_label, measured=False)]
+            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, measured=False)]
 
     def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):

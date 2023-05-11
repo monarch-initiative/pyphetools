@@ -1,17 +1,16 @@
 import requests
-import json
 from .variant import Variant
 
 
 URL_SCHEME = "https://rest.variantvalidator.org/VariantValidator/variantvalidator/%s/%s%%3A%s/%s?content-type=application%%2Fjson"
-ACCEBTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
+ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 
 
 
 class VariantValidator:
     
     def __init__(self, genome_build, transcript=None):
-        if genome_build not in ACCEBTABLE_GENOMES:
+        if genome_build not in ACCEPTABLE_GENOMES:
             raise ValueError(f"genome_build \"{genome_build}\" not recognized")
         self._genome_assembly = genome_build
         self._transcript = transcript

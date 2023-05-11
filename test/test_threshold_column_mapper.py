@@ -1,18 +1,15 @@
 import unittest
-import os
 from pyphetools.creation import ThresholdedColumnMapper
 
 
-
-
 class TestThresholdedColumnMapper(unittest.TestCase):
-    
+
     @classmethod
     def setUpClass(cls) -> None:
-        cls.mapper = ThresholdedColumnMapper(hpo_id="HP:0032988", 
-                                         hpo_label="Persistent head lag", 
-                                        threshold=4, 
-                                        call_if_above=True)
+        cls.mapper = ThresholdedColumnMapper(hpo_id="HP:0032988",
+                                             hpo_label="Persistent head lag",
+                                             threshold=4,
+                                             call_if_above=True)
 
     def test_threshold_of_3(self):
         res = self.mapper.map_cell(3)
@@ -22,7 +19,7 @@ class TestThresholdedColumnMapper(unittest.TestCase):
         self.assertEqual("HP:0032988", result.id)
         self.assertEqual("Persistent head lag", result.label)
         self.assertFalse(result.observed)
-        
+
     def test_threshold_of_4(self):
         res = self.mapper.map_cell(4)
         self.assertIsNotNone(res)
@@ -31,7 +28,7 @@ class TestThresholdedColumnMapper(unittest.TestCase):
         self.assertEqual("HP:0032988", result.id)
         self.assertEqual("Persistent head lag", result.label)
         self.assertFalse(result.observed)
-        
+
     def test_threshold_of_4_point_1(self):
         res = self.mapper.map_cell(4.1)
         self.assertIsNotNone(res)
@@ -40,7 +37,7 @@ class TestThresholdedColumnMapper(unittest.TestCase):
         self.assertEqual("HP:0032988", result.id)
         self.assertEqual("Persistent head lag", result.label)
         self.assertTrue(result.observed)
-        
+
     def test_threshold_with_na(self):
         """_summary_
         Return cannot be measured if the threshold cannot be read

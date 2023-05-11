@@ -1,6 +1,6 @@
 import os
 import phenopackets
-from phenopackets import Phenopacket
+#from phenopackets import Phenopacket
 from google.protobuf.json_format import Parse
 import json
 from collections import defaultdict
@@ -26,11 +26,11 @@ class SimplePatient:
             with open(phenopacket_file) as f:
                 data = f.read()
                 jsondata = json.loads(data)
-                ppack = Parse(json.dumps(jsondata), Phenopacket())
+                ppack = Parse(json.dumps(jsondata), phenopackets.Phenopacket())
         else:
             # in this case, ga4gh_phenopacket cannot be None
             if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
-                raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(phenopacket)}")
+                raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
             else:
                 ppack = ga4gh_phenopacket
         observed_hpo_terms = defaultdict(HpTerm)
@@ -55,9 +55,9 @@ class SimplePatient:
         elif ppack.subject.sex == phenopackets.OTHER_SEX:
             self._sex = "OTHER"
         else:
-            self._sex = "UNNOWN"
+            self._sex = "UNKNOWN"
         for pf in ppack.phenotypic_features:
-            hpterm =  HpTerm(id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
+            hpterm = HpTerm(hpo_id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
             if pf.excluded:
                 excluded_hpo_terms[pf.type.id] = hpterm
             else:
