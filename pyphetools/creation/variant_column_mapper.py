@@ -17,7 +17,6 @@ class VariantColumnMapper:
             default_genotype (str): The genotype of the variants (unless otherwise specified)
             genotype_column (str): Label of the column that contains the genotype (if available)
             delimiter (str): symbol used to separate variants if more than one variant is provided.
-            variant_symbol_d (dict): key, a string, value the corresponding Variant object
         """
         if default_genotype is not None and default_genotype not in ACCEPTABLE_GENOTYPES:
             raise ValueError(f"Did not recognize default genotype {default_genotype}")

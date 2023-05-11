@@ -43,7 +43,6 @@ class CustomColumnMapper(ColumnMapper):
         """
         for excl in self._excluded_set:
             cell_contents = cell_contents.replace(excl, " ")
-        print(f"cc {cell_contents}")
         results = self._concept_recognizer.parse_cell(cell_contents=cell_contents, custom_d=self._custom_map_d)
         if results is None:
             return []
