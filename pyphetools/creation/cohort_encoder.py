@@ -157,7 +157,7 @@ class CohortEncoder:
                                   disease_label=self._disease_label)
                 individuals.append(indi)
             else:
-                raise ValueError(f"Could not find variant data for '{individual_id}'")
+                raise ValueError(f"Could not find disease data for '{individual_id}'")
             count += 1
         return individuals
 
