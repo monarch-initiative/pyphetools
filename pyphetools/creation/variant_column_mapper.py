@@ -8,7 +8,8 @@ ACCEPTABLE_GENOTYPES = {"heterozygous", "homozygous", "hemizygous"}
 
 class VariantColumnMapper:
 
-    def __init__(self, assembly, transcript, column_name, default_genotype=None, genotype_column=None, delimiter=None) -> None:
+    def __init__(self, assembly, transcript, column_name, default_genotype=None, genotype_column=None,
+                 delimiter=None) -> None:
         """Column mapper for HGVS expressions containing the variants identified in individuals
 
         Args:
@@ -29,7 +30,6 @@ class VariantColumnMapper:
         self._genotype_column = genotype_column
         self._delimiter = delimiter
         self._variant_symbol_d = {}
-
 
     def map_cell(self, cell_contents, genotype_contents=None, delimiter=None) -> List[Variant]:
         if delimiter is None:
@@ -88,3 +88,14 @@ class VariantColumnMapper:
 
     def set_variant_symbol_dictionary(self, variant_sym_d):
         self._variant_symbol_d = variant_sym_d
+
+    def _print_summary(self):
+        """Dump some of the attributes of the object, for debugging
+        """
+        print("VariantColumnMapper")
+        print(f"transcript: {self._transcript}")
+        print(f"column_name: {self._column_name}")
+        print(f"genotype_column: {self._genotype_column}")
+        print(f"delimiter: {self._delimiter}")
+        print(f"Size of _variant_symbol_d: {len(self._variant_symbol_d)}")
+
