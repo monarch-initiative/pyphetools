@@ -7,7 +7,7 @@ from .constants import Constants
 
 
 
-class SexColumnMapper():
+class SexColumnMapper:
     def __init__(self, male_symbol, female_symbol, column_name, other_symbol=None, unknown_symbol=None) -> None:
         self._male_symbol    = male_symbol
         self._female_symbol  = female_symbol

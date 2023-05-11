@@ -6,7 +6,7 @@ from .hpo_cr import HpoConceptRecognizer
 
 
 class CustomColumnMapper(ColumnMapper):
-    def __init__(self, concept_recognizer, custom_map_d=None, excluded_set=set()) -> None:
+    def __init__(self, concept_recognizer, custom_map_d=None, excluded_set=None) -> None:
         """Column mapper for concept recognition (CR) augmented by custom maps for concepts missed by automatic CR
 
         Args:
@@ -14,6 +14,7 @@ class CustomColumnMapper(ColumnMapper):
             custom_map_d (dict): keys -- label of a concept in the original text; values -- corresponding HPO label
             excluded_set (set): set of strings to be excluded from concept recognition
         """
+        super().__init__()
         if custom_map_d is None:
             self._custom_map_d = defaultdict()
         else:
@@ -21,6 +22,8 @@ class CustomColumnMapper(ColumnMapper):
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
             raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._concept_recognizer = concept_recognizer
+        if excluded_set is None:
+            excluded_set = set()
         self._excluded_set = excluded_set
 
     def map_cell(self, cell_contents) -> List:
@@ -40,6 +43,7 @@ class CustomColumnMapper(ColumnMapper):
         """
         for excl in self._excluded_set:
             cell_contents = cell_contents.replace(excl, " ")
+        print(f"cc {cell_contents}")
         results = self._concept_recognizer.parse_cell(cell_contents=cell_contents, custom_d=self._custom_map_d)
         if results is None:
             return []

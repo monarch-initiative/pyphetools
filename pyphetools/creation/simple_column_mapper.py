@@ -73,6 +73,7 @@ class SimpleColumnMapper(ColumnMapper):
             non_measured (_type_, optional): symbol used if the feature was not measured or is N/A. Defaults to None.
             constant (bool, optional): If true, all patients have this feature. Defaults to False.
         """
+        super().__init__()
         self._hpo_id = hpo_id
         self._hpo_label = hpo_label
         if observed is None or excluded is None:

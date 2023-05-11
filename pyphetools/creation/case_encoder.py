@@ -8,15 +8,12 @@ from .simple_column_mapper import SimpleColumnMapper
 from .column_mapper import ColumnMapper
 from google.protobuf.json_format import MessageToJson
 from .individual import Individual
-import phenopackets
 
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 
 class CaseEncoder:
     """encode a single case report with HPO terms in Phenopacket format
-    Args:
-        PyPheToolsEncoder (_type_): _description_
     """
 
     def __init__(self, hpo_cr: HpoConceptRecognizer, pmid: str, age_at_last_exam=None) -> None:
@@ -50,7 +47,7 @@ class CaseEncoder:
         for fp in false_positive:
             text = text.replace(fp, " ")
         # results will be a list with HpTerm elements
-        results = self._hpo_concept_recognizer._parse_chunk(chunk=text, custom_d=custom_d)
+        results = self._hpo_concept_recognizer.parse_cell(cell_contents=text, custom_d=custom_d)
         if custom_age is not None:
             self._annotations[custom_age].extend(results)
         elif self._age_at_last_examination is not None:
@@ -62,9 +59,9 @@ class CaseEncoder:
                 r.excluded()
         return HpTerm.term_list_to_dataframe(results)
 
-    def add_term(self, label=None, id=None, excluded=False, custom_age=None):
+    def add_term(self, label=None, hpo_id=None, excluded=False, custom_age=None):
         if label is not None:
-            results = self._hpo_concept_recognizer._parse_chunk(chunk=label, custom_d={})
+            results = self._hpo_concept_recognizer.parse_cell(cell_contents=label, custom_d={})
             if len(results) != 1:
                 raise ValueError(f"Malformed label \"{label}\" we got {len(results)} results")
             hpo_term = results[0]
@@ -76,8 +73,8 @@ class CaseEncoder:
             else:
                 self._annotations["N/A"].append(hpo_term)
             return HpTerm.term_list_to_dataframe([hpo_term])
-        elif id is not None:
-            hpo_term = self._hpo_concept_recognizer.get_term_from_id(id)
+        elif hpo_id is not None:
+            hpo_term = self._hpo_concept_recognizer.get_term_from_id(hpo_id)
             if excluded:
                 hpo_term._observed = not excluded
             if custom_age is not None:
@@ -116,11 +113,11 @@ class CaseEncoder:
         return individual.to_ga4gh_phenopacket(metadata=metadata, phenopacket_id=phenopacket_id)
 
     def output_phenopacket(self, outdir, phenopacket):
-        """_summary_
+        """write a phenopacket to an output directory
 
         Args:
-            outdir (_type_): name of directory to write phenopackets
-            individual_list (_type_, optional): List of individuals. If None, recreate
+            outdir (str): name of directory to write phenopackets
+            phenopacket (Phenopacket): GA4GH Phenopacket object
         """
         if not os.path.exists(outdir):
             os.makedirs(outdir)

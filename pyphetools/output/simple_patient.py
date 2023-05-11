@@ -55,9 +55,9 @@ class SimplePatient:
         elif ppack.subject.sex == phenopackets.OTHER_SEX:
             self._sex = "OTHER"
         else:
-            self._sex = "UNNOWN"
+            self._sex = "UNKNOWN"
         for pf in ppack.phenotypic_features:
-            hpterm =  HpTerm(id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
+            hpterm = HpTerm(hpo_id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
             if pf.excluded:
                 excluded_hpo_terms[pf.type.id] = hpterm
             else:

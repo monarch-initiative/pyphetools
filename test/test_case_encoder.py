@@ -25,8 +25,8 @@ class TestCaseParse(unittest.TestCase):
         results = self._parser.add_vignette(vignette=vignette)
         self.assertEqual(3, len(results))
         self.assertTrue(isinstance(results, pd.DataFrame))
-        id = results.loc[(results['id'] == 'HP:0000365')]['id'].values[0]
-        self.assertEqual("HP:0000365", id)
+        tid = results.loc[(results['id'] == 'HP:0000365')]['id'].values[0]
+        self.assertEqual("HP:0000365", tid)
 
     def test_excluded(self):
         """
@@ -38,8 +38,8 @@ class TestCaseParse(unittest.TestCase):
         excluded.add("Nasal congestion")
         results = self._parser.add_vignette(vignette=vignette, excluded_terms=excluded)
         self.assertEqual(1, len(results))
-        id = results.loc[(results['id'] == 'HP:0001742')]['id'].values[0]
-        self.assertEqual("HP:0001742", id)
+        tid = results.loc[(results['id'] == 'HP:0001742')]['id'].values[0]
+        self.assertEqual("HP:0001742", tid)
         label = results.loc[(results['id'] == 'HP:0001742')]['label'].values[0]
         self.assertEqual("Nasal congestion", label)
         observed = results.loc[(results['id'] == 'HP:0001742')]['observed'].values[0]

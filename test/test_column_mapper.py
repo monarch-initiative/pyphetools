@@ -17,7 +17,7 @@ class TestCustomColumnMapper(unittest.TestCase):
         self.assertIsNotNone(self.hpo_cr)
 
     def test_hpo_cr_ataxia(self):
-        """We should retrieve Ataxia HP:0001251"""
+        """We should retrieve Ataxia (HP:0001251)"""
         neuroMapper = CustomColumnMapper(concept_recognizer=self.hpo_cr)
         results = neuroMapper.map_cell("ataxia")
         self.assertEqual(1, len(results))

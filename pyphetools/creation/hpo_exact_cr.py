@@ -5,9 +5,46 @@ from .simple_column_mapper import SimpleColumnMapper
 
 from collections import defaultdict
 import re
-import pandas as pd
 from typing import List
 from collections import defaultdict
+
+
+class ConceptMatch:
+    def __init__(self, term, start: int, end: int) -> None:
+        self._hp_term = term
+        self._start = start
+        self._end = end
+
+    def length(self):
+        return 1 + (self._end - self._start)
+
+    @property
+    def label(self):
+        return self._hp_term.label
+
+    @property
+    def tid(self):
+        return self._hp_term.id
+
+    @property
+    def term(self):
+        return self._hp_term
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
+
+    def overlaps(self, other):
+        if self.end >= other.start >= self.start:
+            return True
+        elif self.end >= other.end >= self.start:
+            return True
+        else:
+            return False
 
 
 class HpoExactConceptRecognizer(HpoConceptRecognizer):
@@ -22,106 +59,79 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         self._label_to_id = label_to_id
 
     def parse_cell(self, cell_contents, custom_d=None) -> List[HpTerm]:
-        """_summary_
+        """parse the contents of one table cell
 
         Args:
-            cell_contents (_type_): description of patient phenotypes. Assumption is that if there are new lines, any given phenotype is on its own line
-            custom_d (_type_, optional): User-provided dictionary with mappings to HPO terms. Defaults to None.
-
-        Raises:
-            ValueError: must be a string
+            cell_contents (str): description of patient phenotypes. Assumption is that if there are new lines, any given phenotype is on its own line
+            custom_d (dict, optional): User-provided dictionary with mappings to HPO terms. Defaults to None.
         """
         if not isinstance(cell_contents, str):
             print(
                 f"Error: cell_contents argument ({cell_contents}) must be string but was {type(cell_contents)} -- coerced to string")
             cell_contents = str(cell_contents)
 
-        lines = self._split_into_lines(cell_contents)
+        # lines = self._split_into_lines(cell_contents)
+        cell_text = cell_contents.replace("\n", " ")
         if custom_d is None:
             # initialize to empty dictionary if this argument is not passed 
             # to avoid needed to check for None in other functions
             custom_d = defaultdict()
-        if len(lines) > 1:
-            results = []
-            for line in lines:
-                res = self._parse_line(line=line, custom_d=custom_d)
-                results.extend(res)
-            return results
-        else:
-            # just one line
-            return self._parse_line(line=lines[0], custom_d=custom_d)
+        return self._parse_contents(cell_text=cell_text, custom_d=custom_d)
 
-    def _split_into_lines(self, cell_contents):
-        """_summary_
-        Split a cell into lines and remove white space from beginning and end of each line and transform to lower case
+    def _parse_contents(self, cell_text, custom_d) -> List[HpTerm]:
+        """Parse the contents of a cell for HPO terms
+        Args:
+            cell_text (str): THe text of a table cell
+            custom_d (dict): key - text in original table value-corresponding HPO label
         """
-        return cell_contents.split('\n')
+        chunks = self._split_line_into_chunks(cell_text)
+        results = []
+        for chunk in chunks:
+            lc_chunk = chunk.lower()
+            hits = []
+            # Note that chunk has been stripped of whitespace and lower-cased already
+            for original_text, hpo_label in custom_d.items():
+                lc_original = original_text.lower()
+                posn = lc_chunk.find(lc_original)
+                if posn < 0:
+                    continue
+                endpos = posn + len(lc_original) - 1
+                hp_term = self.get_term_from_label(hpo_label)
+                hits.append(ConceptMatch(term=hp_term, start=posn, end=endpos))
+            for lower_case_hp_label, hpo_tid in self._label_to_id.items():
+                key = lower_case_hp_label.lower()
+                posn = chunk.find(key)
+                if posn < 0:
+                    continue
+                endpos = posn + len(key) - 1
+                hp_term = self.get_term_from_id(hpo_id=hpo_tid)  # Get properly capitalized label
+                hits.append(ConceptMatch(term=hp_term, start=posn, end=endpos))
+            # sort hits according to length
+            sorted_hits = sorted(hits, key=ConceptMatch.length, reverse=True)
+            # Choose longest hits first and skip hits that overlap with previously chosen hits
+            chosen_hits = set()
+            for hit in sorted_hits:
+                keeper = True
+                for ch in chosen_hits:
+                    if ch.overlaps(hit):
+                        keeper = False
+                        break
+                if keeper:
+                    chosen_hits.add(hit)
+            for ch in chosen_hits:
+                results.append(ch.term)
+        return results
 
     def _split_line_into_chunks(self, line):
-        """_summary_
-        Split a line into chunks and remove white space from beginning and end of each chunk
+        """Split a line into chunks and remove white space from beginning and end of each chunk
+        
+        Args:
+            line (str): one line of a potentially multi-line Table cell.
         """
         delimiters = ',;|/'
         regex_pattern = '|'.join(map(re.escape, delimiters))
         chunks = re.split(regex_pattern, line)
         return [chunk.strip().lower() for chunk in chunks]
-
-    def _parse_chunk(self, chunk, custom_d) -> List[HpTerm]:
-        if chunk in custom_d:
-            label = custom_d.get(chunk)
-            hpo_id = self._label_to_id[label.lower()]
-            return [HpTerm(id=hpo_id, label=label)]
-        else:
-            results = []
-            # If we get here, we do two things
-            # We may have a long text that includes both custom strings and HPO terms/synonyms
-            # strategy is to first extract the custom terms and then check the remaining text
-            # for HPO terms
-            remaining_text = chunk.lower()
-            for k, v in custom_d.items():
-                key = k.lower()
-                # We now try to find a custom item in the potentially longer chunk string
-                if key in remaining_text:
-                    hpo_label = v
-                    hpo_label_lc = hpo_label.lower()
-                    hpo_id = self._label_to_id.get(hpo_label_lc)
-                    if hpo_id is None:
-                        print(f"Unable to retrieve HPO Id for custom mapping {chunk} -> {hpo_label}")
-                        return []
-                    results.append(HpTerm(id=hpo_id, label=hpo_label))
-                    remaining_text = remaining_text.replace(key, " ")
-            # When we get here, we look for HPO terms in the remaining text
-            if len(remaining_text) > 5:
-                for k, v in self._label_to_id.items():
-                    key = k.lower()
-                    if key in remaining_text:
-                        hpo_id = v
-                        hpo_label = self._id_to_primary_label.get(hpo_id)
-                        results.append(HpTerm(id=hpo_id, label=hpo_label))
-                        remaining_text = remaining_text.replace(key, " ")
-                        # print(f"hpo {hpo_label} key {key} remaining {remaining_text}")
-            return results
-
-    def _parse_line(self, line, custom_d) -> List[HpTerm]:
-        """_summary_
-        'private' function to parse an entire line or chunk
-        The reason we parse lines first is that we are more likely to get complete HPO terms this way
-        """
-        # remove whitespace, convert to lower case (as )
-        content = line.strip().lower()
-        if content is None or len(content) == 0:
-            return []
-        results = self._parse_chunk(chunk=content, custom_d=custom_d)
-        if len(results) > 0:
-            return results
-        else:
-            chunks = self._split_line_into_chunks(content)
-            results = []
-            for chunk in chunks:
-                # Note that chunk has been stripped of whitespace and lower-cased already
-                res = self._parse_chunk(chunk=chunk, custom_d=custom_d)
-                results.extend(res)
-            return results
 
     def get_term_from_id(self, hpo_id) -> HpTerm:
         if not hpo_id.startswith("HP:"):
@@ -129,14 +139,14 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         if not hpo_id in self._id_to_primary_label:
             raise ValueError(f"Could not find id {hpo_id} in dictionary")
         label = self._id_to_primary_label.get(hpo_id)
-        return HpTerm(id=hpo_id, label=label)
+        return HpTerm(hpo_id=hpo_id, label=label)
 
     def get_term_from_label(self, label) -> HpTerm:
         label_lc = label.lower()  # the dictionary was constructed in lower case!
         if label_lc not in self._label_to_id:
             raise ValueError(f"Could not find HPO id for {label}")
         hpo_id = self._label_to_id.get(label_lc)
-        return HpTerm(id=hpo_id, label=label)
+        return HpTerm(hpo_id=hpo_id, label=label)
 
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         if observed is None or excluded is None:

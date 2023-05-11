@@ -2,12 +2,12 @@ import pandas as pd
 
 
 class HpTerm:
-    def __init__(self, id, label, observed=True, measured=True):
-        if id is None or len(id) == 0 or not id.startswith("HP"):
-            raise ValueError(f"invalid id argument: '{id}'")
+    def __init__(self, hpo_id, label, observed=True, measured=True):
+        if hpo_id is None or len(hpo_id) == 0 or not hpo_id.startswith("HP"):
+            raise ValueError(f"invalid id argument: '{hpo_id}'")
         if label is None or len(label) == 0:
             raise ValueError(f"invalid label argument: '{label}'")
-        self._id = id
+        self._id = hpo_id
         self._label = label
         self._observed = observed
         self._measured = measured
@@ -71,6 +71,6 @@ class HpTerm:
             return pd.DataFrame(columns=['Col1', 'Col2', 'Col3'])
         items = []
         for hp in hpo_list:
-            d = { "id": hp._id, "label": hp._label, "observed":hp._observed, "measured": hp._measured }
+            d = { "id": hp.id, "label": hp.label, "observed":hp.observed, "measured": hp.measured }
             items.append(d)
         return pd.DataFrame(items)
