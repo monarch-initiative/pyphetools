@@ -98,7 +98,9 @@ class CohortEncoder:
         self._disease_id = None
         self._disease_label = None
 
-    def get_individuals(self, additional_hpo=None) -> List[Individual]:
+    def get_individuals(self) -> List[Individual]:
+        """Get a list of all Individual objects in the cohort
+        """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
         age_column_name = self._age_mapper.get_column_name()
@@ -109,7 +111,6 @@ class CohortEncoder:
         else:
             variant_colname = self._variant_mapper.get_column_name()
             genotype_colname = self._variant_mapper.get_genotype_colname()
-        count = 0
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
             if age_column_name == Constants.NOT_PROVIDED:
@@ -119,10 +120,7 @@ class CohortEncoder:
                 age = self._age_mapper.map_cell(age_cell_contents)
             sex_cell_contents = row[sex_column_name]
             sex = self._sex_mapper.map_cell(sex_cell_contents)
-            if additional_hpo is None:
-                hpo_terms = []
-            else:
-                hpo_terms = additional_hpo[count]
+            hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 if column_name not in df.columns:
                     raise ValueError(f"Did not find column name '{column_name}' in dataframe -- check spelling!")
@@ -158,7 +156,6 @@ class CohortEncoder:
                 individuals.append(indi)
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
-            count += 1
         return individuals
 
     def output_phenopackets(self, outdir="phenopackets"):

@@ -62,7 +62,7 @@ def try_mapping_columns(df, observed, excluded, hpo_cr, preview=True):
 
 class SimpleColumnMapper(ColumnMapper):
 
-    def __init__(self, hpo_id, hpo_label, observed=None, excluded=None, non_measured=None, constant=False):
+    def __init__(self, hpo_id, hpo_label, observed=None, excluded=None, non_measured=None):
         """ColumnMapper for columns that contain information about a single phenotypic abnormality only
 
         Args:
@@ -77,21 +77,13 @@ class SimpleColumnMapper(ColumnMapper):
         self._hpo_id = hpo_id
         self._hpo_label = hpo_label
         if observed is None or excluded is None:
-            if not constant:
-                raise ValueError(
-                    "constant argument must be true if not arguments are provided for observed and excluded")
-        if constant:
-            self._observed = set()
-            self._excluded = set()
-        else:
-            self._observed = observed
-            self._excluded = excluded
+            raise ValueError(
+                    "Need to provide arguments for both observed and excluded")
+        self._observed = observed
+        self._excluded = excluded
         self._not_measured = non_measured
-        self._constant = constant
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
-        if self._constant:
-            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
         if not isinstance(cell_contents, str):
             raise ValueError(
                 f"Error: cell_contents argument ({cell_contents}) must be string but was {type(cell_contents)} -- coerced to string")

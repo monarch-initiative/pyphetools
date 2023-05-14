@@ -2,6 +2,7 @@ from .age_column_mapper import AgeColumnMapper
 from .case_encoder import CaseEncoder
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
+from .constant_column_mapper import ConstantColumnMapper
 from .custom_column_mapper import CustomColumnMapper
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_parser import HpoParser
