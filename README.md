@@ -12,5 +12,5 @@ See full  [documentation](https://monarch-initiative.github.io/pyphetools/).
 
 ## PyPI
 
-We have installed the package in the Python Package Index (pypi) at [pyphentools](https://pypi.org/project/pyphetools/).
+We have made the package available in the Python Package Index (pypi) at [pyphetools](https://pypi.org/project/pyphetools/).
 

@@ -16,11 +16,12 @@ See :ref:`installation` for instructions on how to set up the package.
 
 
 .. toctree::
-    :caption: wn2vec
-    :name: wn2vec
+    :caption: pyphetools
+    :name: pyphetools
     :maxdepth: 1
 
     installation
+    cohort_encoder
     custom_column_mapper
     option_column_mapper
     simple_column_mapper
