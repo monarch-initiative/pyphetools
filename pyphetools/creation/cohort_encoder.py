@@ -117,9 +117,16 @@ class CohortEncoder:
                 age = Constants.NOT_PROVIDED
             else:
                 age_cell_contents = row[age_column_name]
-                age = self._age_mapper.map_cell(age_cell_contents)
-            sex_cell_contents = row[sex_column_name]
-            sex = self._sex_mapper.map_cell(sex_cell_contents)
+                try:
+                    age = self._age_mapper.map_cell(age_cell_contents)
+                except Exception as ee:
+                    print(f"Error: Could not parse age {ee}")
+                    age = Constants.NOT_PROVIDED
+            if sex_column_name == Constants.NOT_PROVIDED:
+                sex = self._sex_mapper.map_cell(Constants.NOT_PROVIDED)
+            else:
+                sex_cell_contents = row[sex_column_name]
+                sex = self._sex_mapper.map_cell(sex_cell_contents)
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 if column_name not in df.columns:
