@@ -75,12 +75,8 @@ class Individual:
             for hp in self._hpo_terms:
                 if not hp.measured:
                     continue
-                pf = phenopackets.PhenotypicFeature()
-                pf.type.id = hp.id
-                pf.type.label = hp.label
-                if not hp.observed:
-                    pf.excluded = True
-                if self._age != Constants.NOT_PROVIDED:
+                pf = hp.to_phenotypic_feature()
+                if pf.onset.age.iso8601duration is None and self._age != Constants.NOT_PROVIDED:
                     pf.onset.age.iso8601duration = self._age
                 php.phenotypic_features.append(pf)
         elif isinstance(self._hpo_terms, dict):
@@ -88,13 +84,9 @@ class Individual:
                 for hp in hpoterm_list:
                     if not hp.measured:
                         continue
-                    pf = phenopackets.PhenotypicFeature()
-                    pf.type.id = hp.id
-                    pf.type.label = hp.label
-                    if not hp.observed:
-                        pf.excluded = True
-                    if age_key.startswith("P"):
-                        # Note sometimes we have no age, then use N/A -- TODO think of robust way to do this
+                    pf = hp.to_phenotypic_feature()
+                    # only adjust age of onset if not present
+                    if pf.onset.age.iso8601duration is None and age_key.startswith("P"):
                         pf.onset.age.iso8601duration = age_key
                     php.phenotypic_features.append(pf)
         if len(self._variant_list) > 0:

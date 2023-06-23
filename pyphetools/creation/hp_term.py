@@ -1,8 +1,9 @@
 import pandas as pd
-
+import phenopackets 
+from .constants import Constants
 
 class HpTerm:
-    def __init__(self, hpo_id, label, observed=True, measured=True):
+    def __init__(self, hpo_id, label, observed=True, measured=True, onset=None, resolution=None):
         if hpo_id is None or len(hpo_id) == 0 or not hpo_id.startswith("HP"):
             raise ValueError(f"invalid id argument: '{hpo_id}'")
         if label is None or len(label) == 0:
@@ -11,6 +12,14 @@ class HpTerm:
         self._label = label
         self._observed = observed
         self._measured = measured
+        if onset is None:
+            self._onset = Constants.NOT_PROVIDED
+        else:
+            self._onset = onset
+        if resolution is None:
+            self._resolution = Constants.NOT_PROVIDED
+        else:
+            self._resolution = resolution
         
     def __hash__(self):
         return hash((self._id, self._label, self._observed, self._measured))
@@ -30,6 +39,14 @@ class HpTerm:
     @property
     def measured(self):
         return self._measured
+    
+    @property
+    def onset(self):
+        return self._onset
+    
+    @property
+    def resolution(self):
+        return self._resolution
     
     @property
     def display_value(self):
@@ -57,6 +74,18 @@ class HpTerm:
 
     def excluded(self):
         self._observed = False
+        
+    def to_phenotypic_feature(self):
+        pf = phenopackets.PhenotypicFeature()
+        pf.type.id = self._id
+        pf.type.label = self._label
+        if not self._observed:
+            pf.excluded = True
+        if self._onset != Constants.NOT_PROVIDED:
+            pf.onset.age.iso8601duration = self._onset
+        if self._resolution != Constants.NOT_PROVIDED:
+            pf.resolution.age.iso8601duration = self._resolution
+        return pf
 
 
     @staticmethod
