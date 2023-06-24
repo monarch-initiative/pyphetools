@@ -1,5 +1,7 @@
 import phenopackets 
-from .variant import Variant
+import re
+import os
+from google.protobuf.json_format import MessageToJson
 from .constants import Constants
 
 
@@ -107,3 +109,33 @@ class Individual:
         if metadata is not None:
             php.meta_data.CopyFrom(metadata)
         return php
+    
+    @staticmethod
+    def output_individuals_as_phenopackets(individual_list, metadata, pmid=None, outdir="phenopackets"):
+        """write a list of Individial objects to file in GA4GH Phenopacket format
+
+        Args:
+            individual_list (list): list of Individual's
+            metadata (MetaData): GA4GH Phenopacket Schema MetaData object
+            pmid (str, optional): A string such as PMID:3415687. Defaults to None.
+            outdir (str, optional): Path to output directory. Defaults to "phenopackets".
+
+        Returns:
+            int: number of phenopackets written
+        """
+        written = 0
+        for individual in individual_list:
+            phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
+            json_string = MessageToJson(phenopckt)
+            if pmid is None:
+                fname = "phenopacket_" + individual.id + ".json"
+            else:
+                pmid = pmid.replace(" ", "").replace(":", "_")
+                fname = pmid + "_" + individual.id + ".json"
+            fname = re.sub('[^\w_.)( -]', '', fname)  # remove any illegal characters from filename
+            fname = fname.replace(" ", "_")
+            outpth = os.path.join(outdir, fname)
+            with open(outpth, "wt") as fh:
+                fh.write(json_string)
+                written += 1
+        return written
