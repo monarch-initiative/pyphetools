@@ -62,8 +62,8 @@ class FocusCountTable:
                 else:
                     self._non_focus_counts_propagated[hp_id.value] += 1
                 self._total_counts_propagated[hp_id.value] += 1
-            variant_d = pat.get_variant_d()
-            for var in variant_d.keys():
+            variant_d = pat.get_variant_list()
+            for var in variant_d:
                 var_d[var] += 1
 
             # TODO figure out what to do with biallelic

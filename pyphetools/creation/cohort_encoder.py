@@ -117,9 +117,16 @@ class CohortEncoder:
                 age = Constants.NOT_PROVIDED
             else:
                 age_cell_contents = row[age_column_name]
-                age = self._age_mapper.map_cell(age_cell_contents)
-            sex_cell_contents = row[sex_column_name]
-            sex = self._sex_mapper.map_cell(sex_cell_contents)
+                try:
+                    age = self._age_mapper.map_cell(age_cell_contents)
+                except Exception as ee:
+                    print(f"Error: Could not parse age {ee}")
+                    age = Constants.NOT_PROVIDED
+            if sex_column_name == Constants.NOT_PROVIDED:
+                sex = self._sex_mapper.map_cell(Constants.NOT_PROVIDED)
+            else:
+                sex_cell_contents = row[sex_column_name]
+                sex = self._sex_mapper.map_cell(sex_cell_contents)
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 if column_name not in df.columns:
@@ -167,19 +174,8 @@ class CohortEncoder:
         if not os.path.exists(outdir):
             os.makedirs(outdir)
         individual_list = self.get_individuals()
-        written = 0
-        for individual in individual_list:
-            phenopckt = individual.to_ga4gh_phenopacket(metadata=self._metadata)
-            json_string = MessageToJson(phenopckt)
-            if self._pmid is None:
-                fname = "phenopacket_" + individual.id + ".json"
-            else:
-                pmid = self._pmid.replace(" ", "").replace(":", "_")
-                fname = pmid + "_" + individual.id + ".json"
-            fname = re.sub('[^\w_.)( -]', '', fname)  # remove any illegal characters from filename
-            fname = fname.replace(" ", "_")
-            outpth = os.path.join(outdir, fname)
-            with open(outpth, "wt") as fh:
-                fh.write(json_string)
-                written += 1
+        written = Individual.output_individuals_as_phenopackets(individual_list=individual_list, 
+                                                      metadata=self._metadata, 
+                                                      pmid=self._pmid, 
+                                                      outdir=outdir)
         print(f"Wrote {written} phenopackets to {outdir}")

@@ -3,7 +3,7 @@ from .constants import Constants
 
 
 class SexColumnMapper:
-    def __init__(self, male_symbol, female_symbol, column_name, other_symbol=None, unknown_symbol=None) -> None:
+    def __init__(self, male_symbol, female_symbol, column_name, other_symbol=None, unknown_symbol=None, not_provided=False) -> None:
         self._male_symbol = male_symbol
         self._female_symbol = female_symbol
         self._other_symbol = other_symbol
@@ -11,8 +11,11 @@ class SexColumnMapper:
         if column_name is None:
             raise ValueError("Must provide non-null column_name argument")
         self._column_name = column_name
+        self._not_provided = not_provided
 
     def map_cell(self, cell_contents) -> str:
+        if self._not_provided:
+            return Constants.UNKOWN_SEX_SYMBOL
         contents = cell_contents.strip()
         if contents == self._female_symbol:
             return Constants.FEMALE_SYMBOL
@@ -40,3 +43,13 @@ class SexColumnMapper:
 
     def get_column_name(self):
         return self._column_name
+    
+    @staticmethod
+    def not_provided():
+        """Create an object for cases where Age is not provided.
+        """
+        return SexColumnMapper(male_symbol=Constants.NOT_PROVIDED, 
+                               female_symbol=Constants.NOT_PROVIDED, 
+                               not_provided=True, 
+                               column_name=Constants.NOT_PROVIDED)
+

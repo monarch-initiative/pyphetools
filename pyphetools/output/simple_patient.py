@@ -68,12 +68,17 @@ class SimplePatient:
         self._observed = observed_hpo_terms
         self._excluded = excluded_hpo_terms
         # Add information about variants
-        self._variant_d = defaultdict(SimpleVariant)
+        self._variant_list = []
         if ppack.interpretations is not None and len(ppack.interpretations) > 0:
             interprets = ppack.interpretations
-            for intp in interprets:
-                variant = SimpleVariant(interpretation=intp)
-                self._variant_d[variant.hgvs] = variant
+            for interpretation in interprets:
+                if str(type(interpretation)) != "<class 'phenopackets.schema.v2.core.interpretation_pb2.Interpretation'>":
+                    raise ValueError(f"interpretation argument must be GA4GH Phenopacket Interpretation but was {type(interpretation)}")
+                diagnosis = interpretation.diagnosis
+                ginterpretations = diagnosis.genomic_interpretations
+                for gint in ginterpretations:
+                    variant = SimpleVariant(ginterpretation=gint)
+                    self._variant_list.append(variant)
         # TODO -- add information about disease, ensuring that all Variants are associated with the same diagnosis
                 
         
@@ -100,5 +105,5 @@ class SimplePatient:
     def get_excluded_hpo_d(self):
         return self._excluded
 
-    def get_variant_d(self):
-        return self._variant_d
+    def get_variant_list(self):
+        return self._variant_list

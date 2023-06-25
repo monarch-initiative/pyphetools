@@ -1,6 +1,6 @@
 import phenopackets 
 
-ACCEBTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
+ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 
 
 
@@ -11,7 +11,7 @@ class Variant:
     This encapsulates variant data that we retrieve from Variant Validator
     """
     def __init__(self, assembly, vcf_d, symbol=None, hgnc=None, hgvs=None, transcript=None, g_hgvs=None) -> None:
-        if not assembly in ACCEBTABLE_GENOMES:
+        if not assembly in ACCEPTABLE_GENOMES:
             raise ValueError(f"Malformed assembly: \"{assembly}\"")
         self._assembly = assembly
         if not isinstance(vcf_d, dict):
@@ -51,10 +51,15 @@ class Variant:
     def genotype(self):
         return self._genotype
     
-    def set_genotype(self, gt):
-        self._genotype = gt
+    def set_heterozygous(self):
+        self._genotype = 'heterozygous'
+    
+    def set_homozygous(self):
+        self._genotype = 'homozygous'
         
-        
+    def set_hemizygous(self):
+        self._genotype = 'hemizygous'
+          
     def __str__(self):
         return f"{self._chr}:{self._position}{self._ref}>{self._alt}"
     
