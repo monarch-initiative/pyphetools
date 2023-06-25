@@ -12,7 +12,7 @@ exclude = ["notebooks", "test"]
 
 [project]
 name = "pyphetools"
-version = "0.2.26"
+version = "0.2.27"
 requires-python = ">=3.5"
 description = "Generate and work with GA4GH phenopackets"
 readme = "README.md"

@@ -3,6 +3,7 @@ import re
 import os
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
+from .variant import Variant
 
 
 class Individual:
@@ -62,6 +63,11 @@ class Individual:
     @property
     def variant_list(self):
         return self._variant_list
+    
+    def add_variant(self, v):
+        if not isinstance(v, Variant):
+            raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
+        self._variant_list.append(v)
     
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_
