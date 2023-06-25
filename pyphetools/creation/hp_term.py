@@ -22,7 +22,7 @@ class HpTerm:
             self._resolution = resolution
         
     def __hash__(self):
-        return hash((self._id, self._label, self._observed, self._measured))
+        return hash((self._id, self._label, self._observed, self._measured, self._onset, self._resolution))
         
     @property
     def id(self):

@@ -2,8 +2,6 @@ import pandas as pd
 from math import isnan
 from typing import List
 import os
-import re
-from google.protobuf.json_format import MessageToJson
 
 from .age_column_mapper import AgeColumnMapper
 from .constants import Constants
@@ -68,7 +66,7 @@ class CohortEncoder:
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 cell_contents = row[column_name]
-                ## Empty cells are often represented as float non-a-number by Pandas
+                # Empty cells are often represented as float non-a-number by Pandas
                 if isinstance(cell_contents, float) and isnan(cell_contents):
                     continue
                 terms = column_mapper.map_cell(row[column_name])
@@ -132,7 +130,7 @@ class CohortEncoder:
                 if column_name not in df.columns:
                     raise ValueError(f"Did not find column name '{column_name}' in dataframe -- check spelling!")
                 cell_contents = row[column_name]
-                ## Empty cells are often represented as float non-a-number by Pandas
+                # Empty cells are often represented as float non-a-number by Pandas
                 if isinstance(cell_contents, float) and isnan(cell_contents):
                     continue
                 terms = column_mapper.map_cell(cell_contents)
@@ -174,8 +172,8 @@ class CohortEncoder:
         if not os.path.exists(outdir):
             os.makedirs(outdir)
         individual_list = self.get_individuals()
-        written = Individual.output_individuals_as_phenopackets(individual_list=individual_list, 
-                                                      metadata=self._metadata, 
-                                                      pmid=self._pmid, 
-                                                      outdir=outdir)
+        written = Individual.output_individuals_as_phenopackets(individual_list=individual_list,
+                                                                metadata=self._metadata,
+                                                                pmid=self._pmid,
+                                                                outdir=outdir)
         print(f"Wrote {written} phenopackets to {outdir}")

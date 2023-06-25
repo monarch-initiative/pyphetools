@@ -32,7 +32,7 @@ class CaseEncoder:
                 raise ValueError(f"Could not parse {age_at_last_exam} as ISO8601 period")
         else:
             self._age_at_last_examination = None
-
+        self._seen_hpo_terms = set() # Use to prevent duplicate HP annotations
         self._annotations = defaultdict(list)
 
     def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=[], excluded_terms=set()) -> List[
@@ -48,6 +48,13 @@ class CaseEncoder:
             text = text.replace(fp, " ")
         # results will be a list with HpTerm elements
         results = self._hpo_concept_recognizer.parse_cell(cell_contents=text, custom_d=custom_d)
+        hpo_list = []
+        for trm in results:
+            if trm in self._seen_hpo_terms:
+                continue
+            else:
+                self._seen_hpo_terms.add(trm)
+            hpo_list.append(trm)
         if custom_age is not None:
             self._annotations[custom_age].extend(results)
         elif self._age_at_last_examination is not None:

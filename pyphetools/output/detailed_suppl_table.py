@@ -2,9 +2,7 @@ from .simple_patient import SimplePatient
 import pandas as pd
 from .hpo_category import HpoCategorySet
 from hpotk.model import TermId
-from hpotk.algorithm import get_ancestors
 from collections import defaultdict
-from hpotk.algorithm import exists_path
 
 ALL_ROOT = TermId.from_curie("HP:0000001")
 PHENOTYPIC_ABNORMALITY_ROOT = TermId.from_curie("HP:0000118")
@@ -34,7 +32,7 @@ class DetailedSupplTable:
                 # key is a string such as HP:0001234, value is an HpTerm object
                 # we need to convert it to an object from hpo-toolkit because get_ancestors returns HpTerm objects
                 hp_termid = TermId.from_curie(hp_id)
-                ancs = get_ancestors(self._hp_ontology,hp_termid)
+                ancs = self._hp_ontology.get_ancestors(hp_termid)
                 anc_set.add(hp_termid)
                 anc_set.update(ancs)
                 self._total_counts[hp_id] += 1

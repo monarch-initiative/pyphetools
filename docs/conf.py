@@ -76,7 +76,6 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
 
-
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -94,7 +93,7 @@ html_theme = "sphinx_rtd_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
-#html_style = 'css/isopret.css'
+# html_style = 'css/isopret.css'
 html_css_files = ['pyphetools.css']
 
 # Custom sidebar templates, must be a dictionary that maps document names
@@ -112,15 +111,10 @@ html_sidebars = {
     ]
 }
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'pyphetools'
-
-
-
-
 
 # Grouping the document tree into Texinfo files. List of tuples
 # (source start file, target name, title, author,
@@ -130,6 +124,3 @@ texinfo_documents = [
      author, 'pyphetools', 'Python Phenopacket Tools.',
      'Miscellaneous'),
 ]
-
-
-

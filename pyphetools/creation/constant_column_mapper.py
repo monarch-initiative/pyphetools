@@ -3,9 +3,10 @@ import pandas as pd
 from .column_mapper import ColumnMapper
 from .hp_term import HpTerm
 
+
 class ConstantColumnMapper(ColumnMapper):
     def __init__(self, hpo_id=None, hpo_label=None, term_list=None, excluded=False) -> None:
-        """Column mapper for cases in which we known that all patients in the cohort either have an HPO feature or the feature was excluded in all patients.
+        """Column mapper for cases in all patients have an (optionally excluded)HPO term.
 
         Args:
             hpo_id (str): HPO  id, e.g., HP:0004321
@@ -32,7 +33,7 @@ class ConstantColumnMapper(ColumnMapper):
         else:
             raise ValueError(f"Error: Either hpo_id and hpo_label are not not or a list of HPO terms is passed")
         self._excluded = excluded
-        
+
     def map_cell(self, cell_contents) -> List[HpTerm]:
         """if this mapper is used, then all individuals in the table have the list of HPO terms
 
@@ -43,7 +44,7 @@ class ConstantColumnMapper(ColumnMapper):
             List[HpTerm]: list of HPO terms
         """
         return self._hpo_terms
-        
+
     def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
@@ -52,3 +53,4 @@ class ConstantColumnMapper(ColumnMapper):
             display = ";".join(hpterm.display_value for hpterm in self._hpo_terms)
             dlist.append(display)
         return pd.DataFrame(dlist)
+

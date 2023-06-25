@@ -11,9 +11,9 @@ class TestOptionMapper(unittest.TestCase):
     def setUpClass(cls) -> None:
         parser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
         cls.hpo_cr = parser.get_hpo_concept_recognizer()
-        cls.severity_d = {'mild': ['Intellectual disability, mild', 'HP:0001256'],
-                          'moderate': ['Intellectual disability, moderate','HP:0002342'],
-                          'severe': ['Intellectual disability, severe', 'HP:0010864']
+        cls.severity_d = {'mild': 'Intellectual disability, mild',
+                          'moderate': 'Intellectual disability, moderate',
+                          'severe': 'Intellectual disability, severe'
                           }
 
     def test_hpo_cr_mild(self):
@@ -45,11 +45,11 @@ class TestOptionMapper(unittest.TestCase):
 
     def test_with_acronyms(self):
         other_d = {
-            "HP": ["High palate", "HP:0000218"],
-            "D": ["Dolichocephaly", "HP:0000268"],
-            "En": ["Deeply set eye", "HP:0000490"],  # i.e., Enophthalmus
-            "DE": ["Dural ectasia", "HP:0100775"],
-            "St": ["Striae distensae", "HP:0001065"]
+            "HP": "High palate",
+            "D": "Dolichocephaly",
+            "En": "Deeply set eye",  # i.e., Enophthalmus
+            "DE": "Dural ectasia",
+            "St": "Striae distensae"
         }
         otherMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=other_d)
         res1 = otherMapper.map_cell("HP")
@@ -67,4 +67,14 @@ class TestOptionMapper(unittest.TestCase):
         hpterm = res2[1]
         self.assertEqual("Dolichocephaly", hpterm.label)
         self.assertEqual("HP:0000268", hpterm.id)
-
+        
+    def test_eso(self):
+        oph_d = {"strabismus": "Strabismus", 
+                "esotropia": "Esotropia"}
+        ophMapper =  OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=oph_d)
+        res = ophMapper.map_cell("right sided esotropia")
+        self.assertIsNotNone(res)
+        self.assertEqual(1, len(res))
+        hpterm = res[0]
+        self.assertEqual("Esotropia", hpterm.label)
+        self.assertEqual("HP:0000565", hpterm.id)
