@@ -9,9 +9,23 @@ class Individual:
     """
     A class to represent one individual of the cohort
     """
-    def __init__(self, individual_id, hpo_terms, sex, age=Constants.NOT_PROVIDED, variant_list=None, disease_id=None, disease_label=None):
-        """
-        Represents all of the data we will transform into a single phenopacket
+    def __init__(self,  individual_id, 
+                        hpo_terms, 
+                        sex=Constants.NOT_PROVIDED, 
+                        age=Constants.NOT_PROVIDED, 
+                        variant_list=None, 
+                        disease_id=None, 
+                        disease_label=None):
+        """All of the data we will transform into a single phenopacket
+        
+        Args:
+            individual_id (str): The individual identifier
+            hpo_terms (list): List of HpTerm objects
+            sex (str): String corresponding to the sex of the individual, default, n/a
+            age (str): String corresponding to the age of the individual (ISO), default, n/a
+            variant_list (list): list of Variant objects (optional)
+            disease_id (str): String corresponding to the disease ID, default, (optional)
+            disease_label (str): String corresponding to the disease label, default, (optional)
         """
         if isinstance(individual_id, int):
             self._individual_id = str(individual_id)
@@ -71,7 +85,7 @@ class Individual:
             php.subject.sex = phenopackets.Sex.OTHER_SEX
         elif self._sex == Constants.UNKOWN_SEX_SYMBOL:
             php.subject.sex = phenopackets.Sex.UNKNOWN_SEX
-        if self._age != Constants.NOT_PROVIDED:
+        if self._age is not None and self._age != Constants.NOT_PROVIDED:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
         if isinstance(self._hpo_terms, list):
             for hp in self._hpo_terms:
@@ -118,23 +132,25 @@ class Individual:
             individual_list (list): list of Individual's
             metadata (MetaData): GA4GH Phenopacket Schema MetaData object
             pmid (str, optional): A string such as PMID:3415687. Defaults to None.
-            outdir (str, optional): Path to output directory. Defaults to "phenopackets".
+            outdir (str, optional): Path to output directory. Defaults to "phenopackets". Created if not exists.
 
         Returns:
             int: number of phenopackets written
         """
+        if not os.path.isdir(outdir):
+            os.makedir(outdir)
         written = 0
         for individual in individual_list:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
             json_string = MessageToJson(phenopckt)
             if pmid is None:
-                fname = "phenopacket_" + individual.id + ".json"
+                fname = "phenopacket_" + individual.id 
             else:
                 pmid = pmid.replace(" ", "").replace(":", "_")
-                fname = pmid + "_" + individual.id + ".json"
-            fname = re.sub('[^\w_.)( -]', '', fname)  # remove any illegal characters from filename
+                fname = pmid + "_" + individual.id 
+            fname = re.sub('[^A-Za-z0-9_-]', '', fname)  # remove any illegal characters from filename
             fname = fname.replace(" ", "_")
-            outpth = os.path.join(outdir, fname)
+            outpth = os.path.join(outdir, fname, ".json")
             with open(outpth, "wt") as fh:
                 fh.write(json_string)
                 written += 1
