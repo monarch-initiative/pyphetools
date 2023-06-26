@@ -29,7 +29,7 @@ class Downsampler:
         else:
             # in this case, ga4gh_phenopacket cannot be None
             if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
-                raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
+                raise ValueError(f"phenopacket argument must be GA4GH Phenopacket but was {type(ga4gh_phenopacket)}")
             else:
                 self._phenopacket = ga4gh_phenopacket
 
@@ -55,7 +55,7 @@ class Downsampler:
         json_string = MessageToJson(downsampled_ppacket)
         fname = basename + f"_{k}_{time.time()}_.json"
         if outdir is not None:
-            outpth =  os.path.join(outdir, basename, fname)
+            outpth = os.path.join(outdir, basename, fname)
         else:
             outpth = os.path.join(basename, fname)
         with open(outpth, "wt") as fh:

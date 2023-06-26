@@ -2,14 +2,10 @@ from .simple_patient import SimplePatient
 import pandas as pd
 from .hpo_category import HpoCategorySet
 from hpotk.model import TermId
-from hpotk.algorithm import get_ancestors
 from collections import defaultdict
-from hpotk.algorithm import exists_path
 
 ALL_ROOT = TermId.from_curie("HP:0000001")
 PHENOTYPIC_ABNORMALITY_ROOT = TermId.from_curie("HP:0000118")
-
-
 
 
 class FocusCountTable:
@@ -30,23 +26,23 @@ class FocusCountTable:
         self._total_counts = defaultdict(int)
         self._focus_counts = defaultdict(int)
         self._non_focus_counts = defaultdict(int)
-        self._total_counts_propagated  = defaultdict(int)
-        self._focus_counts_propagated  = defaultdict(int)
-        self._non_focus_counts_propagated  = defaultdict(int)
+        self._total_counts_propagated = defaultdict(int)
+        self._focus_counts_propagated = defaultdict(int)
+        self._non_focus_counts_propagated = defaultdict(int)
         self._n_patients = len(patient_d)
-    
+
         sex_d = defaultdict(int)
         var_d = defaultdict(int)
 
         for pat_id, pat in self._patient_d.items():
             sex_d[pat.get_sex()] += 1
             hpo_terms = pat.get_observed_hpo_d()
-            anc_set = set() # graph with ancestors induced by all terms of the patient
+            anc_set = set()  # graph with ancestors induced by all terms of the patient
             for hp_id in hpo_terms.keys():
                 # key is a string such as HP:0001234, value is an HpTerm object
                 # we need to convert it to an object from hpo-toolkit because get_ancestors returns HpTerm objects
                 hp_termid = TermId.from_curie(hp_id)
-                ancs = get_ancestors(self._ontology,hp_termid)
+                ancs = self._ontology.get_ancestors(hp_termid)
                 anc_set.add(hp_termid)
                 anc_set.update(ancs)
                 if pat_id in focus_id:
@@ -68,10 +64,9 @@ class FocusCountTable:
 
             # TODO figure out what to do with biallelic
         self._hpo_category_set = HpoCategorySet(ontology=ontology)
-       
-    
+
     def get_category(self, termid):
-            # TODO figure out what to do with biallelic
+        # TODO figure out what to do with biallelic
         cat = self._hpo_category_set.get_category(termid=termid)
         if cat == "not_found":
             print(f"could not find category for {termid}")
@@ -84,19 +79,20 @@ class FocusCountTable:
         rows = []
         N = self._n_patients
         for hpid, total_count in self._total_counts.items():
-            total_per = 100*total_count/N
+            total_per = 100 * total_count / N
             total_s = f"{total_count}/{N} ({total_per:.1f}%)"
             hpterm = self._ontology.get_term(hpid)
             cat = self.get_category(termid=hpid)
             focus_count = self._focus_counts.get(hpid, 0)
             other_count = self._non_focus_counts.get(hpid, 0)
-            d = {'category': cat, 'term': hpterm.name, 'HP:id': hpid, 'focus' : focus_count, 'other': other_count, 'total': total_s, 'total_count': total_count}
+            d = {'category': cat, 'term': hpterm.name, 'HP:id': hpid, 'focus': focus_count, 'other': other_count,
+                 'total': total_s, 'total_count': total_count}
             rows.append(d)
         df = pd.DataFrame(rows)
         df.set_index('category', inplace=True)
         return df.sort_values(['category', 'total_count'], ascending=[True, False])
 
-    def get_thresholded_table(self, min_proportion:float=None, min_count:int=None):
+    def get_thresholded_table(self, min_proportion: float = None, min_count: int = None):
         if min_count is None and min_proportion is None:
             raise ValueError("One of the arguments min_proportion and min_count must be provided")
         elif min_count is not None and min_proportion is not None:
@@ -109,22 +105,17 @@ class FocusCountTable:
         for hpid, total_count in self._total_counts_propagated.items():
             if total_count < min_count:
                 continue
-            total_per = 100*total_count/N
+            total_per = 100 * total_count / N
             total_s = f"{total_count}/{N} ({total_per:.1f}%)"
             hpterm = self._ontology.get_term(hpid)
             cat = self.get_category(termid=hpid)
             focus_count = self._focus_counts_propagated.get(hpid, 0)
             other_count = self._non_focus_counts_propagated.get(hpid, 0)
-            d = {'category': cat, 'term': hpterm.name, 'HP:id': hpid, 'focus' : focus_count, 'other': other_count, 'total': total_s, 'total_count': total_count}
+            d = {'category': cat, 'term': hpterm.name, 'HP:id': hpid, 'focus': focus_count, 'other': other_count,
+                 'total': total_s, 'total_count': total_count}
             rows.append(d)
         if len(rows) == 0:
             return pd.DataFrame(columns=['category', 'total_count'])
         df = pd.DataFrame(rows)
         df.set_index('category', inplace=True)
         return df.sort_values(['category', 'total_count'], ascending=[True, False])
-
-
-
-
-        
-        

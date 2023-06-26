@@ -143,8 +143,10 @@ class Individual:
         Returns:
             int: number of phenopackets written
         """
+        if os.path.isfile(outdir):
+            raise ValueError(f"Attempt to create directory with name of existing file {outdir}")
         if not os.path.isdir(outdir):
-            os.makedir(outdir)
+            os.makedirs(outdir)
         written = 0
         for individual in individual_list:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
@@ -155,8 +157,8 @@ class Individual:
                 pmid = pmid.replace(" ", "").replace(":", "_")
                 fname = pmid + "_" + individual.id 
             fname = re.sub('[^A-Za-z0-9_-]', '', fname)  # remove any illegal characters from filename
-            fname = fname.replace(" ", "_")
-            outpth = os.path.join(outdir, fname, ".json")
+            fname = fname.replace(" ", "_") + ".json"
+            outpth = os.path.join(outdir, fname)
             with open(outpth, "wt") as fh:
                 fh.write(json_string)
                 written += 1

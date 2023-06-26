@@ -50,16 +50,21 @@ class VariantColumnMapper:
                     variant = self._validator.encode_hgvs(item)
                     if genotype_contents is not None:
                         if 'hom' in genotype_contents.lower():
-                            variant.set_genotype('homozygous')
+                            variant.set_homozygous()
                         elif 'het' in genotype_contents.lower():
-                            variant.set_genotype('heterozygous')
+                            variant.set_heterozygous()
                         elif 'hemi' in genotype_contents.lower():
-                            variant.set_genotype('hemizygous')
-                        elif self._default_genotype is not None:
-                            variant.set_genotype(self._default_genotype)
-                    else:
-                        if self._default_genotype is not None:
-                            variant.set_genotype(self._default_genotype)
+                            variant.set_hemizygous()
+                        else:
+                            print(f"Did not recognize genotype {genotype_contents}")
+                    elif self._default_genotype is not None:
+                        def_gt = self._default_genotype
+                        if 'hom' in def_gt:
+                            variant.set_homozygous()
+                        elif 'het' in def_gt:
+                            variant.set_heterozygous()
+                        elif 'hemi' in def_gt:
+                            variant.set_hemizygous()
                     results.append(variant)
                 except Exception as exc:
                     print(f"Not able to get variant for {item}: {exc}")
