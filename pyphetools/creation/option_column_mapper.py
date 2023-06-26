@@ -38,18 +38,17 @@ class OptionColumnMapper(ColumnMapper):
         chunks = re.split(regex_pattern, contents)
         chunks = [chunk.strip() for chunk in chunks]
         results = []
+        hpo_labels = []
         for c in chunks:
-            hpo_label = None
             for my_key, my_label in self._option_d.items():
-                if isinstance(my_label, list):
-                    raise ValueError("Options must be passed as simple strings (labels), not arrays with labels and ids")
                 if my_key in c:
-                    hpo_label = my_label
-            if hpo_label is None:
-                continue  # We do not expect to map all items in the column, e.g., negatives or empties are skipped
-            # Note that an Exception will be thrown in HpoExactConceptRecognizer if something goes wrong
-            # so that we do not add any additional checks here
-            term = self._hpo_cr.get_term_from_label(label=hpo_label)
+                    if isinstance(my_label, list):
+                        for itm in my_label:
+                            hpo_labels.append(itm)
+                    else:
+                        hpo_labels.append(my_label)
+        for label in hpo_labels:    
+            term = self._hpo_cr.get_term_from_label(label=label)
             results.append(term)
         return results
         

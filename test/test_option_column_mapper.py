@@ -71,10 +71,42 @@ class TestOptionMapper(unittest.TestCase):
     def test_eso(self):
         oph_d = {"strabismus": "Strabismus", 
                 "esotropia": "Esotropia"}
-        ophMapper =  OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=oph_d)
+        ophMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=oph_d)
         res = ophMapper.map_cell("right sided esotropia")
         self.assertIsNotNone(res)
         self.assertEqual(1, len(res))
         hpterm = res[0]
         self.assertEqual("Esotropia", hpterm.label)
         self.assertEqual("HP:0000565", hpterm.id)
+        
+    def test_option_list(self):
+        thumb_d = {"BT": "Broad thumb", 
+                    "BH": "Broad hallux",
+                    "+": ["Broad thumb", "Broad hallux"]}
+        thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d)
+        res = thumbMapper.map_cell("+")
+        self.assertIsNotNone(res)
+        self.assertEqual(2, len(res))
+        hpterm0 = res[0]
+        self.assertEqual("Broad thumb", hpterm0.label)
+        self.assertEqual("HP:0011304", hpterm0.id)
+        hpterm1 = res[1]
+        self.assertEqual("Broad hallux", hpterm1.label)
+        self.assertEqual("HP:0010055", hpterm1.id)
+        
+    def test_options_broad(self):
+        thumb_d = {"BT": "Broad thumb", 
+                    "BH": "Broad hallux",
+                    "+": [ "Broad thumb", "Broad hallux"]}
+        thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d)
+        res = thumbMapper.map_cell("BT, BH")
+        self.assertIsNotNone(res)
+        self.assertEqual(2, len(res))
+        hpterm0 = res[0]
+        self.assertEqual("Broad thumb", hpterm0.label)
+        self.assertEqual("HP:0011304", hpterm0.id)
+        hpterm1 = res[1]
+        self.assertEqual("Broad hallux", hpterm1.label)
+        self.assertEqual("HP:0010055", hpterm1.id)
+
+
