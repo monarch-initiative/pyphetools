@@ -8,7 +8,7 @@ from collections import defaultdict
 
 class OptionColumnMapper(ColumnMapper):
     
-    def __init__(self, concept_recognizer, option_d):
+    def __init__(self, concept_recognizer, option_d, negative_symbol=None, negative_label=None):
         """Mapper to be used if the column has a set of defined items but text mining is not required.
 
         Args:
@@ -25,6 +25,11 @@ class OptionColumnMapper(ColumnMapper):
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
             raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         self._hpo_cr = concept_recognizer
+        if negative_symbol is None:
+            negative_symbol = defaultdict()
+        self._negative_symbol = negative_symbol
+        self._negative_label = negative_label
+        self._has_negative = negative_label is not None and negative_symbol is not None
         
     def map_cell(self, cell_contents) -> List[HpTerm]:
         """Map cell contents using the option dictionary 
@@ -32,12 +37,18 @@ class OptionColumnMapper(ColumnMapper):
         Args:
             cell_contents (str): contents of one table cell
         """
+        results = []
         contents = cell_contents.strip()
+        if self._has_negative and contents == self._negative_symbol:
+            term = self._hpo_cr.get_term_from_label(label=self._negative_label)
+            term.excluded()
+            results.append(term)
+            return results
         delimiters = ',;|/'
         regex_pattern = '|'.join(map(re.escape, delimiters))
         chunks = re.split(regex_pattern, contents)
         chunks = [chunk.strip() for chunk in chunks]
-        results = []
+
         hpo_labels = []
         for c in chunks:
             for my_key, my_label in self._option_d.items():

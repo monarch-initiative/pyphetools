@@ -109,4 +109,19 @@ class TestOptionMapper(unittest.TestCase):
         self.assertEqual("Broad hallux", hpterm1.label)
         self.assertEqual("HP:0010055", hpterm1.id)
 
+    def test_options_negative(self):
+        thumb_d = {"BT": "Broad thumb",
+                   "BH": "Broad hallux",
+                   "+": ["Broad thumb", "Broad hallux"]}
+        thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d,
+                                         negative_symbol="-", negative_label="Broad thumb")
+        res = thumbMapper.map_cell("-")
+        self.assertIsNotNone(res)
+        self.assertEqual(1, len(res))
+        hpterm0 = res[0]
+        self.assertEqual("Broad thumb", hpterm0.label)
+        self.assertEqual("HP:0011304", hpterm0.id)
+        self.assertFalse(hpterm0.observed)
+
+
 
