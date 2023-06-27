@@ -136,7 +136,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
     def get_term_from_id(self, hpo_id) -> HpTerm:
         if not hpo_id.startswith("HP:"):
             raise ValueError(f"Malformed HP id '{hpo_id}' - must start with HP:")
-        if not hpo_id in self._id_to_primary_label:
+        if hpo_id not in self._id_to_primary_label:
             raise ValueError(f"Could not find id {hpo_id} in dictionary")
         label = self._id_to_primary_label.get(hpo_id)
         return HpTerm(hpo_id=hpo_id, label=label)
@@ -147,6 +147,9 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             raise ValueError(f"Could not find HPO id for {label}")
         hpo_id = self._label_to_id.get(label_lc)
         return HpTerm(hpo_id=hpo_id, label=label)
+
+    def contains_term(self, hpo_id) -> bool:
+        return hpo_id in self._id_to_primary_label
 
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         if observed is None or excluded is None:

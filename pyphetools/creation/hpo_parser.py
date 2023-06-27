@@ -106,8 +106,10 @@ class HpoParser:
         label_to_id = defaultdict()
         for n in nodes:
             if 'id' in n and 'HP_' in n.get('id'):
+                if self._is_deprecated_node(n):
+                    continue
                 hpo_id, label, all_labels = self._extract_node_data(n)
-                if not hpo_id in valid_node_curies:
+                if hpo_id not in valid_node_curies:
                     continue  # This restricts us to descendants of Phenotypic abnormality
                 id_to_primary_label[hpo_id] = label
                 for lab in all_labels:
@@ -123,17 +125,31 @@ class HpoParser:
         self._long_version = long_version
         self._version = version
 
+
+    def _is_deprecated_node(self, json_node):
+        """check if a node was obsoleted
+        Skip obsoleted nodes such as "lbl": "obsolete Abnormality of the ocular region",
+        obsoleted nodes have a "deprecated" attribute whose value is always true (and this is not checked here)
+        """
+        metadata = json_node.get('meta')
+        if metadata is not None:
+            if "deprecated" in metadata:
+                # This is a sign that the term has been obsoleted
+                # We want to skip such terms
+                return True
+        return False
+
     def _extract_node_data(self, json_node):
         if not isinstance(json_node, dict):
             raise ValueError("HpoNode obhject must be constructed from JSON-derived dictionary")
-        if not 'id' in json_node.keys():
+        if 'id' not in json_node.keys():
             raise ValueError("HpoNode object must have id attribute")
-        id = json_node.get('id')
+        node_id = json_node.get('id')
         if 'lbl' not in json_node.keys():
-            raise ValueError(f"HpoNode object must have lbl attribute but {id} did not")
-        if  'http://purl.obolibrary.org/obo/HP' not in id:
-            raise ValueError(f"HpoNode id must begin with 'http://purl.obolibrary.org/obo/' but we got {id}")
-        hpo_id = id[31:].replace("_", ":")
+            raise ValueError(f"HpoNode object must have lbl attribute but {node_id} did not")
+        if 'http://purl.obolibrary.org/obo/HP' not in node_id:
+            raise ValueError(f"HpoNode id must begin with 'http://purl.obolibrary.org/obo/' but we got {node_id}")
+        hpo_id = node_id[31:].replace("_", ":")
         label = json_node.get("lbl", "NA")
         all_labels = set()
         all_labels.add(label)

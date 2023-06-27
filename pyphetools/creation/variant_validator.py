@@ -21,7 +21,7 @@ class VariantValidator:
         elif self._transcript is not None:
             transcript = self._transcript
         else:
-            raise ValueError("Cannot run variant valididator without transcript")
+            raise ValueError("Cannot run variant validator without transcript")
         api_url = URL_SCHEME % (self._genome_assembly, transcript, hgvs, transcript)
         #f"https://rest.variantvalidator.org/VariantValidator/variantvalidator/{self._genome_assembly}/{transcript}%3A{hgvs}/{transcript}"
         #
