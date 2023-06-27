@@ -13,3 +13,10 @@ class TestHpoParser(unittest.TestCase):
         
     def test_not_none(self):
         self.assertIsNotNone(self.hpo_cr)
+
+    def test_deprecated_nodes_not_parsed(self):
+        """Test that the parser did not ingest a deprecated node"""
+        # HP_0000284 is for the obsoleted term obsolete Abnormality of the ocular region
+        self.assertFalse(self.hpo_cr.contains_term("HP0000284"))
+        # HP:0000319 for for the valid term Smooth philtrum
+        self.assertTrue(self.hpo_cr.contains_term("HP:0000319"))
