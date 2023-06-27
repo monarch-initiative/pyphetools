@@ -147,7 +147,7 @@ class HpoParser:
         node_id = json_node.get('id')
         if 'lbl' not in json_node.keys():
             raise ValueError(f"HpoNode object must have lbl attribute but {node_id} did not")
-        if  'http://purl.obolibrary.org/obo/HP' not in node_id:
+        if 'http://purl.obolibrary.org/obo/HP' not in node_id:
             raise ValueError(f"HpoNode id must begin with 'http://purl.obolibrary.org/obo/' but we got {node_id}")
         hpo_id = node_id[31:].replace("_", ":")
         label = json_node.get("lbl", "NA")

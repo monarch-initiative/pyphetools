@@ -11,6 +11,10 @@ from .variant_column_mapper import VariantColumnMapper
 
 
 class CohortEncoder:
+    """Encode a cohort of individuals with clinical data in a table as a collection of GA4GH Phenopackets
+    This classes uses a collection of ColumnMapper objects to map a table using the
+    get_individuals or output_phenopackets methods.
+    """
 
     def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, metadata,
                  agemapper=AgeColumnMapper.not_provided(), sexmapper=None, variant_mapper=None, pmid=None):
