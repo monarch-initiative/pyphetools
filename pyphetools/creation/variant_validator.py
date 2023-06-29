@@ -1,5 +1,5 @@
 import requests
-from .variant import Variant
+from .hgvs_variant import Variant
 
 
 URL_SCHEME = "https://rest.variantvalidator.org/VariantValidator/variantvalidator/%s/%s%%3A%s/%s?content-type=application%%2Fjson"

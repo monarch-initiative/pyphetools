@@ -14,7 +14,7 @@ class TestVariantValidator(unittest.TestCase):
                                                     gene_symbol=gene,
                                                     gene_id=gene_id,
                                                     genotype=genotype)
-        cls._variant_interpretation = sv.to_ga4gh()
+        cls._variant_interpretation = sv.to_ga4gh_variant_interpretation()
 
     def test_label(self):
         var_inter = self._variant_interpretation

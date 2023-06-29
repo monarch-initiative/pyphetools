@@ -1,11 +1,12 @@
 import string
 import random
 import phenopackets
+from .variant import Variant
 
 ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 
 
-class StructuralVariant:
+class StructuralVariant(Variant):
     """
     This encapsulates variant about a structural variant
     For instance, we may see things like this
@@ -38,12 +39,12 @@ class StructuralVariant:
                  sequence_ontology_label,
                  genotype,
                  variant_id: None):
+        super().__init__()
         if variant_id is None:
             self._variant_id = "var_" + "".join(random.choices(string.ascii_letters, k=25))
         else:
             self._variant_id = variant_id
         self._label = cell_contents.strip()
-        print("IN COTOT")
         if gene_symbol is None:
             raise ValueError(f"Need to pass a valid gene symbol!")
         self._gene_symbol = gene_symbol
@@ -54,11 +55,12 @@ class StructuralVariant:
         self._so_label = sequence_ontology_label
         self._genotype = genotype
 
-    def to_ga4gh(self, acmg=None):
+    def to_ga4gh_variant_interpretation(self, acmg=None):
         """
         Transform this Variant object into a "variantInterpretation" message of the GA4GH Phenopacket schema
         """
         vdescriptor = phenopackets.VariationDescriptor()
+        vdescriptor.id = self._variant_id
         vdescriptor.gene_context.value_id = self._hgnc_id
         vdescriptor.gene_context.symbol = self._gene_symbol
         vdescriptor.label = self._label

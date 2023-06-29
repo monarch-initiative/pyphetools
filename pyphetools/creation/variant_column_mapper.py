@@ -1,14 +1,23 @@
-from .variant import Variant
-from typing import List
-from .variant_validator import VariantValidator
+from collections import defaultdict
 import pandas as pd
+from typing import List
+from .hgvs_variant import Variant
+from .variant_validator import VariantValidator
+from .variant import Variant
+
 
 ACCEPTABLE_GENOTYPES = {"heterozygous", "homozygous", "hemizygous"}
 
 
 class VariantColumnMapper:
 
-    def __init__(self, assembly, transcript, column_name, default_genotype=None, genotype_column=None,
+    def __init__(self, 
+                 assembly, 
+                 transcript, 
+                 column_name, 
+                 default_genotype=None, 
+                 genotype_column=None,
+                 non_hgvs_variant_map=defaultdict(),
                  delimiter=None) -> None:
         """Column mapper for HGVS expressions containing the variants identified in individuals
 
@@ -30,6 +39,7 @@ class VariantColumnMapper:
         self._genotype_column = genotype_column
         self._delimiter = delimiter
         self._variant_symbol_d = {}
+        self._non_hgvs_variant_map = non_hgvs_variant_map
 
     def map_cell(self, cell_contents, genotype_contents=None, delimiter=None) -> List[Variant]:
         if delimiter is None:
@@ -38,13 +48,17 @@ class VariantColumnMapper:
             items = [x.strip() for x in cell_contents.split(delimiter)]
         else:
             items = [cell_contents]
-        results = []
+        variant_interpretation_list = []
         for item in items:
-            if item in self._variant_symbol_d:
+            if item in self._non_hgvs_variant_map:
+                variant: Variant = self._non_hgvs_variant_map.get(item)
+                interpretation = variant.to_ga4gh_variant_interpretation()
+                variant_interpretation_list.append(interpretation)
+            elif item in self._variant_symbol_d:
                 variant_list = self._variant_symbol_d.get(item)
                 for v in variant_list:
                     v.set_genotype(self._default_genotype)
-                results.extend(variant_list)
+                    variant_interpretation_list.append(v.to_ga4gh_variant_interpretation())
             else:
                 try:
                     variant = self._validator.encode_hgvs(item)
@@ -65,23 +79,39 @@ class VariantColumnMapper:
                             variant.set_heterozygous()
                         elif 'hemi' in def_gt:
                             variant.set_hemizygous()
-                    results.append(variant)
+                    variant_interpretation_list.append(variant.to_ga4gh_variant_interpretation())
                 except Exception as exc:
                     print(f"Not able to get variant for {item}: {exc}")
-        return results
+        return variant_interpretation_list
+    
+    
+    def variant_interpretation_to_string(self, vinterpretation):
+        # first check for HGVS
+        if vinterpretation.variation_descriptor is None:
+            raise ValueError("VariantInterpretation must have VariationDescriptor element")
+        vdescriptor = vinterpretation.variation_descriptor
+        for exprss in vdescriptor.expressions:
+            if exprss.syntax == "hgvs.c":
+                return exprss.value
+        # then check for a description
+        if vdescriptor.label is not None:
+            return vdescriptor.label
+        else:
+            return vinterpretation.id
+
 
     def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         dlist = []
         for _, value in column.items():
-            variants = self.map_cell(str(value))
-            if len(variants) == 0:
+            variant_interpretation_list = self.map_cell(str(value))
+            if len(variant_interpretation_list) == 0:
                 dlist.append({"variant": "n/a"})
             else:
                 result_strings = []
-                for v in variants:
-                    result_strings.append(v.to_string())
+                for v in variant_interpretation_list:
+                    result_strings.append(self.variant_interpretation_to_string(v))
                 dlist.append({"variant": ": ".join(result_strings)})
         return pd.DataFrame(dlist)
 

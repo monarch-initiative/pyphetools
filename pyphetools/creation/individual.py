@@ -3,7 +3,7 @@ import re
 import os
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
-from .variant import Variant
+from .hgvs_variant import Variant
 
 
 class Individual:
@@ -14,7 +14,7 @@ class Individual:
                         hpo_terms, 
                         sex=Constants.NOT_PROVIDED, 
                         age=Constants.NOT_PROVIDED, 
-                        variant_list=None, 
+                        interpretation_list=None, 
                         disease_id=None, 
                         disease_label=None):
         """All of the data we will transform into a single phenopacket
@@ -24,7 +24,7 @@ class Individual:
             hpo_terms (list): List of HpTerm objects
             sex (str): String corresponding to the sex of the individual, default, n/a
             age (str): String corresponding to the age of the individual (ISO), default, n/a
-            variant_list (list): list of Variant objects (optional)
+            interpretation_list (list): list of GA4GH VariationInterpretation objects (optional)
             disease_id (str): String corresponding to the disease ID, default, (optional)
             disease_label (str): String corresponding to the disease label, default, (optional)
         """
@@ -40,7 +40,7 @@ class Individual:
             self._sex = sex
         self._age = age
         self._hpo_terms = hpo_terms
-        self._variant_list = variant_list
+        self._interpretation_list = interpretation_list
         self._disease_id = disease_id
         self._disease_label = disease_label
         
@@ -64,10 +64,10 @@ class Individual:
     def variant_list(self):
         return self._variant_list
     
-    def add_variant(self, v):
+    def add_variant(self, v, acmg=None):
         if not isinstance(v, Variant):
             raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
-        self._variant_list.append(v)
+        self._interpretation_list.append(v.to_ga4gh_variant_interpretation(acmg=acmg))
     
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_
@@ -111,19 +111,19 @@ class Individual:
                     if pf.onset.age.iso8601duration is None and age_key.startswith("P"):
                         pf.onset.age.iso8601duration = age_key
                     php.phenotypic_features.append(pf)
-        if len(self._variant_list) > 0:
+        if len(self._interpretation_list) > 0:
             interpretation = phenopackets.Interpretation()
             interpretation.id = self._individual_id
             interpretation.progress_status = phenopackets.Interpretation.ProgressStatus.SOLVED
             if self._disease_id is not None and self._disease_label is not None:
                 interpretation.diagnosis.disease.id = self._disease_id
                 interpretation.diagnosis.disease.label = self._disease_label
-            for var in self._variant_list:
+            for var in self._interpretation_list:
                 genomic_interpretation = phenopackets.GenomicInterpretation()
                 genomic_interpretation.subject_or_biosample_id = self._individual_id
                 # by assumption, variants passed to this package are all causative
                 genomic_interpretation.interpretation_status = phenopackets.GenomicInterpretation.InterpretationStatus.CAUSATIVE
-                genomic_interpretation.variant_interpretation.CopyFrom(var.to_ga4gh())
+                genomic_interpretation.variant_interpretation.CopyFrom(var)
                 interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
             php.interpretations.append(interpretation)
         if metadata is not None:
