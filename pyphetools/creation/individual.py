@@ -61,8 +61,8 @@ class Individual:
         return self._hpo_terms
     
     @property
-    def variant_list(self):
-        return self._variant_list
+    def interpretation_list(self):
+        return self._interpretation_list
     
     def add_variant(self, v, acmg=None):
         if not isinstance(v, Variant):

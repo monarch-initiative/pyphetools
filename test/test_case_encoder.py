@@ -5,6 +5,7 @@ from pyphetools.creation import HpoParser, CaseEncoder
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 # The API requires us to pass a column name but the column name will not be used in the tests
 TEST_COLUMN = "test"
+from pyphetools.creation import MetaData
 
 class TestCaseParse(unittest.TestCase):
 
@@ -12,7 +13,9 @@ class TestCaseParse(unittest.TestCase):
     def setUpClass(cls) -> None:
         hpparser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
         cls._hpo_cr = hpparser.get_hpo_concept_recognizer()
-        cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr, pmid="PMID:1")
+        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
+        metadata.default_versions_with_hpo(version="2022-05-05")
+        cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr, individual_id="arbitrary", pmid="PMID:1", metadata=metadata.to_ga4gh())
 
     def test_chief_complaint(self):
         """
@@ -54,7 +57,9 @@ class TestCaseParse(unittest.TestCase):
         vignette = "The patient is not on seizure medication at this time."
         excluded = set()
         excluded.add("Seizure")
-        encoder = CaseEncoder(hpo_cr=self._hpo_cr, pmid="PMID:1")
+        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
+        metadata.default_versions_with_hpo(version="2022-05-05")
+        encoder = CaseEncoder(hpo_cr=self._hpo_cr, individual_id="id", metadata=metadata.to_ga4gh(), pmid="PMID:1")
         df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded)
         self.assertEqual(1, len(df))
         

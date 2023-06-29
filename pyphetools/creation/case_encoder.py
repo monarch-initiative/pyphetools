@@ -1,13 +1,16 @@
-import re
+from google.protobuf.json_format import MessageToJson
 import os
+import phenopackets
+import re
 from typing import List
 from collections import defaultdict
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 from .simple_column_mapper import SimpleColumnMapper
 from .column_mapper import ColumnMapper
-from google.protobuf.json_format import MessageToJson
+
 from .individual import Individual
+from .variant import Variant
 
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
@@ -16,7 +19,16 @@ class CaseEncoder:
     """encode a single case report with HPO terms in Phenopacket format
     """
 
-    def __init__(self, hpo_cr: HpoConceptRecognizer, pmid: str, age_at_last_exam=None) -> None:
+    def __init__(self, 
+                 hpo_cr: HpoConceptRecognizer, 
+                 pmid: str, 
+                 individual_id:str, 
+                 metadata:phenopackets.MetaData, 
+                 age_at_last_exam=None, 
+                 sex:str=None, 
+                 age:str=None, 
+                 disease_id:str=None, 
+                 disease_label:str=None) -> None:
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
                 "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
@@ -34,6 +46,14 @@ class CaseEncoder:
             self._age_at_last_examination = None
         self._seen_hpo_terms = set() # Use to prevent duplicate HP annotations
         self._annotations = defaultdict(list)
+        self._individual_id = individual_id
+        if not isinstance(metadata, phenopackets.MetaData):
+            raise ValueError(f"metadata argument must be phenopackets.MetaData but was {type(metadata)}")
+        self._sex = sex
+        self._age = age
+        self._disease_id = disease_id
+        self._disease_label = disease_label
+        self._interpretations = []
 
     def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=[], excluded_terms=set()) -> List[
         HpTerm]:
@@ -93,6 +113,17 @@ class CaseEncoder:
             return HpTerm.term_list_to_dataframe([hpo_term])
         else:
             return ValueError("Must call function with non-None value for either id or label argument")
+        
+        
+    def add_variant_or_interpretation(self, variant):
+        if isinstance(variant, Variant):
+            self._interpretations.append(variant.to_ga4gh_variant_interpretation())
+        elif isinstance(variant, phenopackets.VariantInterpretation):
+            self._interpretations.append(variant)
+        else:
+            raise ValueError(f"variant argument must be pyphetools Variant or GA4GH \
+                phenopackets.VariantInterpretation but was {type(variant)}")
+            
 
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         if observed is None or excluded is None:
@@ -110,16 +141,20 @@ class CaseEncoder:
     def get_hpo_term_dict(self):
         return self._annotations
 
-    def get_phenopacket(self, individual_id, metadata, sex=None, age=None, disease_id=None, disease_label=None,
-                        variants=None):
-        if not isinstance(variants, list):
-            variants = [variants]
-        individual = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=self._annotations,
-                                variant_list=variants, disease_id=disease_id, disease_label=disease_label)
+    def get_phenopacket(self):
+        if not isinstance(interpretations, list):
+            interpretations = [interpretations]
+        individual = Individual(individual_id=self._individual_id, 
+                                sex=self._sex, 
+                                age=self._age, 
+                                hpo_terms=self._annotations,
+                                interpretation_list=self._interpretations, 
+                                disease_id=self._disease_id, 
+                                disease_label=self._disease_label)
         phenopacket_id = self._pmid.replace(":", "_") + "_" + individual.id.replace(" ", "_").replace(":", "_")
-        return individual.to_ga4gh_phenopacket(metadata=metadata, phenopacket_id=phenopacket_id)
+        return individual.to_ga4gh_phenopacket(metadata=self._metadata, phenopacket_id=phenopacket_id)
 
-    def output_phenopacket(self, outdir, phenopacket):
+    def output_phenopacket(self, outdir):
         """write a phenopacket to an output directory
 
         Args:
@@ -128,6 +163,7 @@ class CaseEncoder:
         """
         if not os.path.exists(outdir):
             os.makedirs(outdir)
+        phenopacket = self.get_phenopacket()
         phenopacket_id = phenopacket.id
         json_string = MessageToJson(phenopacket)
         fname = phenopacket_id.replace(" ", "_") + ".json"

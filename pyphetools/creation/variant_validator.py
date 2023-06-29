@@ -1,5 +1,5 @@
 import requests
-from .hgvs_variant import Variant
+from .hgvs_variant import HgvsVariant
 
 
 URL_SCHEME = "https://rest.variantvalidator.org/VariantValidator/variantvalidator/%s/%s%%3A%s/%s?content-type=application%%2Fjson"
@@ -60,7 +60,7 @@ class VariantValidator:
         # 'vcf': {'alt': 'C', 'chr': '16', 'pos': '1756403', 'ref': 'CG'}},
         if not 'vcf' in assembly:
             raise ValueError(f"Could not identify vcf element in Variant Validator genome assembly response")
-        return Variant(assembly=self._genome_assembly, vcf_d=assembly['vcf'], symbol=symbol, 
+        return HgvsVariant(assembly=self._genome_assembly, vcf_d=assembly['vcf'], symbol=symbol, 
                        hgnc=hgnc, transcript=transcript, hgvs=hgvs_transcript_var, g_hgvs=genomic_hgvs)
   
 

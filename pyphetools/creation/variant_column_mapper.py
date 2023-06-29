@@ -38,7 +38,6 @@ class VariantColumnMapper:
         self._column_name = column_name
         self._genotype_column = genotype_column
         self._delimiter = delimiter
-        self._variant_symbol_d = {}
         self._non_hgvs_variant_map = non_hgvs_variant_map
 
     def map_cell(self, cell_contents, genotype_contents=None, delimiter=None) -> List[Variant]:
@@ -54,11 +53,6 @@ class VariantColumnMapper:
                 variant: Variant = self._non_hgvs_variant_map.get(item)
                 interpretation = variant.to_ga4gh_variant_interpretation()
                 variant_interpretation_list.append(interpretation)
-            elif item in self._variant_symbol_d:
-                variant_list = self._variant_symbol_d.get(item)
-                for v in variant_list:
-                    v.set_genotype(self._default_genotype)
-                    variant_interpretation_list.append(v.to_ga4gh_variant_interpretation())
             else:
                 try:
                     variant = self._validator.encode_hgvs(item)
@@ -120,9 +114,6 @@ class VariantColumnMapper:
 
     def get_genotype_colname(self):
         return self._genotype_column
-
-    def set_variant_symbol_dictionary(self, variant_sym_d):
-        self._variant_symbol_d = variant_sym_d
 
     def _print_summary(self):
         """Dump some of the attributes of the object, for debugging
