@@ -53,7 +53,8 @@ default_versions = {
     'geno': '2022-03-05',
     'hgnc': '06/01/23',
     'omim': 'January 4, 2023',
-    'mondo': 'v2023-01-04'
+    'mondo': 'v2023-01-04',
+    'so': "2021-11-22"
 }
 
 
@@ -75,6 +76,7 @@ class MetaData:
         self.geno()
         self.hgnc()
         self.omim()
+        self.sequence_ontology()
         self.hpo(version=version)
 
     def hpo(self, version):
@@ -125,6 +127,15 @@ class MetaData:
                                              iriprefix="http://purl.obolibrary.org/obo/MONDO_",
                                              url="http://purl.obolibrary.org/obo/mondo.obo",
                                              version=version)
+        
+    def sequence_ontology(self, version=default_versions.get("so")):
+        self._resource_d["so"] = Resource(resource_id="so",
+                                             name="Sequence types and features ontology",
+                                             namespace_prefix="SO",
+                                             iriprefix="http://purl.obolibrary.org/obo/SO_",
+                                             url="http://purl.obolibrary.org/obo/so.obo",
+                                             version=version)
+        
 
     def to_ga4gh(self):
         """

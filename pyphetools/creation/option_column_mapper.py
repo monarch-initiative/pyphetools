@@ -79,5 +79,56 @@ class OptionColumnMapper(ColumnMapper):
                 dlist.append({"terms": "; ".join(column_val)})  
             else:
                 dlist.append({"terms": "n/a"})  
-        return pd.DataFrame(dlist)     
+        return pd.DataFrame(dlist)   
+    
+    @staticmethod
+    def autoformat(df: pd.DataFrame, concept_recognizer, delimiter=",") -> str:
+        """Autoformat code from the colums so that we can easily copy-paste and change it.
+        This method intends to save time by preformatting code the create OptionMappers.
+        
+        Args:
+            df: data frame with the data about the individuals
+            concept_recognizer: HpoConceptRecognizer for text mining
+            delimiter: the string used to delimit individual items in a cell (default: comma)
+        Return:
+            a string that should be displayed using a print() command in the notebook
+        """  
+        lines = []
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError(f"argument \"df\" must be a pandas DataFrame but was {type(df)}")
+        if not isinstance(concept_recognizer, HpoConceptRecognizer):
+            raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+        # df.shape[1] gives us the number of columns
+        for y in range(df.shape[1]):
+            temp_dict = {}
+            for i in range(len(df)):
+                if len(str(df.iloc[i, y])) > 1:
+                    for entry in str(df.iloc[i, y]).split(delimiter):
+                        hpo_term = concept_recognizer.parse_cell(entry.strip())
+                        if len(hpo_term) > 0:
+                            temp_dict[entry.strip()] = hpo_term[0].label                
+                        else:
+                            temp_dict[entry.strip()] = 'PLACEHOLDER'
+            col_name = str(df.columns[y]).lower().replace(", ","_").replace(' ', '_')
+            col_name = col_name.lower()
+            # skip columns that are unlikely to be interesting for the OptionColumnMapper
+            if "patient" in col_name:
+                continue
+            if "family" in col_name:
+                continue
+            if "gender" in col_name:
+                continue
+            if "mutation" in col_name or "varia" in col_name:
+                continue
+            if "age" == col_name or "sex" == col_name or "gender" == col_name:
+                continue
+            items_d_name = f"{col_name}_d"
+            items_d_string = str(temp_dict).replace(',', ',\n')
+            lines.append(f"{items_d_name} = {items_d_string}")
+            lines.append(f"{col_name}Mapper = OptionColumnMapper(concept_recognizer=hpo_cr, option_d={items_d_name})")
+            lines.append(f"{col_name}Mapper.preview_column(df['" + str(df.columns[y]) + "']))")
+            lines.append(f"column_mapper_d['{str(df.columns[y])}'] = {col_name}Mapper")
+            lines.append("")
+        return "\n".join(lines)
+        
    
