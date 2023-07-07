@@ -28,36 +28,8 @@ def get_separate_hpos_from_df(df, hpo_cr):
     return additional_hpos
 
 
-def try_mapping_columns(df, observed, excluded, hpo_cr, preview=True):
-    """Try to map the columns in a dataframe by matching the name of the column to correct HPO term.
-    Wrapper for SimpleColumnMapper below
 
-    Args:
-       df (dataframe): dataframe with phenotypic data
-       observed (str): symbol used in table if the phenotypic feature was observed
-       excluded (str): symbol used if the feature was excluded
-       hpo_cr (HpoConceptRecognizer): instance of HpoConceptRecognizer to match HPO term and get label/id
-       preview (bool): whether to print the successfully mapped columns
 
-    Returns:
-        simple_mappers (dict): dict with successfully mapped columns
-        col_not_found (list): columns that were not mapped
-    """
-    col_not_found = []
-    simple_mappers = defaultdict(ColumnMapper)
-    for col in df.columns:
-        hpo_term = hpo_cr.parse_cell(col)
-        if len(hpo_term) > 0:
-            hpo_term = hpo_term[0]
-            simple_mappers[col] = SimpleColumnMapper(hpo_id=hpo_term.id,
-                                                                hpo_label=hpo_term.label,
-                                                                observed=observed,
-                                                                excluded=excluded)
-            if preview:
-                print(simple_mappers[col].preview_column(df[col]))
-        else:
-            col_not_found.append(col)
-    return simple_mappers, col_not_found
 
 
 class SimpleColumnMapper(ColumnMapper):
@@ -105,3 +77,69 @@ class SimpleColumnMapper(ColumnMapper):
             dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
         return pd.DataFrame(dlist)
     
+class SimpleColumnMapperGenerator:
+    def __init__(self, df, observed, excluded, hpo_cr) -> None:
+        """Try to map the columns in a dataframe by matching the name of the column to correct HPO term.
+        This class can be used to generate SimpleColumn mappers for exact matches found in the columns names.
+        Args:
+            df (dataframe): dataframe with phenotypic data
+            observed (str): symbol used in table if the phenotypic feature was observed
+            excluded (str): symbol used if the feature was excluded
+            hpo_cr (HpoConceptRecognizer): instance of HpoConceptRecognizer to match HPO term and get label/id
+        """
+        self._df = df
+        self._observed = observed
+        self._excluded = excluded
+        self._hpo_cr = hpo_cr
+        self._mapped_columns = []
+        self._unmapped_columns = []
+        self._error_messages = []
+        
+    
+    def try_mapping_columns(self) -> List[ColumnMapper]:
+        """As a side effect, this class initializes three lists of mapped, unmapped, and error columns
+
+        Returns:
+            list(ColumnMapper): simple_mappers (dict): dict with successfully mapped columns
+        """
+        simple_mappers = defaultdict(ColumnMapper)
+        for col in self._df.columns:
+            colname = str(col)
+            if self._hpo_cr.contains_term_label(colname):
+                hpo_term_list = self._hpo_cr.parse_cell(colname)
+                hpo_term = hpo_term_list[0]
+                simple_mappers[col] = SimpleColumnMapper(hpo_id=hpo_term.id,
+                                                                    hpo_label=hpo_term.label,
+                                                                    observed=self._observed,
+                                                                    excluded=self._excluded)
+            else:
+                self._unmapped_columns.append(colname)
+        self._mapped_columns = list(simple_mappers.keys())
+        return simple_mappers
+
+
+    def get_unmapped_columns(self):
+        return self._unmapped_columns
+    
+    def get_mapped_columns(self):
+        return self._mapped_columns
+    
+    def to_html(self):
+        """create an HTML table with names of mapped and unmapped columns
+        """
+        table_items = []
+        table_items.append('<table style="border: 2px solid black;">\n')
+        table_items.append("""<tr>
+            <th>Result</th>
+            <th>Columns</th>
+        </tr>
+      """)
+        mapped_str = "; ".join(self._mapped_columns)
+        unmapped_str = "; ".join([f"<q>{colname}</q>" for colname in self._unmapped_columns])
+        def two_item_table_row(cell1, cell2):
+            return f"<tr><td>{cell1}</td><td>{cell2}</td></tr>"
+        table_items.append(two_item_table_row("Mapped", mapped_str))
+        table_items.append(two_item_table_row("Unmapped", unmapped_str))
+        table_items.append('</table>\n') # close table content
+        return "\n".join(table_items)
+        

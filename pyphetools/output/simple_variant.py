@@ -21,8 +21,8 @@ class SimpleVariant:
         else:
             self._gene_id = NA_STRING
             self._gene_symbol = NA_STRING
+        self._hgvs = NA_STRING
         if vdescript.expressions is not None and len(vdescript.expressions) > 0:
-            self._hgvs = NA_STRING
             for exprsn in vdescript.expressions:
                 if exprsn.syntax == "hgvs.c":
                     self._hgvs = exprsn.value       
