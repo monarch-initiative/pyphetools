@@ -57,15 +57,6 @@ class HgvsVariant(Variant):
     @property
     def genotype(self):
         return self._genotype
-    
-    def set_heterozygous(self):
-        self._genotype = 'heterozygous'
-    
-    def set_homozygous(self):
-        self._genotype = 'homozygous'
-        
-    def set_hemizygous(self):
-        self._genotype = 'hemizygous'
           
     def __str__(self):
         return f"{self._chr}:{self._position}{self._ref}>{self._alt}"

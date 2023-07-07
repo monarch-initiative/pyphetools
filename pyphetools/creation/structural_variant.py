@@ -37,7 +37,6 @@ class StructuralVariant(Variant):
                  gene_id,
                  sequence_ontology_id,
                  sequence_ontology_label,
-                 genotype,
                  variant_id: None):
         super().__init__()
         if variant_id is None:
@@ -53,7 +52,7 @@ class StructuralVariant(Variant):
         self._hgnc_id = gene_id
         self._so_id = sequence_ontology_id
         self._so_label = sequence_ontology_label
-        self._genotype = genotype
+        self._genotype = None
 
     def to_ga4gh_variant_interpretation(self, acmg=None):
         """
@@ -102,28 +101,24 @@ class StructuralVariant(Variant):
     def chromosomal_deletion(cell_contents,
                              gene_symbol,
                              gene_id,
-                             genotype,
                              variant_id=None):
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
                                  sequence_ontology_id="SO:1000029",
                                  sequence_ontology_label="chromosomal_deletion",
-                                 genotype=genotype,
                                  variant_id=variant_id)
 
     @staticmethod
     def chromosomal_duplication(cell_contents,
                                 gene_symbol,
                                 gene_id,
-                                genotype,
                                 variant_id=None):
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
                                  sequence_ontology_id="SO:1000037",
                                  sequence_ontology_label="chromosomal_duplication",
-                                 genotype=genotype,
                                  variant_id=variant_id)
 
     @staticmethod
@@ -137,5 +132,4 @@ class StructuralVariant(Variant):
                                  gene_id=gene_id,
                                  sequence_ontology_id="SO:1000030",
                                  sequence_ontology_label="chromosomal_inversion",
-                                 genotype=genotype,
                                  variant_id=variant_id)
