@@ -1,7 +1,7 @@
 name: Sphinx Documentation
 on:
   push:
-    branches: [  main ]
+    branches: [  main, develop ]
 
 jobs:
   build-docs:
@@ -55,7 +55,7 @@ jobs:
           # TODO - enable when the docs make it into `main
           # build_docs main stable
           # We store the docs for `development` in `latest` dir
-          build_docs development latest
+          build_docs develop latest
   
     - name: Deploy documentation.
       if: ${{ github.event_name == 'push' }}
