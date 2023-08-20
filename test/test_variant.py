@@ -1,5 +1,5 @@
 import unittest
-from pyphetools.creation import Variant
+from pyphetools.creation import HgvsVariant
 
 # The following dictionary has the same structure as a subelement of the response from Variant Validator
 VCF_DICTIONARY =  {'alt': 'C', 'chr': '16', 'pos': '1756403', 'ref': 'CG'}
@@ -14,7 +14,7 @@ class TestVariantValidator(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls) -> None:
-        cls._variant = Variant(assembly=GENOME_ASSEMBLY, vcf_d=VCF_DICTIONARY, symbol=symbol, 
+        cls._variant = HgvsVariant(assembly=GENOME_ASSEMBLY, vcf_d=VCF_DICTIONARY, symbol=symbol, 
                                hgnc=hgnc_id, hgvs=hgvs, transcript=transcript, g_hgvs=g_hgvs)
         
     def test_obect_created(self):

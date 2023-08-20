@@ -14,7 +14,25 @@ MONTH_REGEX = r"(\d+)\s*[Mm]"
 
 
 class AgeColumnMapper:
+
+    """
+    Map a column that contains information about the age of individuals.
+
+    Tables with information about genotype phenotype correlations typically
+    contain a column with information about age. The columns often have formats
+    such as 34 (integer with number of years or months) or 3Y2M (for three years 
+    and two months). This mapper ingests data from such columns and transforms the
+    contents into ISO 8601 strings (e.g., P4Y2M1D for 4 years, 2 months, and 1 day).
+    
+    """
+    
     def __init__(self, ageEncodingType, column_name) -> None:
+        """
+        :param ageEncodingType: Formatting convention used to represent the age
+        :type ageEncodingType: one of Year (e.g. 42), ISO 8601 (e.g. P42Y2M), year/month (e.g. 42y2m)
+        :param column_name: Name of the Age column in the original table
+        :type column_name: str
+        """
         self._age_econding = ageEncodingType
         if column_name is None:
             raise ValueError("Must provide non-null column_name argument")

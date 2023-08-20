@@ -128,6 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 .vscode/
+./.vscode
+./psvenv
+
 notebooks/hpo_data/
 notebooks/phenopackets/
 .idea/

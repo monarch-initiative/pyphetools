@@ -1,12 +1,14 @@
 import pandas as pd
 from math import isnan
 from typing import List
+from collections import defaultdict
 import os
 
 from .age_column_mapper import AgeColumnMapper
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
 
@@ -16,8 +18,33 @@ class CohortEncoder:
     get_individuals or output_phenopackets methods.
     """
 
-    def __init__(self, df, hpo_cr, column_mapper_d, individual_column_name, metadata,
-                 agemapper=AgeColumnMapper.not_provided(), sexmapper=None, variant_mapper=None, pmid=None):
+    def __init__(self, 
+                 df, 
+                 hpo_cr, 
+                 column_mapper_d, 
+                 individual_column_name, 
+                 metadata,
+                 agemapper=AgeColumnMapper.not_provided(), 
+                 sexmapper=SexColumnMapper.not_provided(), 
+                 variant_mapper=None, 
+                 pmid=None):
+        """_summary_
+
+        Args:
+            df (pd.DataFrame): tabular data abotu a cohort
+            hpo_cr (HpoConceptRecognizer): HPO concept recognizer
+            column_mapper_d (dict): Dictionary with key: Column name, value: ColumnMapper object
+            individual_column_name (str): label of column with individual/proband/patient identifier
+            metadata (Object): GA4GH MetaData object
+            agemapper (AgeColumnMapper, optional): Mapper for the Age column. Defaults to AgeColumnMapper.not_provided().
+            sexmapper (SexColumnMapper, optional): Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
+            variant_mapper (VariantColumnMapper, optional): mapper for HGVS-encoded variant column. Defaults to None.
+            non_hgvs_variant_map (dict, optional): key: string in the variant column value: VarMapper for converting the string to GA4GH VariationDescriptor . Defaults to empty defaultdict().
+            pmid (str, optional): PubMed identifier for the cohort. Defaults to None.
+
+        Raises:
+            ValueError: several of the input arguments are checked.
+        """
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
                 "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
@@ -140,14 +167,15 @@ class CohortEncoder:
                 terms = column_mapper.map_cell(cell_contents)
                 hpo_terms.extend(terms)
             if variant_colname is not None:
-                variant_col = row[variant_colname]
+                variant_cell_contents = row[variant_colname]
+                interpretation_list = []
                 if genotype_colname is not None:
-                    genotype_col = row[genotype_colname]
+                    genotype_cell_contents = row[genotype_colname]
                 else:
-                    genotype_col = None
-                variant_list = self._variant_mapper.map_cell(variant_col, genotype_col)
+                    genotype_cell_contents = None
+                interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
             else:
-                variant_list = []
+                interpretation_list = []
             if self._disease_dictionary is not None and self._disease_id is None and self._disease_label is None:
                 if individual_id not in self._disease_dictionary:
                     raise ValueError(f"Could not find disease link for {individual_id}")
@@ -155,12 +183,12 @@ class CohortEncoder:
                 disease_id = disease.get('id')
                 disease_label = disease.get('label')
                 indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
-                                  variant_list=variant_list,
+                                  interpretation_list=interpretation_list,
                                   disease_id=disease_id, disease_label=disease_label)
                 individuals.append(indi)
             elif self._disease_dictionary is None and self._disease_id is not None and self._disease_label is not None:
                 indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
-                                  variant_list=variant_list, disease_id=self._disease_id,
+                                  interpretation_list=interpretation_list, disease_id=self._disease_id,
                                   disease_label=self._disease_label)
                 individuals.append(indi)
             else:

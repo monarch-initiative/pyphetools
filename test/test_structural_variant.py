@@ -12,9 +12,9 @@ class TestVariantValidator(unittest.TestCase):
         gene_id = "HGNC:4319"
         sv = StructuralVariant.chromosomal_deletion(cell_contents=variant,
                                                     gene_symbol=gene,
-                                                    gene_id=gene_id,
-                                                    genotype=genotype)
-        cls._variant_interpretation = sv.to_ga4gh()
+                                                    gene_id=gene_id)
+        sv.set_heterozygous()
+        cls._variant_interpretation = sv.to_ga4gh_variant_interpretation()
 
     def test_label(self):
         var_inter = self._variant_interpretation

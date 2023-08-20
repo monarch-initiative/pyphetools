@@ -150,6 +150,11 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
 
     def contains_term(self, hpo_id) -> bool:
         return hpo_id in self._id_to_primary_label
+    
+    def contains_term_label(self, hpo_label) -> bool:
+        """return True iff the argument is the primary label of an HPO term
+        """
+        return hpo_label.lower() in self._label_to_id
 
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         if observed is None or excluded is None:

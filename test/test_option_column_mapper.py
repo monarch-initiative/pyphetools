@@ -113,8 +113,9 @@ class TestOptionMapper(unittest.TestCase):
         thumb_d = {"BT": "Broad thumb",
                    "BH": "Broad hallux",
                    "+": ["Broad thumb", "Broad hallux"]}
+        excluded_d = {"-":"Broad thumb"}
         thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d,
-                                         negative_symbol="-", negative_label="Broad thumb")
+                                         excluded_d=excluded_d)
         res = thumbMapper.map_cell("-")
         self.assertIsNotNone(res)
         self.assertEqual(1, len(res))

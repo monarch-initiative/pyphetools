@@ -1,11 +1,12 @@
 import string
 import random
 import phenopackets
+from .variant import Variant
 
 ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 
 
-class StructuralVariant:
+class StructuralVariant(Variant):
     """
     This encapsulates variant about a structural variant
     For instance, we may see things like this
@@ -36,14 +37,13 @@ class StructuralVariant:
                  gene_id,
                  sequence_ontology_id,
                  sequence_ontology_label,
-                 genotype,
                  variant_id: None):
+        super().__init__()
         if variant_id is None:
             self._variant_id = "var_" + "".join(random.choices(string.ascii_letters, k=25))
         else:
             self._variant_id = variant_id
         self._label = cell_contents.strip()
-        print("IN COTOT")
         if gene_symbol is None:
             raise ValueError(f"Need to pass a valid gene symbol!")
         self._gene_symbol = gene_symbol
@@ -52,13 +52,14 @@ class StructuralVariant:
         self._hgnc_id = gene_id
         self._so_id = sequence_ontology_id
         self._so_label = sequence_ontology_label
-        self._genotype = genotype
+        self._genotype = None
 
-    def to_ga4gh(self, acmg=None):
+    def to_ga4gh_variant_interpretation(self, acmg=None):
         """
         Transform this Variant object into a "variantInterpretation" message of the GA4GH Phenopacket schema
         """
         vdescriptor = phenopackets.VariationDescriptor()
+        vdescriptor.id = self._variant_id
         vdescriptor.gene_context.value_id = self._hgnc_id
         vdescriptor.gene_context.symbol = self._gene_symbol
         vdescriptor.label = self._label
@@ -100,28 +101,24 @@ class StructuralVariant:
     def chromosomal_deletion(cell_contents,
                              gene_symbol,
                              gene_id,
-                             genotype,
                              variant_id=None):
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
                                  sequence_ontology_id="SO:1000029",
                                  sequence_ontology_label="chromosomal_deletion",
-                                 genotype=genotype,
                                  variant_id=variant_id)
 
     @staticmethod
     def chromosomal_duplication(cell_contents,
                                 gene_symbol,
                                 gene_id,
-                                genotype,
                                 variant_id=None):
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
                                  sequence_ontology_id="SO:1000037",
                                  sequence_ontology_label="chromosomal_duplication",
-                                 genotype=genotype,
                                  variant_id=variant_id)
 
     @staticmethod
@@ -135,5 +132,4 @@ class StructuralVariant:
                                  gene_id=gene_id,
                                  sequence_ontology_id="SO:1000030",
                                  sequence_ontology_label="chromosomal_inversion",
-                                 genotype=genotype,
                                  variant_id=variant_id)
