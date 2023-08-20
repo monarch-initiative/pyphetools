@@ -38,7 +38,7 @@ autodoc_member_order = 'bysource'
 
 # -- Doctest setup ------------------------------------------------------------
 
-doctest_path = [c2s2_src]
+doctest_path = [pyphetools_src]
 doctest_test_doctest_blocks = ""
 
 # Nothing special here
