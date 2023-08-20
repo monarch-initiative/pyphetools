@@ -53,7 +53,7 @@ jobs:
             cd docs
             make html
             
-            mv _build/html/* ../gh-pages/${DOCDIR}
+            mv build/html/* ../gh-pages/${DOCDIR}
           }
                   
           # We store the docs for `main` in `stable` dir
