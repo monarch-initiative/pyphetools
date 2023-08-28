@@ -49,11 +49,11 @@ jobs:
             # Generate the HTML pages and move the generated content into the target folder.
             printf "Building the %s documentation\n" ${DOCDIR}
   
-            sphinx-apidoc --separate --module-first -d 2 -H "API documentation" --follow-links -o docs/apidocs pyphetools
+            sphinx-apidoc --separate --module-first -d 2 -H "API reference" --follow-links -o docs/apidocs pyphetools
             cd docs
             make html
             
-            mv build/html/* ../gh-pages/${DOCDIR}
+            mv _build/html/* ../gh-pages/${DOCDIR}
           }
                   
           # We store the docs for `main` in `stable` dir
@@ -68,4 +68,4 @@ jobs:
       with:
         branch: gh-pages
         clean: true
-        folder: docs/build
+        folder: gh-pages
