@@ -27,18 +27,28 @@ class AgeColumnMapper:
     """
     
     def __init__(self, ageEncodingType, column_name) -> None:
+       
         """
         :param ageEncodingType: Formatting convention used to represent the age
         :type ageEncodingType: one of Year (e.g. 42), ISO 8601 (e.g. P42Y2M), year/month (e.g. 42y2m)
         :param column_name: Name of the Age column in the original table
         :type column_name: str
         """
+       
         self._age_econding = ageEncodingType
         if column_name is None:
             raise ValueError("Must provide non-null column_name argument")
         self._column_name = column_name
 
     def map_cell(self, cell_contents) -> str:
+
+        """
+        Map a single cell of the table
+
+        :param cell_contents: The text contained in a single cell of the table
+        :type cell_contents: can be a string or numerical type
+        """
+        
         if isinstance(cell_contents, str):
             contents = cell_contents.strip()
         else:
@@ -78,19 +88,23 @@ class AgeColumnMapper:
         elif self._age_econding == AgeEncodingType.NOT_PROVIDED:
             return Constants.NOT_PROVIDED
 
-    def get_iso8601_from_int_or_float_year(self, age_string) -> str:
+    def get_iso8601_from_int_or_float_year(self, age) -> str:
+        
         """
         Extract an iso8601 string for age recorded as a year (either an int such as 4 or a float such as 4.25 for P4Y3M)
+        :param age: an int representing years or a float such as 2.5 for two and a half years
+        :return: an ISO 8601 string such as P2Y6M
         """
-        if isinstance(age_string, int):
-            return f"P{age_string}Y"
-        elif isinstance(age_string, float):
-            age_string = str(age_string)
-        elif not isinstance(age_string, str):
-            raise ValueError(f"Malformed agestring {age_string}, type={type(age_string)}")
+        
+        if isinstance(age, int):
+            return f"P{age}Y"
+        elif isinstance(age, float):
+            age = str(age)
+        elif not isinstance(age, str):
+            raise ValueError(f"Malformed agestring {age}, type={type(age)}")
         int_or_float = r"(\d+)(\.\d+)?"
         p = re.compile(int_or_float)
-        results = p.search(age_string).groups()
+        results = p.search(age).groups()
         if len(results) != 2:
             return Constants.NOT_PROVIDED
         if results[0] is None:

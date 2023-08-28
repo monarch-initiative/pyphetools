@@ -1,15 +1,20 @@
 name: Sphinx Documentation
 on:
+  # runs with manual start from Actions tab
+  workflow_dispatch:
+  # runs on pushes
   push:
-    branches: [  main ]
+    branches: [  main, develop ]
 
 jobs:
   build-docs:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
+        fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
         ref: ${{ github.ref }}
 
     - name: Set up Python 3.
@@ -48,14 +53,14 @@ jobs:
             cd docs
             make html
             
-            mv _build/html/* ../gh-pages/${DOCDIR}
+            mv build/html/* ../gh-pages/${DOCDIR}
           }
                   
           # We store the docs for `main` in `stable` dir
           # TODO - enable when the docs make it into `main
           # build_docs main stable
           # We store the docs for `development` in `latest` dir
-          build_docs development latest
+          build_docs develop latest
   
     - name: Deploy documentation.
       if: ${{ github.event_name == 'push' }}
@@ -63,4 +68,4 @@ jobs:
       with:
         branch: gh-pages
         clean: true
-        folder: docs/_build
+        folder: docs/build
