@@ -70,6 +70,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/apidocs/
 
 # PyBuilder
 target/
@@ -135,3 +136,12 @@ notebooks/hpo_data/
 notebooks/phenopackets/
 .idea/
 hpo_data/
+../.DS_Store
+generated/
+modules.rst
+pyphetools.analyze.rst
+pyphetools.creation.rst
+pyphetools.output.rst
+pyphetools.rst
+pyphetools.validation.rst
+test.rst

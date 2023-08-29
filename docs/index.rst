@@ -20,13 +20,9 @@ See :ref:`installation` for instructions on how to set up the package.
     :maxdepth: 1
 
     installation
-    cohort_encoder
-    constant_column_mapper
-    custom_column_mapper
-    option_column_mapper
-    simple_column_mapper
-    variant_column_mapper
+    user-guide/index
     apidocs/modules  
+    developers
 
 Indices and tables
 ==================

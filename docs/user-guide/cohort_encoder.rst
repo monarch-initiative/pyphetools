@@ -33,5 +33,5 @@ each relevant column of the table.
   # output all encoded phenopackets
   output_directory = "phenopackets"
   encoder.output_phenopackets(outdir=output_directory)
-  # optionally, in Jupyter notebooks, show a phenopacket for debugging
-  ! cat phenopackets/example.json
+
+
