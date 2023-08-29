@@ -14,7 +14,6 @@ MONTH_REGEX = r"(\d+)\s*[Mm]"
 
 
 class AgeColumnMapper:
-
     """
     Map a column that contains information about the age of individuals.
 

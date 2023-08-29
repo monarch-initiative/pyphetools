@@ -2,7 +2,12 @@ import abc
 
 
 class Variant(metaclass=abc.ABCMeta):
-    """Superclass for classes that create GA4GH VariantInterpretationObjects"""
+    """
+    Superclass for classes that create GA4GH VariantInterpretationObjects.
+    Subclass HgvsVariant is used for small variants encoded using HGVS notation, e.g., NM_00123.5:c.543G>T.
+    Subclass StructuralVariant is used for structural variants that are likely to completely disrupt a gene.
+    
+    """
     
     def __init__(self):
         self._genotype = None
