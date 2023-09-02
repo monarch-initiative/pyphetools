@@ -145,3 +145,7 @@ pyphetools.output.rst
 pyphetools.rst
 pyphetools.validation.rst
 test.rst
+
+.DS_Store
+notebooks/.DS_Store
+ppt_venv/

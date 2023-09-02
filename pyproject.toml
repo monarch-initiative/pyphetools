@@ -1,9 +1,8 @@
 # pyproject.toml
 
 [build-system]
-requires = ["setuptools>=61.0.0", "wheel"]
+requires = ["setuptools>=65.6.3", "wheel"]
 build-backend = "setuptools.build_meta"
-
 
 
 [tool.setuptools.packages.find]
@@ -12,7 +11,7 @@ exclude = ["notebooks", "test"]
 
 [project]
 name = "pyphetools"
-version = "0.4.8"
+# version in __init__
 requires-python = ">=3.5"
 description = "Generate and work with GA4GH phenopackets"
 readme = "README.md"
@@ -21,6 +20,7 @@ authors = [
      ]
 license = { file = "LICENSE" }
 classifiers = [
+    "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -39,6 +39,7 @@ dependencies = [
     "protobuf",
     "requests"
 ]
+dynamic = ["version"]
 [project.optional-dependencies]
 test = ["pytest"]
 
@@ -53,5 +54,12 @@ repository = "https://github.com/monarch-initiative/pyphetools.git"
 documentation = "https://github.com/monarch-initiative/pyphetools"
 bugtracker = "https://github.com/monarch-initiative/pyphetools/issues"
 
-#[project.scripts]
-# ... = "reader.__main__:main"
+
+
+
+[tool.setuptools]
+package-dir = { "" = "." }
+zip-safe = false
+[tool.setuptools.dynamic]
+version = { attr = "pyphetools.__version__" }
+

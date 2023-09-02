@@ -31,36 +31,18 @@ jobs:
           # We will put all site documentation there.
           mkdir -p gh-pages
           touch gh-pages/.nojekyll
+
+          git checkout main
+          git fetch
+          git pull
+          ## Init the target folder.
+          # We will put all site documentation there.
+          mkdir -p gh-pages
+          sphinx-apidoc --separate --module-first -d 4 -H "API reference" --follow-links -o docs/apidocs pyphetools
+          cd docs
+          make html
+          mv _build/* ../gh-pages
           
-          function build_docs {
-            # The function will checkout a branch and build the Javadoc & documentation 
-            # into provided documentation directory.
-            BRANCH=${1}
-            DOCDIR=${2}
-          
-            git checkout ${BRANCH}
-            git fetch
-            git pull
-            ## Init the target folder.
-            # We will put all site documentation there.
-            mkdir -p gh-pages/${DOCDIR}
-          
-            ## Build the docs
-            # Generate the HTML pages and move the generated content into the target folder.
-            printf "Building the %s documentation\n" ${DOCDIR}
-  
-            sphinx-apidoc --separate --module-first -d 2 -H "API reference" --follow-links -o docs/apidocs pyphetools
-            cd docs
-            make html
-            
-            mv _build/html/* ../gh-pages/${DOCDIR}
-          }
-                  
-          # We store the docs for `main` in `stable` dir
-          # TODO - enable when the docs make it into `main
-          # build_docs main stable
-          # We store the docs for `development` in `latest` dir
-          build_docs develop latest
   
     - name: Deploy documentation.
       if: ${{ github.event_name == 'push' }}
