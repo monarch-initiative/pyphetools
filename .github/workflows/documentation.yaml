@@ -31,6 +31,17 @@ jobs:
           # We will put all site documentation there.
           mkdir -p gh-pages
           touch gh-pages/.nojekyll
+
+          git checkout main
+          git fetch
+          git pull
+          ## Init the target folder.
+          # We will put all site documentation there.
+          mkdir -p gh-pages
+          sphinx-apidoc --separate --module-first -d 2 -H "API reference" --follow-links -o docs/apidocs pyphetools
+          cd docs
+          make html
+          mv _build/html/* ../gh-pages
           
           function build_docs {
             # The function will checkout a branch and build the Javadoc & documentation 
