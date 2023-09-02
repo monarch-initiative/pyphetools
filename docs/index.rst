@@ -23,6 +23,9 @@ See :ref:`installation` for instructions on how to set up the package.
     user-guide/index
     apidocs/modules  
     developers
+    modules
+    test
+    pyphetools
 
 Indices and tables
 ==================
