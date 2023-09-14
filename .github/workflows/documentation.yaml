@@ -38,7 +38,7 @@ jobs:
           ## Init the target folder.
           # We will put all site documentation there.
           mkdir -p gh-pages
-          sphinx-apidoc --separate --module-first -d 4 -H "API reference" --follow-links -o docs/apidocs pyphetools
+          sphinx-apidoc --separate --module-first -d 4 -H "API reference" --follow-links -o docs/apidocs src/pyphetools
           cd docs
           make html
           mv _build/* ../gh-pages
