@@ -1,4 +1,4 @@
-.. _custom_column_mapper:
+.. _custom_column_mapper_rst:
 
 ==================
 CustomColumnMapper
