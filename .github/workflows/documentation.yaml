@@ -35,6 +35,7 @@ jobs:
           git checkout main
           git fetch
           git pull
+          #python3 -m pip install .[dev]
           ## Init the target folder.
           # We will put all site documentation there.
           mkdir -p gh-pages
@@ -46,7 +47,7 @@ jobs:
   
     - name: Deploy documentation.
       if: ${{ github.event_name == 'push' }}
-      uses: JamesIves/github-pages-deploy-action@v4.3.0
+      uses: JamesIves/github-pages-deploy-action@v4.4.1
       with:
         branch: gh-pages
         clean: true

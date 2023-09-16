@@ -1,5 +1,5 @@
 import unittest
-from pyphetools.creation import StructuralVariant
+from src.pyphetools.creation import StructuralVariant
 
 
 class TestVariantValidator(unittest.TestCase):

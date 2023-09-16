@@ -1,7 +1,7 @@
 import unittest
 import os
 import re
-from pyphetools.creation import AgeColumnMapper
+from src.pyphetools.creation import AgeColumnMapper
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 # The API requires us to pass a column name but the column name will not be used in the tests

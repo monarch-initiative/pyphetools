@@ -11,7 +11,8 @@ class Individual:
     A class to represent one individual of the cohort
     """
     def __init__(self,  individual_id, 
-                        hpo_terms, 
+                        hpo_terms,
+                        pmid=None,
                         sex=Constants.NOT_PROVIDED, 
                         age=Constants.NOT_PROVIDED, 
                         interpretation_list=None, 
@@ -43,6 +44,7 @@ class Individual:
         self._interpretation_list = interpretation_list
         self._disease_id = disease_id
         self._disease_label = disease_label
+        self._pmid = pmid
         
     @property
     def id(self):
@@ -79,9 +81,12 @@ class Individual:
             raise ValueError(f"metadata argument must be GA4GH Phenopacket Schema MetaData but was {type(metadata)}")
         php = phenopackets.Phenopacket()
         if phenopacket_id is None:
-            php.id = self._individual_id
+            if self._pmid is not None:
+                pmid = self._pmid.replace(":","_")
+                ppkt_id = f"{pmid}_individual_{self._individual_id}"
         else:
-            php.id = phenopacket_id
+            ppkt_id = phenopacket_id
+        php.id = ppkt_id
         php.subject.id = self._individual_id
         if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE

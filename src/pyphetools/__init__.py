@@ -1,12 +1,17 @@
 # top level
 
-
+from . import analyze
 from . import creation
+from . import output
+from . import validation
 
 
-__version__ = "0.4.9"
+__version__ = "0.4.11"
 
 
 __all__ = [
-    creation
+    "analyze",
+    "creation",
+    "output",
+    "validation"
 ]
