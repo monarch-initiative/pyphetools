@@ -1,5 +1,5 @@
 import unittest
-from pyphetools.creation import ThresholdedColumnMapper
+from src.pyphetools.creation import ThresholdedColumnMapper
 
 
 class TestThresholdedColumnMapper(unittest.TestCase):

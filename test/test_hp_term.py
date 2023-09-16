@@ -1,5 +1,5 @@
 import unittest
-from pyphetools.creation import HpTerm
+from src.pyphetools.creation import HpTerm
 import phenopackets
 
 

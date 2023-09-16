@@ -31,4 +31,4 @@ jobs:
             pip install ".[test]"
         - name: Run pytest tests
           run: |
-            pytest
+            python3 -m pytest
