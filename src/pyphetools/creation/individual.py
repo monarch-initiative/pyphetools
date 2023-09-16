@@ -84,6 +84,8 @@ class Individual:
             if self._pmid is not None:
                 pmid = self._pmid.replace(":","_")
                 ppkt_id = f"{pmid}_individual_{self._individual_id}"
+            else:
+                ppkt_id = self._individual_id
         else:
             ppkt_id = phenopacket_id
         php.id = ppkt_id

@@ -17,6 +17,7 @@ be sufficient for most users of the library. The API documentation provides addi
   :maxdepth: 1
   :caption: Contents:
 
+  tutorial
   cohort_encoder
   constant_column_mapper
   custom_column_mapper

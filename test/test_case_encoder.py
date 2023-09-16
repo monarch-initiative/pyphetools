@@ -15,7 +15,7 @@ class TestCaseParse(unittest.TestCase):
         cls._hpo_cr = hpparser.get_hpo_concept_recognizer()
         metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
         metadata.default_versions_with_hpo(version="2022-05-05")
-        cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr, individual_id="arbitrary", pmid="PMID:1", metadata=metadata.to_ga4gh())
+        cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr, individual_id="A", pmid="PMID:123", metadata=metadata.to_ga4gh())
 
     def test_chief_complaint(self):
         """
@@ -67,4 +67,12 @@ class TestCaseParse(unittest.TestCase):
         self.assertEqual("Seizure",df.iloc[0]['label'])
         self.assertFalse(df.iloc[0]['observed'])
         self.assertTrue(df.iloc[0]['measured'])
+
+    def test_phenopacket_id(self):
+        """
+        Test that we construct the phenopacket ID to include the PMID and the individual id
+        """
+        ppkt = self._parser.get_phenopacket()
+        expected_ppkt_id = "PMID_123_A"
+        self.assertEqual(expected_ppkt_id, ppkt.id)
 
