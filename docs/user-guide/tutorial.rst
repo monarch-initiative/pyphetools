@@ -126,13 +126,48 @@ Data with clinical columns in typical supplemental files often have one of three
 `Intellectual disability, mild HP:0001256 <https://hpo.jax.org/app/browse/term/HP:0001256>`_, etc. See :ref:`option_column_mapper` for more information about how to work with this kind of column.
 3. Custom. This mapper is used for columns whose cells contain longer strings. We use a combination of text mining and specification of strings that were not matched by mining to extract HPO terms. See :ref:`custom_column_mapper_rst` for more information.
 4. Constant. This mapper can be used if all individuals diusplay the same feature. See :ref:`simple_column_mapper`.
-
+5. Threshold. This can be used for columns that have numerical data whereby being above or below a certain threshold is abnormal. See :ref:`threshold_column_mapper`.
 
 
 Row-based vs column-based
 #########################
 
 pyphetools expects the rows to represent individuals. In some cases, input files represent individuals in columns. In this case, it is necessary to transpose the table before working with pyphetools.
+
+
+Converting to row-based format
+
+To use pyphetools, we need to have the individuals represented as rows (one row per individual) and have the items of interest be encoded as column names. 
+The required transformations for doing this may be different for different input data, but often we will want to transpose the table (using the pandas transpose function) 
+and set the column names of the new table to the zero-th row. After this, we drop the zero-th row (otherwise, it will be interpreted as an individual by the pyphetools code).
+
+
+
+Here is an example. Other examples can be found in several of the notebooks in phenopacket-store.
+
+.. code-block:: python
+  :linenos:
+
+  dft = df.transpose()
+  dft.columns = dft.iloc[0]
+  dft.drop(dft.index[0], inplace=True)
+  dft.head()
+
+
+Another thing to look out for is whether the individuals (usually the first column) are regarded as the index of the table or as the first normal column.
+If this is the case, it is easiest to create a new column with the contents of the index -- this will work with the pyphetools software. 
+An example follows -- we can now use 'patient_id' as the column name. It is easier to work with this than with the index column.
+
+
+.. code-block:: python
+  :linenos:
+
+  dft.index  # first check the index
+  dft['patient_id'] = dft.index  # Set the new column 'patient_id' to be identical to the contents of the index
+  dft.head() # check the transposed table
+
+
+After this step is completed, the remaining steps to create phenopackets are the same as in the row-based notebook.
 
 
 

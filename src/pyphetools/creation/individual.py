@@ -80,10 +80,11 @@ class Individual:
         if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
             raise ValueError(f"metadata argument must be GA4GH Phenopacket Schema MetaData but was {type(metadata)}")
         php = phenopackets.Phenopacket()
+        indi_id = self._individual_id.replace(" ", "_")
         if phenopacket_id is None:
             if self._pmid is not None:
                 pmid = self._pmid.replace(":","_")
-                ppkt_id = f"{pmid}_individual_{self._individual_id}"
+                ppkt_id = f"{pmid}_{self._individual_id}"
             else:
                 ppkt_id = self._individual_id
         else:
@@ -169,4 +170,4 @@ class Individual:
             with open(outpth, "wt") as fh:
                 fh.write(json_string)
                 written += 1
-        return written
+        print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
