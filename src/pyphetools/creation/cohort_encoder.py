@@ -182,12 +182,21 @@ class CohortEncoder:
                 disease = self._disease_dictionary.get(individual_id)
                 disease_id = disease.get('id')
                 disease_label = disease.get('label')
-                indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
+                indi = Individual(individual_id=individual_id, 
+                                  sex=sex, 
+                                  age=age, 
+                                  hpo_terms=hpo_terms,
+                                  pmid=self._pmid,
                                   interpretation_list=interpretation_list,
-                                  disease_id=disease_id, disease_label=disease_label)
+                                  disease_id=disease_id, 
+                                  disease_label=disease_label)
                 individuals.append(indi)
             elif self._disease_dictionary is None and self._disease_id is not None and self._disease_label is not None:
-                indi = Individual(individual_id=individual_id, sex=sex, age=age, hpo_terms=hpo_terms,
+                indi = Individual(individual_id=individual_id, 
+                                  sex=sex, 
+                                  age=age, 
+                                  hpo_terms=hpo_terms,
+                                  pmid=self._pmid,
                                   interpretation_list=interpretation_list, disease_id=self._disease_id,
                                   disease_label=self._disease_label)
                 individuals.append(indi)

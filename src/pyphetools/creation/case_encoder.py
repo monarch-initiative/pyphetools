@@ -49,6 +49,7 @@ class CaseEncoder:
         self._individual_id = individual_id
         if not isinstance(metadata, phenopackets.MetaData):
             raise ValueError(f"metadata argument must be phenopackets.MetaData but was {type(metadata)}")
+        self._metadata = metadata
         self._sex = sex
         self._age = age
         self._disease_id = disease_id
@@ -63,7 +64,7 @@ class CaseEncoder:
         if custom_d is None:
             custom_d = {}
         # replace new lines and multiple consecutive spaces with a single space
-        text = re.sub('\s+', ' ', vignette.replace('\n', ' '))
+        text = re.sub(r'\s+', ' ', vignette.replace('\n', ' '))
         for fp in false_positive:
             text = text.replace(fp, " ")
         # results will be a list with HpTerm elements
@@ -142,12 +143,14 @@ class CaseEncoder:
         return self._annotations
 
     def get_phenopacket(self):
+        interpretations = self._interpretations
         if not isinstance(interpretations, list):
             interpretations = [interpretations]
         individual = Individual(individual_id=self._individual_id, 
                                 sex=self._sex, 
                                 age=self._age, 
                                 hpo_terms=self._annotations,
+                                pmid=self._pmid,
                                 interpretation_list=self._interpretations, 
                                 disease_id=self._disease_id, 
                                 disease_label=self._disease_label)
