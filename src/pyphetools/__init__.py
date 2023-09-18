@@ -6,7 +6,7 @@ from . import output
 from . import validation
 
 
-__version__ = "0.4.15"
+__version__ = "0.4.16"
 
 
 __all__ = [

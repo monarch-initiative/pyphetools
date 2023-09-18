@@ -68,7 +68,7 @@ class SimplePatient:
                     if diagnosis.disease is not None:
                         disease_id = diagnosis.disease.id
                         disease_label = diagnosis.disease.label
-                        self._disease = f"{disease_label ({disease_id})}"
+                        self._disease = f"{disease_label} ({disease_id})"
                 ginterpretations = diagnosis.genomic_interpretations
                 for gint in ginterpretations:
                     variant = SimpleVariant(ginterpretation=gint)
