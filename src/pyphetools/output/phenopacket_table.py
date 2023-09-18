@@ -23,6 +23,7 @@ class PhenopacketTable:
         # Patient information
         pat_info = spat.get_subject_id() + " (" + spat.get_sex() + "; " + spat.get_age() + ")"
         row_items.append('<td>' + pat_info + '</ts>')
+        row_items.append('<td>' + spat.get_disease() + '</ts>')
         # Variant information    
         var_list = spat.get_variant_list()
         if len(var_list) == 0:
@@ -52,6 +53,7 @@ class PhenopacketTable:
         table_items.append('<table style="border: 2px solid black;">\n')
         table_items.append("""<tr>
             <th>Individual</th>
+            <th>Disease</th>
             <th>Genotype</th>
             <th>Phenotypic features</th>
         </tr>
