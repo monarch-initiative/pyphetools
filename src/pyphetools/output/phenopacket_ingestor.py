@@ -15,7 +15,7 @@ class PhenopacketIngestor:
                 if file.endswith(".json"):
                     self._phenopackets.append(file)
                     fullpath = os.path.join(indir, file)
-                    patient = SimplePatient(phenopacket_file=fullpath)
+                    patient = SimplePatient.from_file(phenopacket_file=fullpath)
                     phenopacket_id = patient.get_phenopacket_id()
                     self._patient_d[phenopacket_id] = patient
 

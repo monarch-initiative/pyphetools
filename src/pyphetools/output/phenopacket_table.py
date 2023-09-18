@@ -3,10 +3,21 @@ from .simple_patient import SimplePatient
 
 
 class PhenopacketTable:
+    """
+    This class creates a table with a summary of all phenopackets in a cohort of individuals
+    It should be used with HTML, display from IPython.display 
+    """
     def __init__(self, phenopacket_list) -> None:
+        if not isinstance(phenopacket_list, list):
+            raise ValueError(f"Expecting a list but got {type(phenopacket_list)}")
         self._phenopacket_list = phenopacket_list
     
     def _phenopacket_to_table_row(self, spat):
+        """
+        private method intended to create one table row that represents one individual
+        :param spat: An object that represents one individual
+        :type spat: SimplePatient
+        """
         row_items = []
         row_items.append('<tr>')
         # Patient information
