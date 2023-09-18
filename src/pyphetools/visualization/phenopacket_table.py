@@ -8,8 +8,16 @@ class PhenopacketTable:
     It should be used with HTML, display from IPython.display 
     """
     def __init__(self, phenopacket_list) -> None:
+        """
+        :param phenopacket_list: List of GA4GH phenopackets to be displayed
+        """
         if not isinstance(phenopacket_list, list):
             raise ValueError(f"Expecting a list but got {type(phenopacket_list)}")
+        if len(phenopacket_list) == 0:
+            raise ValueError("phenopacket_list was empty")
+        ppkt = phenopacket_list[0]
+        if str(type(ppkt)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
+            raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ppkt)}")
         self._phenopacket_list = phenopacket_list
     
     def _phenopacket_to_table_row(self, spat):

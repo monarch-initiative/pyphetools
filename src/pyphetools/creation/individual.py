@@ -84,12 +84,12 @@ class Individual:
         if phenopacket_id is None:
             if self._pmid is not None:
                 pmid = self._pmid.replace(":","_")
-                ppkt_id = f"{pmid}_{self._individual_id}"
+                ppkt_id = f"{pmid}_{indi_id}"
             else:
-                ppkt_id = self._individual_id
+                ppkt_id = indi_id
         else:
             ppkt_id = phenopacket_id
-        php.id = ppkt_id
+        php.id = ppkt_id.replace(" ", "_")
         php.subject.id = self._individual_id
         if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE

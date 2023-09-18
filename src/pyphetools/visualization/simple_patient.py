@@ -12,11 +12,12 @@ class SimplePatient:
     """
     This class flattens all observed terms into a set and also recorded variants, sex, identifier, and age
     The class purposefully disregards information about the time course in order to be able to count the 
-    frequencies of HPO terms in groups
+    frequencies of HPO terms in groups. The use case of the class is to facilitate visualization of 
+    a collection of phenopackets from files or that have just been ingested using pyphetools. Each simple
+    patient is essentially a wrapper around one phenopacket.
     """
 
     def __init__(self, ga4gh_phenopacket) -> None:
-        # in this case, ga4gh_phenopacket cannot be None
         if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
             raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
         else:
@@ -123,11 +124,14 @@ class SimplePatient:
 
     def get_observed_hpo_d(self):
         """
-        returns map with key (string) HP id, value, HpTerm from creation submodule
+        returns map of observed phenotypic features with key (string) HP id, value, HpTerm from creation submodule
         """
         return self._observed
 
     def get_excluded_hpo_d(self):
+        """
+        :return: map of excluded phenotypic features with key (string) HP id, value, HpTerm from creation submodule
+        """
         return self._excluded
 
     def get_variant_list(self):
