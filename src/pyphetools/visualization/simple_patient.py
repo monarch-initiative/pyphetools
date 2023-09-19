@@ -73,7 +73,16 @@ class SimplePatient:
                 ginterpretations = diagnosis.genomic_interpretations
                 for gint in ginterpretations:
                     variant = SimpleVariant(ginterpretation=gint)
-                    self._variant_list.append(variant)                
+                    self._variant_list.append(variant)
+        # Get PMID, if available, from the MetaData
+        mdata = ppack.meta_data
+        self._pmid = None
+        if len(mdata.external_references) == 1:
+            eref = mdata.external_references[0]
+            self._pmid = eref.id
+
+
+         
         
     @staticmethod
     def from_file(phenopacket_file):
@@ -136,3 +145,10 @@ class SimplePatient:
 
     def get_variant_list(self):
         return self._variant_list
+    
+    def has_pmid(self):
+        return self._pmid is not None
+    
+    def get_pmid(self):
+        return self._pmid
+

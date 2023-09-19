@@ -69,7 +69,7 @@ class MetaData:
         self._extref = None
         if pmid is not None and pubmed_title is not None:
             self._extref  = PPKt.ExternalReference()
-            self._extref .id = pmid
+            self._extref.id = pmid
             pm = pmid.replace("PMID:", "")
             self._extref .reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
             self._extref .description = pubmed_title

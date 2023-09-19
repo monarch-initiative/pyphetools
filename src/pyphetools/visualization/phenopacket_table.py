@@ -1,4 +1,5 @@
 import phenopackets
+from collections import defaultdict
 from .simple_patient import SimplePatient
 
 
@@ -57,20 +58,39 @@ class PhenopacketTable:
     def to_html(self):
         """create an HTML table with patient ID, age, sex, genotypes, and PhenotypicFeatures
         """
+        ppack_list = self._phenopacket_list
+        spat_list = []
+        pmid_count_d = defaultdict(int)
+        no_pmid_found = 0
+        pmid_found = 0
+        for pp in ppack_list:
+            spat = SimplePatient(ga4gh_phenopacket=pp)
+            if spat.has_pmid():
+                pmid_count_d[spat.get_pmid()] += 1
+                pmid_found += 1
+            else:
+                no_pmid_found += 1
+            spat_list.append(spat)
+        # Create caption
+        if pmid_found == 0:
+            capt = f"{len{ppack_list} phenopackets - no PMIDs (consider adding this information to the MetaData)}"
+        else:
+            pmid_strings = []
+            for k, v in pmid_count_d.items():
+                pmid_strings.append("{k} (n={v})")
+            pmid_str = "; ".join(pmid_strings)
+            capt = f"{len(ppack_list)} phenopackets - {pmid_str}"
         table_items = []
         table_items.append('<table style="border: 2px solid black;">\n')
+        table_items.append(f'<caption>{capt}</caption>\n')
         table_items.append("""<tr>
             <th>Individual</th>
             <th>Disease</th>
             <th>Genotype</th>
             <th>Phenotypic features</th>
         </tr>
-      """)
-        for pp in self._phenopacket_list:
-            if isinstance(pp, SimplePatient):
-                spat = pp
-            else:
-                spat = SimplePatient(ga4gh_phenopacket=pp)
+        """)
+        for spat in spat_list:
             table_items.append(self._phenopacket_to_table_row(spat))
         table_items.append('</table>\n') # close table content
         return "\n".join(table_items)
