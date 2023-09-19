@@ -42,7 +42,7 @@ jobs:
           sphinx-apidoc --separate --module-first -d 4 -H "API reference" --follow-links -o docs/apidocs src/pyphetools
           cd docs
           make html
-          mv apidocs _build/html/.
+          mv apidocs _build/html
           mv _build/html/* ../gh-pages
           
   
