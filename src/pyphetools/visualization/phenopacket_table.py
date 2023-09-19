@@ -73,11 +73,11 @@ class PhenopacketTable:
             spat_list.append(spat)
         # Create caption
         if pmid_found == 0:
-            capt = f"{len{ppack_list} phenopackets - no PMIDs (consider adding this information to the MetaData)}"
+            capt = f"{len(ppack_list)} phenopackets - no PMIDs (consider adding this information to the MetaData)"
         else:
             pmid_strings = []
             for k, v in pmid_count_d.items():
-                pmid_strings.append("{k} (n={v})")
+                pmid_strings.append(f"{k} (n={v})")
             pmid_str = "; ".join(pmid_strings)
             capt = f"{len(ppack_list)} phenopackets - {pmid_str}"
         table_items = []

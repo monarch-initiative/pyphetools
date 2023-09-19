@@ -1,6 +1,5 @@
 import os
 import phenopackets
-#from phenopackets import Phenopacket
 from google.protobuf.json_format import Parse
 import json
 from collections import defaultdict
@@ -151,4 +150,7 @@ class SimplePatient:
     
     def get_pmid(self):
         return self._pmid
+    
+    def contains_observed_term_id(self, hpo_term_id):
+        return hpo_term_id in self._observed
 
