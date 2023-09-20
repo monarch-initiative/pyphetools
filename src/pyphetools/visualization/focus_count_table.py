@@ -42,7 +42,7 @@ class FocusCountTable:
                 # key is a string such as HP:0001234, value is an HpTerm object
                 # we need to convert it to an object from hpo-toolkit because get_ancestors returns HpTerm objects
                 hp_termid = TermId.from_curie(hp_id)
-                ancs = self._ontology.get_ancestors(hp_termid)
+                ancs = self._ontology.graph.get_ancestors(hp_termid)
                 anc_set.add(hp_termid)
                 anc_set.update(ancs)
                 if pat_id in focus_id:

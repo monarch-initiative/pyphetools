@@ -141,8 +141,11 @@ class CaseEncoder:
 
     def get_hpo_term_dict(self):
         return self._annotations
-
-    def get_phenopacket(self):
+    
+    def get_individual(self):
+        """
+        :return: the pyphetools Individual object corresponding to the current case report
+        """
         interpretations = self._interpretations
         if not isinstance(interpretations, list):
             interpretations = [interpretations]
@@ -154,6 +157,13 @@ class CaseEncoder:
                                 interpretation_list=self._interpretations, 
                                 disease_id=self._disease_id, 
                                 disease_label=self._disease_label)
+        return individual
+
+    def get_phenopacket(self):
+        """
+        :return: the GA4GH phenopacket corresponding to the current case report
+        """
+        individual = self.get_individual()
         phenopacket_id = self._pmid.replace(":", "_") + "_" + individual.id.replace(" ", "_").replace(":", "_")
         return individual.to_ga4gh_phenopacket(metadata=self._metadata, phenopacket_id=phenopacket_id)
 

@@ -1,6 +1,6 @@
 from datetime import datetime
 from collections import defaultdict
-import phenopackets
+import phenopackets as PPKt
 from google import protobuf
 import time
 
@@ -63,12 +63,19 @@ class MetaData:
     A representation of the MetaData element of the GA4GH Phenopacket Schema
     """
 
-    def __init__(self, created_by) -> None:
+    def __init__(self, created_by, pmid=None, pubmed_title=None) -> None:
         self._created_by = created_by
         self._schema_version = "2.0"
+        self._extref = None
+        if pmid is not None and pubmed_title is not None:
+            self._extref  = PPKt.ExternalReference()
+            self._extref.id = pmid
+            pm = pmid.replace("PMID:", "")
+            self._extref .reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
+            self._extref .description = pubmed_title
         self._resource_d = defaultdict(Resource)
 
-    def default_versions_with_hpo(self, version):
+    def default_versions_with_hpo(self, version, pmid=None, pubmed_title=None):
         """
         Add resources for HPO (with specified version), GENO, HGNC, and OMIM (with default versions)
         The HPO version can be easily obtained from the HpoParser using the get_version() function
@@ -141,7 +148,7 @@ class MetaData:
         """
         Use a time stamp for the current instant
         """
-        metadata = phenopackets.MetaData()
+        metadata = PPKt.MetaData()
         metadata.created_by = self._created_by
         now = time.time()
         seconds = int(now)
@@ -150,7 +157,7 @@ class MetaData:
         metadata.created.CopyFrom(timestamp)
         metadata.phenopacket_schema_version = self._schema_version
         for _, resource in self._resource_d.items():
-            res = phenopackets.Resource()
+            res = PPKt.Resource()
             res.id = resource.id
             res.name = resource.name
             res.namespace_prefix = resource.namespace_prefix
@@ -158,4 +165,6 @@ class MetaData:
             res.url = resource.url
             res.version = resource.version
             metadata.resources.append(res)
+        if self._extref is not None:
+            metadata.external_references.append(self._extref)
         return metadata

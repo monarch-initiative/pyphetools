@@ -2,16 +2,16 @@
 
 from . import analyze
 from . import creation
-from . import output
+from . import visualization
 from . import validation
 
 
-__version__ = "0.4.13"
+__version__ = "0.5.8"
 
 
 __all__ = [
     "analyze",
     "creation",
-    "output",
+    "visualization",
     "validation"
 ]

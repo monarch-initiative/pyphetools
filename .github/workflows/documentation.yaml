@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   # runs on pushes
   push:
-    branches: [  main, develop ]
+    branches: [  main ]
 
 jobs:
   build-docs:
@@ -33,9 +33,7 @@ jobs:
           touch gh-pages/.nojekyll
 
           git checkout main
-          git fetch
-          git pull
-          #python3 -m pip install .[dev]
+          python3 -m pip install .
           ## Init the target folder.
           # We will put all site documentation there.
           mkdir -p gh-pages

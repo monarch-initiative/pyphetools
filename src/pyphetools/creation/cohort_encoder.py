@@ -149,7 +149,7 @@ class CohortEncoder:
                 try:
                     age = self._age_mapper.map_cell(age_cell_contents)
                 except Exception as ee:
-                    print(f"Error: Could not parse age {ee}")
+                    print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
                     age = Constants.NOT_PROVIDED
             if sex_column_name == Constants.NOT_PROVIDED:
                 sex = self._sex_mapper.map_cell(Constants.NOT_PROVIDED)

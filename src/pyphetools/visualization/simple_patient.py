@@ -1,6 +1,5 @@
 import os
 import phenopackets
-#from phenopackets import Phenopacket
 from google.protobuf.json_format import Parse
 import json
 from collections import defaultdict
@@ -12,27 +11,16 @@ class SimplePatient:
     """
     This class flattens all observed terms into a set and also recorded variants, sex, identifier, and age
     The class purposefully disregards information about the time course in order to be able to count the 
-    frequencies of HPO terms in groups
+    frequencies of HPO terms in groups. The use case of the class is to facilitate visualization of 
+    a collection of phenopackets from files or that have just been ingested using pyphetools. Each simple
+    patient is essentially a wrapper around one phenopacket.
     """
 
-    def __init__(self, phenopacket_file=None, ga4gh_phenopacket=None) -> None:
-        if phenopacket_file is None and ga4gh_phenopacket is None:
-            raise ValueError("Must pass either 'phenopacket_file' or 'ga4gh_phenopacket' argument")
-        elif phenopacket_file is not None and ga4gh_phenopacket is not None:
-            raise ValueError("Must pass only one of 'phenopacket_file' and 'ga4gh_phenopacket' arguments")
-        elif phenopacket_file is not None:
-            if not os.path.isfile(phenopacket_file):
-                raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket_file}'") 
-            with open(phenopacket_file) as f:
-                data = f.read()
-                jsondata = json.loads(data)
-                ppack = Parse(json.dumps(jsondata), phenopackets.Phenopacket())
+    def __init__(self, ga4gh_phenopacket) -> None:
+        if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
+            raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
         else:
-            # in this case, ga4gh_phenopacket cannot be None
-            if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
-                raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
-            else:
-                ppack = ga4gh_phenopacket
+            ppack = ga4gh_phenopacket
         observed_hpo_terms = defaultdict(HpTerm)
         excluded_hpo_terms = defaultdict(HpTerm)
         self._phenopacket_id = ppack.id
@@ -69,19 +57,59 @@ class SimplePatient:
         self._excluded = excluded_hpo_terms
         # Add information about variants
         self._variant_list = []
+        self._disease = None
         if ppack.interpretations is not None and len(ppack.interpretations) > 0:
             interprets = ppack.interpretations
             for interpretation in interprets:
                 if str(type(interpretation)) != "<class 'phenopackets.schema.v2.core.interpretation_pb2.Interpretation'>":
                     raise ValueError(f"interpretation argument must be GA4GH Phenopacket Interpretation but was {type(interpretation)}")
                 diagnosis = interpretation.diagnosis
+                if diagnosis is not None:
+                    if diagnosis.disease is not None:
+                        disease_id = diagnosis.disease.id
+                        disease_label = diagnosis.disease.label
+                        self._disease = f"{disease_label} ({disease_id})"
                 ginterpretations = diagnosis.genomic_interpretations
                 for gint in ginterpretations:
                     variant = SimpleVariant(ginterpretation=gint)
                     self._variant_list.append(variant)
-        # TODO -- add information about disease, ensuring that all Variants are associated with the same diagnosis
-                
+        # Get PMID, if available, from the MetaData
+        mdata = ppack.meta_data
+        self._pmid = None
+        if len(mdata.external_references) == 1:
+            eref = mdata.external_references[0]
+            self._pmid = eref.id
+
+
+         
         
+    @staticmethod
+    def from_file(phenopacket_file):
+        """
+        Return a SimplePatient object that corresponds to a phenopacket (JSON) file
+        :param phenopacket_file: A phenopacket file (JSON format) 
+        :type ppkt_file: string representing a path to a file
+        """
+        if not os.path.isfile(phenopacket_file):
+            raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket_file}'") 
+        with open(phenopacket_file) as f:
+            data = f.read()
+            jsondata = json.loads(data)
+            ppack = Parse(json.dumps(jsondata), phenopackets.Phenopacket())
+            return SimplePatient(ga4gh_phenopacket=ppack)
+        
+
+    @staticmethod
+    def from_individual(individual, metadata):
+        """
+        Return a SimplePatient object that corresponds to a pyphetools Individual object
+        :param individual: Am Individual object
+        :type individual: Individual
+        :param metadata: A GA4GH Phenopacket Schema MetaData object
+        :type metadata: MetaData
+        """
+        ppack = individual.to_ga4gh_phenopacket(metadata)
+        return SimplePatient(ga4gh_phenopacket=ppack)
 
 
     def get_phenopacket_id(self):
@@ -95,15 +123,34 @@ class SimplePatient:
 
     def get_age(self):
         return self._time_at_last_encounter
+    
+    def get_disease(self):
+        if self._disease is None:
+            return "n/a"
+        else:
+            return self._disease
 
     def get_observed_hpo_d(self):
         """
-        returns map with key (string) HP id, value, HpTerm from creation submodule
+        returns map of observed phenotypic features with key (string) HP id, value, HpTerm from creation submodule
         """
         return self._observed
 
     def get_excluded_hpo_d(self):
+        """
+        :return: map of excluded phenotypic features with key (string) HP id, value, HpTerm from creation submodule
+        """
         return self._excluded
 
     def get_variant_list(self):
         return self._variant_list
+    
+    def has_pmid(self):
+        return self._pmid is not None
+    
+    def get_pmid(self):
+        return self._pmid
+    
+    def contains_observed_term_id(self, hpo_term_id):
+        return hpo_term_id in self._observed
+
