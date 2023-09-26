@@ -62,11 +62,11 @@ class TestOptionMapper(unittest.TestCase):
         self.assertIsNotNone(res2)
         self.assertEqual(2, len(res2))
         hpterm = res2[0]
-        self.assertEqual("High palate", hpterm.label)
-        self.assertEqual("HP:0000218", hpterm.id)
-        hpterm = res2[1]
         self.assertEqual("Dolichocephaly", hpterm.label)
         self.assertEqual("HP:0000268", hpterm.id)
+        hpterm = res2[1]
+        self.assertEqual("High palate", hpterm.label)
+        self.assertEqual("HP:0000218", hpterm.id)
         
     def test_eso(self):
         oph_d = {"strabismus": "Strabismus", 
@@ -88,11 +88,11 @@ class TestOptionMapper(unittest.TestCase):
         self.assertIsNotNone(res)
         self.assertEqual(2, len(res))
         hpterm0 = res[0]
-        self.assertEqual("Broad thumb", hpterm0.label)
-        self.assertEqual("HP:0011304", hpterm0.id)
+        self.assertEqual("Broad hallux", hpterm0.label)
+        self.assertEqual("HP:0010055", hpterm0.id)
         hpterm1 = res[1]
-        self.assertEqual("Broad hallux", hpterm1.label)
-        self.assertEqual("HP:0010055", hpterm1.id)
+        self.assertEqual("Broad thumb", hpterm1.label)
+        self.assertEqual("HP:0011304", hpterm1.id)
         
     def test_options_broad(self):
         thumb_d = {"BT": "Broad thumb", 
@@ -103,11 +103,11 @@ class TestOptionMapper(unittest.TestCase):
         self.assertIsNotNone(res)
         self.assertEqual(2, len(res))
         hpterm0 = res[0]
-        self.assertEqual("Broad thumb", hpterm0.label)
-        self.assertEqual("HP:0011304", hpterm0.id)
+        self.assertEqual("Broad hallux", hpterm0.label)
+        self.assertEqual("HP:0010055", hpterm0.id)
         hpterm1 = res[1]
-        self.assertEqual("Broad hallux", hpterm1.label)
-        self.assertEqual("HP:0010055", hpterm1.id)
+        self.assertEqual("Broad thumb", hpterm1.label)
+        self.assertEqual("HP:0011304", hpterm1.id)
 
     def test_options_negative(self):
         thumb_d = {"BT": "Broad thumb",
@@ -124,5 +124,22 @@ class TestOptionMapper(unittest.TestCase):
         self.assertEqual("HP:0011304", hpterm0.id)
         self.assertFalse(hpterm0.observed)
 
+
+    def test_avoid_duplicates(self):
+        """
+        avoid adding the same term multiple times if one item is a substring of another
+        """
+        autistic_like_behavior_d = {
+            'stereotypies': 'Motor stereotypy',
+            'yes - was being investigated': 'Autism',
+            'Severe autism': 'Autism',
+            'yes': 'Autism'}
+        exluded_d = {'no': 'Autism',
+                     'no formal testing (no concern for ASD)': 'Autism', }
+        autisticMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr,
+                                            option_d=autistic_like_behavior_d,
+                                            excluded_d=exluded_d)
+        hpo_term_list = autisticMapper.map_cell("yes - was being investigated")
+        self.assertEqual(1, len(hpo_term_list))
 
 
