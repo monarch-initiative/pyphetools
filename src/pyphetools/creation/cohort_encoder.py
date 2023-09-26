@@ -1,7 +1,7 @@
 import pandas as pd
 from math import isnan
-from typing import List
-from collections import defaultdict
+from typing import List, Dict
+import phenopackets as PPkt
 import os
 
 from .age_column_mapper import AgeColumnMapper
@@ -26,24 +26,38 @@ class CohortEncoder:
                  metadata,
                  agemapper=AgeColumnMapper.not_provided(), 
                  sexmapper=SexColumnMapper.not_provided(), 
-                 variant_mapper=None, 
+                 variant_mapper=None,
+                 variant_dictionary=None,
                  pmid=None):
-        """_summary_
+        """Map a table of data to Individual/GA4GH Phenopacket Schema objects
 
-        Args:
-            df (pd.DataFrame): tabular data abotu a cohort
-            hpo_cr (HpoConceptRecognizer): HPO concept recognizer
-            column_mapper_d (dict): Dictionary with key: Column name, value: ColumnMapper object
-            individual_column_name (str): label of column with individual/proband/patient identifier
-            metadata (Object): GA4GH MetaData object
-            agemapper (AgeColumnMapper, optional): Mapper for the Age column. Defaults to AgeColumnMapper.not_provided().
-            sexmapper (SexColumnMapper, optional): Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
-            variant_mapper (VariantColumnMapper, optional): mapper for HGVS-encoded variant column. Defaults to None.
-            non_hgvs_variant_map (dict, optional): key: string in the variant column value: VarMapper for converting the string to GA4GH VariationDescriptor . Defaults to empty defaultdict().
-            pmid (str, optional): PubMed identifier for the cohort. Defaults to None.
+        The column_mapper_d is a dictionary with key=column names, and value=Mapper objects. These mappers are responsible
+        for mapping HPO terms. The agemapper and the sexmapper are specialized for the respective columns. The
+        variant mapper is useful if there is a single variant column that is all HGVS or structural variants. In some
+        cases, it is preferable to use the variant_dictionary, which has key=string (cell contents) and value=Hgvs or
+        StructuralVariant object.
 
-        Raises:
-            ValueError: several of the input arguments are checked.
+        :param df: tabular data abotu a cohort
+        :type df: pd.DataFrame
+        :param hpo_cr: HpoConceptRecognizer for text mining
+        :type  hpo_cr: pyphetools.creation.HpoConceptRecognizer
+        :param column_mapper_d: Dictionary with key: Column name, value: ColumnMapper object
+        :type column_mapper_d: Dict[pyphetools.creation.ColumnMapper]
+        :param individual_column_name: label of column with individual/proband/patient identifier
+        :type individual_column_name: str
+        :param metadata: GA4GH MetaData object
+        :type metadata: PPkt.MetaData
+        :param agemapper:Mapper for the Age column. Defaults to AgeColumnMapper.not_provided()
+        :type agemapper: pyphetools.creation.AgeColumnMapper
+        :param sexmapper: Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
+        :type sexmapper: pyphetools.creation.SexColumnMapper
+        :param variant_mapper: column mapper for HGVS-encoded variant column. Defaults to None.
+        :type variant_mapper: pyphetools.creation.VariantColumnMapper
+        :param variant_dictionary: dictionary with key:string (cell contents), value: corresponding Variant
+        :type variant_dictionary: Dict[str, Variant]
+        :param pmid: PubMed identifier for the cohort. Defaults to None.
+        :type pmid: str
+        :raises: ValueError - several of the input arguments are checked.
         """
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
@@ -73,7 +87,10 @@ class CohortEncoder:
         self._sex_mapper = sexmapper
         self._disease_id = None
         self._disease_label = None
+        if variant_mapper is not None and variant_dictionary is not None:
+            raise ValueError("Only one of the arguments variant_mapper and variant_dictionary must be provided")
         self._variant_mapper = variant_mapper
+        self._variant_dictionary = variant_dictionary
         self._pmid = pmid
         self._disease_dictionary = None
 
@@ -168,12 +185,15 @@ class CohortEncoder:
                 hpo_terms.extend(terms)
             if variant_colname is not None:
                 variant_cell_contents = row[variant_colname]
-                interpretation_list = []
                 if genotype_colname is not None:
                     genotype_cell_contents = row[genotype_colname]
                 else:
                     genotype_cell_contents = None
-                interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
+                if self._variant_mapper is not None:
+                    interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
+                elif self._variant_dictionary is not None:
+                    v = self._variant_dictionary.get(variant_cell_contents)
+                    interpretation_list = [v]
             else:
                 interpretation_list = []
             if self._disease_dictionary is not None and self._disease_id is None and self._disease_label is None:

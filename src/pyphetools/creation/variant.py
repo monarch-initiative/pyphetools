@@ -15,9 +15,14 @@ class Variant(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def to_ga4gh_variant_interpretation(self, acmg=None):
         """
-        Embed the variant object into a GA4GH Genomic Interpretation obbject (abstract)
+        Embed the variant object into a GA4GH Genomic Interpretation object (abstract method)
 
-        :param acmg: ACMG pathogenicity level (default: None)
+        The argument acmg must be one of the strings 'benign', 'likely_benign', 'uncertain_significance',
+            'likely_pathogenic', or 'pathogenic' (underscores are optional). If it is not provided or
+            not one of these strings, the level will be set to not available
+
+        :param acmg: ACMG pathogenicity level
+        :type acmg: str
         """
         pass
     
