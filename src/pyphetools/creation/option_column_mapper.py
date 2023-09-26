@@ -1,21 +1,27 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from .hpo_cr import HpoConceptRecognizer
-from typing import List
+from typing import List, Dict
 import pandas as pd
 import re
 from collections import defaultdict
 
 class OptionColumnMapper(ColumnMapper):
+    """Class to map the contents of a table cell to one or more options (HPO terms)
+
+    This mapper should be used if the column has a set of multiple defined items (strings) representing HPO terms.
+    The excluded_d argument should be used if the column includes excluded (negated) HPO terms
+
+    :param concept_recognizer: HpoConceptRecognizer for text mining
+    :type  concept_recognizer: pyphetools.creation.HpoConceptRecognizer
+    :param option_d: dictionary with key: string corresponding to original table, value: corresponding HPO term label
+    :type option_d:Dict[str,str]
+    :param excluded_d: dictionary with key: similar to option_d but for excluded HPO terms, optional
+    :type excluded_d:Dict[str,str]
+    """
     
     def __init__(self, concept_recognizer, option_d, excluded_d=None):
-        """Mapper to be used if the column has a set of defined items but text mining is not required.
-
-        Args:
-            option_d (dict): key: item (e.g., MVP) in original publication; value: corresponding HPO label, e.g. Mitral Valve Prolapse
-            excluded_d: key: excluded string, value: excluded HPO term label
-        Raises:
-            ValueError: if option_d is not a dictionary
+        """Constructor
         """
         super().__init__()
         # Either have self._option_d be an empty dictionary or it must be a valid dictionary
@@ -31,9 +37,11 @@ class OptionColumnMapper(ColumnMapper):
         
     def map_cell(self, cell_contents) -> List[HpTerm]:
         """Map cell contents using the option dictionary 
-        
-        Args:
-            cell_contents (str): contents of one table cell
+
+        :param cell_contents: contents of one table cell
+        :type cell_contents: str
+        :returns: list of (unique, alphabetically sorted) HpTerm objects with observed or excluded HPO terms
+        :rtype: List[HpTerm]
         """
         results = []
         contents = cell_contents.strip()
@@ -48,21 +56,32 @@ class OptionColumnMapper(ColumnMapper):
         chunks = re.split(regex_pattern, contents)
         chunks = [chunk.strip() for chunk in chunks]
 
-        hpo_labels = []
+        hpo_labels = set()
         for c in chunks:
             for my_key, my_label in self._option_d.items():
                 if my_key in c:
                     if isinstance(my_label, list):
                         for itm in my_label:
-                            hpo_labels.append(itm)
+                            hpo_labels.add(itm)
                     else:
-                        hpo_labels.append(my_label)
+                        hpo_labels.add(my_label)
         for label in hpo_labels:    
             term = self._hpo_cr.get_term_from_label(label=label)
             results.append(term)
+            results.sort(key=lambda term: term.label)
         return results
         
     def preview_column(self, column) -> pd.DataFrame:
+        """
+        Generate a pandas dataframe with a summary of parsing of the entire column
+
+        This method is intended for use in developing the code for ETL of an input column.
+        It is only needed for development and debugging.
+        :param column: A single column from the input table
+        :type column: pd.Series
+        :returns: a pandas dataframe with one row for each entry of the input column
+        :rtype: pd.DataFrame
+        """
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         dlist = []
@@ -82,16 +101,20 @@ class OptionColumnMapper(ColumnMapper):
     
     @staticmethod
     def autoformat(df: pd.DataFrame, concept_recognizer, delimiter=",", omit_columns=None) -> str:
-        """Autoformat code from the colums so that we can easily copy-paste and change it.
+        """Autoformat code from the columns so that we can easily copy-paste and change it.
+
         This method intends to save time by preformatting code the create OptionMappers.
         
-        Args:
-            df: data frame with the data about the individuals
-            concept_recognizer: HpoConceptRecognizer for text mining
-            delimiter: the string used to delimit individual items in a cell (default: comma)
-            omit_columns: names of columns to omit from this search
-        Return:
-            a string that should be displayed using a print() command in the notebook
+        :param df: data frame with the data about the individuals
+        :type df: pd.DataFrame
+        :param concept_recognizer: HpoConceptRecognizer for text mining
+        :type  concept_recognizer: pyphetools.creation.HpoConceptRecognizer
+        :param delimiter: the string used to delimit individual items in a cell (default: comma)
+        :type delimiter: str
+        :param omit_columns: names of columns to omit from this search
+        :type omit_columns: List[str]
+        :returns: a string that should be displayed using a print() command in the notebook - has info about automatically mapped columns
+        :rtype: str
         """  
         lines = []
         if not isinstance(df, pd.DataFrame):
