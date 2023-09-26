@@ -3,6 +3,22 @@ import phenopackets
 from .constants import Constants
 
 class HpTerm:
+    """
+    Class to represent a phenotypic observation as an HPO term with optional modifiers
+
+    :param hpo_id: a Human Phenotype Ontology (HPO) identifier such as HP:0001166
+    :type hpo_id: str
+    :param label: The HPO label that corresponds to the id (note: This class does not check for correct match)
+    :type label: str
+    :param observed: a boolean that indicates whether the HPO term was observed (True) or excluded (False)
+    :type observed: bool
+    :param measured: a boolean that indicates whether the HPO was measured (True) or not explicitly measured (False)
+    :type measured: bool
+    :param onset: an ISO8601 string representing the age of onset, optional
+    :type onset: str
+    :param resolution: an ISO8601 string representing the age of resolution, optional
+    :type resolution: str
+    """
     def __init__(self, hpo_id, label, observed=True, measured=True, onset=None, resolution=None):
         if hpo_id is None or len(hpo_id) == 0 or not hpo_id.startswith("HP"):
             raise ValueError(f"invalid id argument: '{hpo_id}'")

@@ -1,4 +1,4 @@
-import phenopackets 
+import phenopackets
 import re
 import os
 from google.protobuf.json_format import MessageToJson
@@ -10,24 +10,31 @@ class Individual:
     """
     A class to represent one individual of the cohort
     """
-    def __init__(self,  individual_id, 
-                        hpo_terms,
-                        pmid=None,
-                        sex=Constants.NOT_PROVIDED, 
-                        age=Constants.NOT_PROVIDED, 
-                        interpretation_list=None, 
-                        disease_id=None, 
-                        disease_label=None):
-        """All of the data we will transform into a single phenopacket
+
+    def __init__(self, individual_id,
+                 hpo_terms,
+                 pmid=None,
+                 sex=Constants.NOT_PROVIDED,
+                 age=Constants.NOT_PROVIDED,
+                 interpretation_list=None,
+                 disease_id=None,
+                 disease_label=None):
+        """All of the data we will transform into a single GA4GH phenopacket
         
-        Args:
-            individual_id (str): The individual identifier
-            hpo_terms (list): List of HpTerm objects
-            sex (str): String corresponding to the sex of the individual, default, n/a
-            age (str): String corresponding to the age of the individual (ISO), default, n/a
-            interpretation_list (list): list of GA4GH VariationInterpretation objects (optional)
-            disease_id (str): String corresponding to the disease ID, default, (optional)
-            disease_label (str): String corresponding to the disease label, default, (optional)
+        :param individual_id: The individual identifier
+        :type individual_id: str
+        :param hpo_terms: List of HpTerm objects
+        :type hpo_terms: List[pyphetools.creation.HpTerm]
+        :param sex: String corresponding to the sex of the individual, default, n/a
+        :type sex: str
+        :param age: String corresponding to the age of the individual (ISO), default, n/a
+        :type age: str
+        :param interpretation_list: list of GA4GH VariationInterpretation objects (optional)
+        :type interpretation_list: list
+        :param disease_id: String corresponding to the disease ID, default, (optional)
+        :type disease_id: str
+        :param disease_label: String corresponding to the disease label, default, (optional)
+        :type disease_label: str
         """
         if isinstance(individual_id, int):
             self._individual_id = str(individual_id)
@@ -45,32 +52,32 @@ class Individual:
         self._disease_id = disease_id
         self._disease_label = disease_label
         self._pmid = pmid
-        
+
     @property
     def id(self):
         return self._individual_id
-    
+
     @property
     def sex(self):
         return self._sex
-    
+
     @property
     def age(self):
         return self._age
-    
+
     @property
     def hpo_terms(self):
         return self._hpo_terms
-    
+
     @property
     def interpretation_list(self):
         return self._interpretation_list
-    
+
     def add_variant(self, v, acmg=None):
         if not isinstance(v, Variant):
             raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
         self._interpretation_list.append(v.to_ga4gh_variant_interpretation(acmg=acmg))
-    
+
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_
         Transform the data into GA4GH Phenopacket format
@@ -83,7 +90,7 @@ class Individual:
         indi_id = self._individual_id.replace(" ", "_")
         if phenopacket_id is None:
             if self._pmid is not None:
-                pmid = self._pmid.replace(":","_")
+                pmid = self._pmid.replace(":", "_")
                 ppkt_id = f"{pmid}_{indi_id}"
             else:
                 ppkt_id = indi_id
@@ -137,7 +144,7 @@ class Individual:
         if metadata is not None:
             php.meta_data.CopyFrom(metadata)
         return php
-    
+
     @staticmethod
     def output_individuals_as_phenopackets(individual_list, metadata, pmid=None, outdir="phenopackets"):
         """write a list of Individial objects to file in GA4GH Phenopacket format
@@ -160,10 +167,10 @@ class Individual:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
             json_string = MessageToJson(phenopckt)
             if pmid is None:
-                fname = "phenopacket_" + individual.id 
+                fname = "phenopacket_" + individual.id
             else:
                 pmid = pmid.replace(" ", "").replace(":", "_")
-                fname = pmid + "_" + individual.id 
+                fname = pmid + "_" + individual.id
             fname = re.sub('[^A-Za-z0-9_-]', '', fname)  # remove any illegal characters from filename
             fname = fname.replace(" ", "_") + ".json"
             outpth = os.path.join(outdir, fname)

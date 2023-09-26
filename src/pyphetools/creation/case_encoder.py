@@ -8,7 +8,7 @@ from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 from .simple_column_mapper import SimpleColumnMapper
 from .column_mapper import ColumnMapper
-
+from .constants import Constants
 from .individual import Individual
 from .variant import Variant
 
@@ -17,6 +17,25 @@ ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 class CaseEncoder:
     """encode a single case report with HPO terms in Phenopacket format
+
+    Encode a single case report in GA4GH Phenopacket format.
+
+    :param hpo_cr: HpoConceptRecognizer for text mining
+    :type  hpo_cr: pyphetools.creation.HpoConceptRecognizer
+    :param  pmid: PubMed identifier of this case report
+    :type  pmid: str,
+    :param  individual_id: Application specific individual identifier
+    :type individual_id:str,
+    :param  metadata: GA4GH MetaData object
+    :type metadata:phenopackets.MetaData
+    :param  age_at_last_exam: An ISO8601 string (e.g., P42Y2M) representing the age of the individual, optional
+    :type age_at_last_exam: str
+    :param   sex:str=None,
+    :type sex: str
+    :param  disease_id: a CURIE (e.g. OMIM:600213) for the current disease, optional
+    :type disease_id: str
+    :param  disease_label: Name (label) of the disease diagnosis for the case report, optional
+    :type disease_label: str
     """
 
     def __init__(self, 
@@ -25,8 +44,7 @@ class CaseEncoder:
                  individual_id:str, 
                  metadata:phenopackets.MetaData, 
                  age_at_last_exam=None, 
-                 sex:str=None, 
-                 age:str=None, 
+                 sex:str=None,
                  disease_id:str=None, 
                  disease_label:str=None) -> None:
         if not isinstance(hpo_cr, HpoConceptRecognizer):
@@ -50,17 +68,42 @@ class CaseEncoder:
         if not isinstance(metadata, phenopackets.MetaData):
             raise ValueError(f"metadata argument must be phenopackets.MetaData but was {type(metadata)}")
         self._metadata = metadata
-        self._sex = sex
-        self._age = age
+        female_symbols = {"f", "girl", "female", "woman", "w"}
+        male_symbols = {"f", "boy", "male", "man", "m"}
+        if sex in female_symbols:
+            self._sex = Constants.FEMALE_SYMBOL
+        elif sex in male_symbols:
+            self._sex = Constants.MALE_SYMBOL
+        else:
+            self._sex = Constants.UNKOWN_SEX_SYMBOL
         self._disease_id = disease_id
         self._disease_label = disease_label
         self._interpretations = []
 
-    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=[], excluded_terms=set()) -> List[
+    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms=None) -> List[
         HpTerm]:
+        """Add a description of a clinical encouter for text mining
+
+        This method uses simple text mining to extract terms from the vignette. The optional custom_d argument can be
+        used for HPO terms that are not mined by the text miner (users should use the preview to check the performance
+        of the default miner and add terms as needed/desired). Note that HpTerms are added to the CaseEncoder object; these
+        terms are also returned as a pandas DataFrame for checking.
+
+        :param vignette: A free text description of a clinical encounter (we will use text mining to extract HPO terms)
+        :type vignette: str
+        :param custom_d: A dictionary of strings that correspond to HPO terms
+        :type custom_d: dict
+        :param false_positive: a set of strings that are omitted from text mining to avoid false positive results
+        :type false_positive: set
+        :param excluded_terms: similar to custom_d but for terms that are explicitly excluded in the vignette
+        :type excluded_terms: dict
+        :returns: dataframe of (unique, alphabetically sorted) HpTerm objects with observed or excluded HPO terms
+        :rtype: pd.DataFrame
         """
-        false_positive: words or phrases that should not be parsed to HP terms
-        """
+        if excluded_terms is None:
+            excluded_terms = set()
+        if false_positive is None:
+            false_positive = []
         if custom_d is None:
             custom_d = {}
         # replace new lines and multiple consecutive spaces with a single space
@@ -150,11 +193,11 @@ class CaseEncoder:
         if not isinstance(interpretations, list):
             interpretations = [interpretations]
         individual = Individual(individual_id=self._individual_id, 
-                                sex=self._sex, 
-                                age=self._age, 
+                                sex=self._sex,
+                                age=self._age_at_last_examination,
                                 hpo_terms=self._annotations,
                                 pmid=self._pmid,
-                                interpretation_list=self._interpretations, 
+                                interpretation_list=interpretations,
                                 disease_id=self._disease_id, 
                                 disease_label=self._disease_label)
         return individual
