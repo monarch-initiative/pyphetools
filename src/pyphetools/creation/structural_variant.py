@@ -29,7 +29,18 @@ class StructuralVariant(Variant):
     - vcf_record, empty
     - structural type: Ontology Class
     - allelic state: het/hom/emi etc.
-
+    :param cell_contents: the string from the original table that we want to map as a structural variant
+    :type cell_contents: str
+    :param gene_symbol: the gene affected by the structural variant, e.g., GLI3
+    :type gene_symbol: str
+    :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
+    :type gene_id: str
+    :param sequence_ontology_id: An identifier from the Sequence Ontology
+    :type sequence_ontology_id: str
+    :param sequence_ontology_label: the SO label corresponding to the ID
+    :type sequence_ontology_label: str
+    :param variant_id: an identifier for the variant, optional
+    :type variant_id: str
     """
 
     def __init__(self, cell_contents,
@@ -102,6 +113,18 @@ class StructuralVariant(Variant):
                              gene_symbol,
                              gene_id,
                              variant_id=None):
+        """
+        create a StructuralVariant object for a chromosomal deletion
+
+        :param cell_contents: the string from the original table that we want to map as a structural variant
+        :type cell_contents: str
+        :param gene_symbol: the gene affected by the structural variant, e.g., GLI3
+        :type gene_symbol: str
+        :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
+        :type gene_id: str
+        :param variant_id: an identifier for the variant, optional
+        :type variant_id: str
+        """
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
@@ -114,6 +137,18 @@ class StructuralVariant(Variant):
                                 gene_symbol,
                                 gene_id,
                                 variant_id=None):
+        """
+        create a StructuralVariant object for a chromosomal duplication
+
+        :param cell_contents: the string from the original table that we want to map as a structural variant
+        :type cell_contents: str
+        :param gene_symbol: the gene affected by the structural variant, e.g., GLI3
+        :type gene_symbol: str
+        :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
+        :type gene_id: str
+        :param variant_id: an identifier for the variant, optional
+        :type variant_id: str
+        """
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
@@ -127,6 +162,18 @@ class StructuralVariant(Variant):
                               gene_id,
                               genotype,
                               variant_id=None):
+        """
+        create a StructuralVariant object for a chromosomal inversion
+
+        :param cell_contents: the string from the original table that we want to map as a structural variant
+        :type cell_contents: str
+        :param gene_symbol: the gene affected by the structural variant, e.g., GLI3
+        :type gene_symbol: str
+        :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
+        :type gene_id: str
+        :param variant_id: an identifier for the variant, optional
+        :type variant_id: str
+        """
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
                                  gene_id=gene_id,
