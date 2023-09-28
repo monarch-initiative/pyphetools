@@ -29,6 +29,7 @@ class StructuralVariant(Variant):
     - vcf_record, empty
     - structural type: Ontology Class
     - allelic state: het/hom/emi etc.
+
     :param cell_contents: the string from the original table that we want to map as a structural variant
     :type cell_contents: str
     :param gene_symbol: the gene affected by the structural variant, e.g., GLI3

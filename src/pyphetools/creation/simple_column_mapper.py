@@ -1,6 +1,6 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
-from typing import List
+from typing import List, Dict
 import pandas as pd
 from collections import defaultdict
 
@@ -33,17 +33,24 @@ def get_separate_hpos_from_df(df, hpo_cr):
 
 
 class SimpleColumnMapper(ColumnMapper):
+    """ColumnMapper for columns that contain information about a single phenotypic abnormality only
 
+    :param hpo_id: HPO  id, e.g., HP:0004321
+    :type hpo_id: str
+    :param hpo_label: Corresponding term label
+    :type hpo_label: str
+    :param observed: symbol used in table if the phenotypic feature was observed
+    :type observed: str
+    :param excluded: symbol used if the feature was excluded
+    :type excluded: str
+    :param non_measured: symbol used if the feature was not measured or is N/A. Defaults to None, optional
+    :type non_measured: str
+    :param constant: If true, all patients have this feature. Defaults to False, optional
+    :type constant: bool
+    """
     def __init__(self, hpo_id, hpo_label, observed=None, excluded=None, non_measured=None):
-        """ColumnMapper for columns that contain information about a single phenotypic abnormality only
-
-        Args:
-            hpo_id (_type_): HPO  id, e.g., HP:0004321
-            hpo_label (_type_): Corresponding term label
-            observed (_type_): symbol used in table if the phenotypic feature was observed
-            excluded (_type_): symbol used if the feature was excluded
-            non_measured (_type_, optional): symbol used if the feature was not measured or is N/A. Defaults to None.
-            constant (bool, optional): If true, all patients have this feature. Defaults to False.
+        """
+        Constructor
         """
         super().__init__()
         self._hpo_id = hpo_id
@@ -78,14 +85,23 @@ class SimpleColumnMapper(ColumnMapper):
         return pd.DataFrame(dlist)
     
 class SimpleColumnMapperGenerator:
+    """Convenience tool to provide mappings automatically
+
+    Try to map the columns in a dataframe by matching the name of the column to correct HPO term.
+    This class can be used to generate SimpleColumn mappers for exact matches found in the columns names.
+
+    :param df: dataframe with phenotypic data
+    :type df: pd.DataFrame
+    :param observed: symbol used in table if the phenotypic feature was observed
+    :type observed: str
+    :param excluded: symbol used if the feature was excluded
+    :type excluded: str
+    :param hpo_cr: instance of HpoConceptRecognizer to match HPO term and get label/id
+    :type hpo_cr: HpoConceptRecognizer
+    """
     def __init__(self, df, observed, excluded, hpo_cr) -> None:
-        """Try to map the columns in a dataframe by matching the name of the column to correct HPO term.
-        This class can be used to generate SimpleColumn mappers for exact matches found in the columns names.
-        Args:
-            df (dataframe): dataframe with phenotypic data
-            observed (str): symbol used in table if the phenotypic feature was observed
-            excluded (str): symbol used if the feature was excluded
-            hpo_cr (HpoConceptRecognizer): instance of HpoConceptRecognizer to match HPO term and get label/id
+        """
+        Constructor
         """
         self._df = df
         self._observed = observed
@@ -96,11 +112,11 @@ class SimpleColumnMapperGenerator:
         self._error_messages = []
         
     
-    def try_mapping_columns(self) -> List[ColumnMapper]:
+    def try_mapping_columns(self) -> Dict[str, ColumnMapper]:
         """As a side effect, this class initializes three lists of mapped, unmapped, and error columns
 
-        Returns:
-            list(ColumnMapper): simple_mappers (dict): dict with successfully mapped columns
+        :returns: A dictionary with successfully mapped columns
+        :rtype: Dict[str,ColumnMapper]
         """
         simple_mappers = defaultdict(ColumnMapper)
         for col in self._df.columns:

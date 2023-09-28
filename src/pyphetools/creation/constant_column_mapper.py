@@ -5,15 +5,18 @@ from .hp_term import HpTerm
 
 
 class ConstantColumnMapper(ColumnMapper):
+    """Column mapper for cases in all patients have an (optionally excluded)HPO term.
+    :param hpo_id: HPO  id, e.g., HP:0004321
+    :type hpo_id: str
+    :param hpo_label: Corresponding term label
+    :type hpo_label: str
+    :param term_list: list of lists with [label, hpo_id
+    :type term_list: List[lst]
+    :param excluded:symbol used if the feature was excluded (if None, the feature was observed)
+    :type excluded: str
+    """
     def __init__(self, hpo_id=None, hpo_label=None, term_list=None, excluded=False) -> None:
-        """Column mapper for cases in all patients have an (optionally excluded)HPO term.
 
-        Args:
-            hpo_id (str): HPO  id, e.g., HP:0004321
-            hpo_label (str): Corresponding term label
-            term_list: list of lists with [label, hpo_id]
-            excluded (str): symbol used if the feature was excluded (if None, the feature was observed)
-        """
         super().__init__()
         self._hpo_id = hpo_id
         if hpo_id is None and hpo_label is None and term_list is not None:
