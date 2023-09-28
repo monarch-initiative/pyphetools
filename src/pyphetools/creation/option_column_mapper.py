@@ -46,10 +46,17 @@ class OptionColumnMapper(ColumnMapper):
         results = []
         contents = cell_contents.strip()
         if contents in self._excluded_d:
-            excluded_hpo_label = self._excluded_d.get(contents)
-            term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
-            term.excluded()
-            results.append(term)
+            if isinstance(contents, list):
+                for itm in contents:
+                    excluded_hpo_label = self._excluded_d.get(itm)
+                    term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
+                    term.excluded()
+                    results.append(term)
+            else:
+                excluded_hpo_label = self._excluded_d.get(contents)
+                term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
+                term.excluded()
+                results.append(term)
             return results
         delimiters = ',;|/'
         regex_pattern = '|'.join(map(re.escape, delimiters))
