@@ -8,14 +8,38 @@ ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 
 
 class VariantValidator:
+    """
+    Check and Encode HGVS string
+
+    The default mRNA transcript for the HGVS strings should be added in the constructor byt can be overridden in the
+    encode_hgvs method.
+
+    :param genome_build: The genome assembly, one of "GRCh37", "GRCh38", "hg19", "hg38"
+    :type genome_build: str
+    :param transcript: An mRNA transcript that is the reference for the HGVS string, opt
+    :type transcript: str
+    """
     
     def __init__(self, genome_build, transcript=None):
+        """
+        Constructor
+        """
         if genome_build not in ACCEPTABLE_GENOMES:
             raise ValueError(f"genome_build \"{genome_build}\" not recognized")
         self._genome_assembly = genome_build
         self._transcript = transcript
         
     def encode_hgvs(self, hgvs, custom_transcript=None):
+        """
+        Encode an HGVS string as a pyphetools Variant object
+
+        :param hgvs: Human Genome Variation Society (HGVS) representation of a variant, e.g., c.36613706dup
+        :type hgvs: str
+        :param custom_transcript: a transcript (e.g., NM_001848.2), if different from the default transcript, optional
+        :type custom_transcript: str
+        :returns: pyphetools Variant object
+        :rtype: HgvsVariant
+        """
         if custom_transcript is not None:
             transcript = custom_transcript
         elif self._transcript is not None:
