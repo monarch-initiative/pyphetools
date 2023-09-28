@@ -1,7 +1,7 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from .hpo_cr import HpoConceptRecognizer
-from typing import List, Dict
+from typing import List, TypedDict
 import pandas as pd
 import re
 from collections import defaultdict
@@ -15,9 +15,9 @@ class OptionColumnMapper(ColumnMapper):
     :param concept_recognizer: HpoConceptRecognizer for text mining
     :type  concept_recognizer: pyphetools.creation.HpoConceptRecognizer
     :param option_d: dictionary with key: string corresponding to original table, value: corresponding HPO term label
-    :type option_d:Dict[str,str]
+    :type option_d:TypedDict[str,str]
     :param excluded_d: dictionary with key: similar to option_d but for excluded HPO terms, optional
-    :type excluded_d:Dict[str,str]
+    :type excluded_d:TypedDict[str,str]
     """
     
     def __init__(self, concept_recognizer, option_d, excluded_d=None):
@@ -77,6 +77,7 @@ class OptionColumnMapper(ColumnMapper):
 
         This method is intended for use in developing the code for ETL of an input column.
         It is only needed for development and debugging.
+
         :param column: A single column from the input table
         :type column: pd.Series
         :returns: a pandas dataframe with one row for each entry of the input column
