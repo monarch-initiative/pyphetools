@@ -98,7 +98,6 @@ class TestCaseParse(unittest.TestCase):
         ppkt = self._parser.get_phenopacket()
         self.assertIsNotNone(ppkt.subject)
         self.assertIsNotNone(ppkt.subject.sex)
-        print(ppkt.subject)
         expected_sex = PPkt.Sex.FEMALE
         self.assertEqual(expected_sex, ppkt.subject.sex)
 
