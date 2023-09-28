@@ -27,8 +27,8 @@ class CohortEncoder:
                  agemapper=AgeColumnMapper.not_provided(), 
                  sexmapper=SexColumnMapper.not_provided(), 
                  variant_mapper=None,
-                 variant_dictionary=None,
-                 pmid=None):
+                 pmid=None,
+                 delimiter=None):
         """Map a table of data to Individual/GA4GH Phenopacket Schema objects
 
         The column_mapper_d is a dictionary with key=column names, and value=Mapper objects. These mappers are responsible
@@ -87,12 +87,10 @@ class CohortEncoder:
         self._sex_mapper = sexmapper
         self._disease_id = None
         self._disease_label = None
-        if variant_mapper is not None and variant_dictionary is not None:
-            raise ValueError("Only one of the arguments variant_mapper and variant_dictionary must be provided")
         self._variant_mapper = variant_mapper
-        self._variant_dictionary = variant_dictionary
         self._pmid = pmid
         self._disease_dictionary = None
+        self._delimiter = delimiter
 
     def preview_dataframe(self):
         """
@@ -100,8 +98,8 @@ class CohortEncoder:
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
-        age_column_name = self._age_mapper.get_column_name()
-        sex_column_name = self._sex_mapper.get_column_name()
+        age_column_name = self._age_mapper.get_variant_column_name()
+        sex_column_name = self._sex_mapper.get_variant_column_name()
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
             if age_column_name == Constants.NOT_PROVIDED:
@@ -149,13 +147,13 @@ class CohortEncoder:
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
-        age_column_name = self._age_mapper.get_column_name()
-        sex_column_name = self._sex_mapper.get_column_name()
+        age_column_name = self._age_mapper.get_variant_column_name()
+        sex_column_name = self._sex_mapper.get_variant_column_name()
         if self._variant_mapper is None:
             variant_colname = None
             genotype_colname = None
         else:
-            variant_colname = self._variant_mapper.get_column_name()
+            variant_colname = self._variant_mapper.get_variant_column_name()
             genotype_colname = self._variant_mapper.get_genotype_colname()
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
@@ -191,9 +189,6 @@ class CohortEncoder:
                     genotype_cell_contents = None
                 if self._variant_mapper is not None:
                     interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
-                elif self._variant_dictionary is not None:
-                    v = self._variant_dictionary.get(variant_cell_contents)
-                    interpretation_list = [v]
             else:
                 interpretation_list = []
             if self._disease_dictionary is not None and self._disease_id is None and self._disease_label is None:

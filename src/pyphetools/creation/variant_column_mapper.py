@@ -1,46 +1,73 @@
-from collections import defaultdict
 import pandas as pd
-from typing import List
-from .hgvs_variant import Variant
-from .variant_validator import VariantValidator
-from .variant import Variant
+from typing import List, Dict
 
+from .variant import Variant
 
 ACCEPTABLE_GENOTYPES = {"heterozygous", "homozygous", "hemizygous"}
 
 
 class VariantColumnMapper:
+    """Column mapper for the variants identified in individuals
 
-    def __init__(self, 
-                 assembly, 
-                 transcript, 
-                 column_name, 
-                 default_genotype=None, 
-                 genotype_column=None,
-                 non_hgvs_variant_map=defaultdict(),
+    To use this mapper, first create a dictionary with all variants in the cohort using the
+    VariantValidator (for HGVS) and the StructuralVariant classes. The key to the variant is
+    the cell contents of the column with variant information in the original table. The Values
+    are the Variant objects (implemented as HgvsVariant or StructuralVariant). This mapper will
+    split cells that contain multiple variants if needed and also will add genotype information.
+
+    :param variant_d: Dictionary with all variants found in the column
+    :type variant_d: Dict[str,Variant]
+    :param variant_column_name: name of the variant column in the original table
+    :type variant_column_name: str
+    :param genotype_column_name: name of the genotype column in the original table, optional
+    :type genotype_column_name: str
+    :param delimiter: symbol used to separate variants if more than one variant is provided, optional
+    :type delimiter: str
+    """
+    def __init__(self,
+                 variant_d,
+                 variant_column_name,
+                 genotype_column_name=None,
+                 default_genotype=None,
                  delimiter=None) -> None:
-        """Column mapper for HGVS expressions containing the variants identified in individuals
 
-        Args:
-            assembly (str): The genome assembly
-            transcript (str): The default transcript to use to map the HGVS expressions
-            default_genotype (str): The genotype of the variants (unless otherwise specified)
-            genotype_column (str): Label of the column that contains the genotype (if available)
-            delimiter (str): symbol used to separate variants if more than one variant is provided.
-        """
         if default_genotype is not None and default_genotype not in ACCEPTABLE_GENOTYPES:
             raise ValueError(f"Did not recognize default genotype {default_genotype}")
+        if not isinstance(variant_d, dict):
+            raise ValueError(f"Argument variant_d must be a dictionary but was {type(variant_d)}")
+        self._variant_d = variant_d
         self._default_genotype = default_genotype
-        if transcript is None or len(transcript) < 3:
-            raise ValueError(f"Invalid transcript: \"{transcript}\"")
-        self._transcript = transcript
-        self._validator = VariantValidator(genome_build=assembly, transcript=transcript)
-        self._column_name = column_name
-        self._genotype_column = genotype_column
+        self._variant_column_name = variant_column_name
+        self._genotype_column_name = genotype_column_name
         self._delimiter = delimiter
-        self._non_hgvs_variant_map = non_hgvs_variant_map
+
+
+    def _get_genotype(self, genotype_contents):
+        """
+        Get a genotype string
+
+        get the genotype from the argument (which comes from the genotype column if available) or from the
+        default genotype.
+        :returns: one of "heterozygous", "homozygous", "hemizygous", None
+        """
+        if genotype_contents is not None and genotype_contents.lower() in ACCEPTABLE_GENOTYPES:
+            return genotype_contents.lower()
+        else:
+            return self._default_genotype
+
 
     def map_cell(self, cell_contents, genotype_contents=None, delimiter=None) -> List[Variant]:
+        """
+        Map the contents of a variant cell (and optionally a genotype cell).
+
+        If the delimiter is not None, search for the delimiter and split the cell into two variants
+        :param cell_contents: contents of the original table cell representing the variant string
+        :type cell_contents: str
+        :param genotype_contents: contents of the original table cell representing the genotype (allelic status), optional
+        :type genotype_contents: str
+        :param delimiter: string or character that splits the cell contents into multiple entries, e.g., ";", optional
+        :type delimiter: str
+        """
         if delimiter is None:
             delimiter = self._delimiter
         if delimiter is not None:
@@ -49,49 +76,18 @@ class VariantColumnMapper:
             items = [cell_contents]
         variant_interpretation_list = []
         for item in items:
-            if item in self._non_hgvs_variant_map:
-                variant: Variant = self._non_hgvs_variant_map.get(item)
+            if item in self._variant_d:
+                variant: Variant = self._variant_d.get(item)
+                gt = self._get_genotype(genotype_contents)
+                if gt is not None:
+                    variant.set_genotype(gt)
                 interpretation = variant.to_ga4gh_variant_interpretation()
                 variant_interpretation_list.append(interpretation)
             else:
-                try:
-                    variant = self._validator.encode_hgvs(item)
-                    if genotype_contents is not None:
-                        if 'hom' in genotype_contents.lower():
-                            variant.set_homozygous()
-                        elif 'het' in genotype_contents.lower():
-                            variant.set_heterozygous()
-                        elif 'hemi' in genotype_contents.lower():
-                            variant.set_hemizygous()
-                        else:
-                            print(f"Did not recognize genotype {genotype_contents}")
-                    elif self._default_genotype is not None:
-                        def_gt = self._default_genotype
-                        if 'hom' in def_gt:
-                            variant.set_homozygous()
-                        elif 'het' in def_gt:
-                            variant.set_heterozygous()
-                        elif 'hemi' in def_gt:
-                            variant.set_hemizygous()
-                    variant_interpretation_list.append(variant.to_ga4gh_variant_interpretation())
-                except Exception as exc:
-                    print(f"Not able to get variant for {item}: {exc}")
+                raise ValueError(f"Did not recognize variant string \"{item}\"")
+
         return variant_interpretation_list
-    
-    
-    def variant_interpretation_to_string(self, vinterpretation):
-        # first check for HGVS
-        if vinterpretation.variation_descriptor is None:
-            raise ValueError("VariantInterpretation must have VariationDescriptor element")
-        vdescriptor = vinterpretation.variation_descriptor
-        for exprss in vdescriptor.expressions:
-            if exprss.syntax == "hgvs.c":
-                return exprss.value
-        # then check for a description
-        if vdescriptor.label is not None:
-            return vdescriptor.label
-        else:
-            return vinterpretation.id
+
 
 
     def preview_column(self, column) -> pd.DataFrame:
@@ -109,19 +105,10 @@ class VariantColumnMapper:
                 dlist.append({"variant": ": ".join(result_strings)})
         return pd.DataFrame(dlist)
 
-    def get_column_name(self):
-        return self._column_name
+    def get_variant_column_name(self):
+        return self._variant_column_name
 
     def get_genotype_colname(self):
-        return self._genotype_column
+        return self._genotype_column_name
 
-    def _print_summary(self):
-        """Dump some of the attributes of the object, for debugging
-        """
-        print("VariantColumnMapper")
-        print(f"transcript: {self._transcript}")
-        print(f"column_name: {self._column_name}")
-        print(f"genotype_column: {self._genotype_column}")
-        print(f"delimiter: {self._delimiter}")
-        print(f"Size of _variant_symbol_d: {len(self._variant_symbol_d)}")
 
