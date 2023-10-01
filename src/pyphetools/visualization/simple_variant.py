@@ -16,7 +16,7 @@ class SimpleVariant:
     def __init__(self, ginterpretation) -> None:
         
         if str(type(ginterpretation)) != "<class 'phenopackets.schema.v2.core.interpretation_pb2.GenomicInterpretation'>":
-            raise ValueError(f"interpretation argument must be GA4GH Phenopacket Interpretation but was {type(ginterpretation)}")
+            raise ValueError(f"interpretation argument must be GA4GH Phenopacket GenomicInterpretation but was {type(ginterpretation)}")
         self._status = str(ginterpretation.interpretation_status)
         vinterpretation = ginterpretation.variant_interpretation
         if vinterpretation.variation_descriptor is  None:
@@ -33,7 +33,7 @@ class SimpleVariant:
             for exprsn in vdescript.expressions:
                 if exprsn.syntax == "hgvs.c":
                     self._hgvs = exprsn.value       
-        if vdescript.vcf_record is not None:
+        if vdescript.vcf_record is not None and len(vdescript.vcf_record.chrom) > 0:
             vcf = vdescript.vcf_record
             self._genome_ass = vcf.genome_assembly
             self._chrom = vcf.chrom
@@ -138,5 +138,6 @@ class SimpleVariant:
         elif self._structural is not None:
             # try to return information about a structural variant.
             var_str = f"{self._description_label}: {self._structural}"
+            return var_str
         else:
             return "n/a"
