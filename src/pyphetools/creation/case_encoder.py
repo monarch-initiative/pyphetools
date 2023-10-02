@@ -21,13 +21,13 @@ class CaseEncoder:
     Encode a single case report in GA4GH Phenopacket format.
 
     :param hpo_cr: HpoConceptRecognizer for text mining
-    :type  hpo_cr: pyphetools.creation.HpoConceptRecognizer
-    :param  pmid: PubMed identifier of this case report
-    :type  pmid: str
-    :param  individual_id: Application specific individual identifier
-    :type individual_id:str
-    :param  metadata: GA4GH MetaData object
-    :type metadata:phenopackets.MetaData
+    :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
+    :param pmid: PubMed identifier of this case report
+    :type pmid: str
+    :param individual_id: Application specific individual identifier
+    :type individual_id: str
+    :param metadata: GA4GH MetaData object
+    :type metadata: phenopackets.MetaData
     :param  age_at_last_exam: An ISO8601 string (e.g., P42Y2M) representing the age of the individual, optional
     :type age_at_last_exam: str
     :param  sex: a string such as "male" or "FEMALE"
