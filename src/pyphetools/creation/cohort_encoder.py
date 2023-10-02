@@ -103,8 +103,8 @@ class CohortEncoder:
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
-        age_column_name = self._age_mapper.get_variant_column_name()
-        sex_column_name = self._sex_mapper.get_variant_column_name()
+        age_column_name = self._age_mapper.get_column_name()
+        sex_column_name = self._sex_mapper.get_column_name()
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
             if age_column_name == Constants.NOT_PROVIDED:
