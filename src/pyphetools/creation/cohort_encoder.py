@@ -13,9 +13,39 @@ from .variant_column_mapper import VariantColumnMapper
 
 
 class CohortEncoder:
-    """Encode a cohort of individuals with clinical data in a table as a collection of GA4GH Phenopackets
+    """Map a table of data to Individual/GA4GH Phenopacket Schema objects
+
+    Encode a cohort of individuals with clinical data in a table as a collection of GA4GH Phenopackets
     This classes uses a collection of ColumnMapper objects to map a table using the
     get_individuals or output_phenopackets methods.
+
+    The column_mapper_d is a dictionary with key=column names, and value=Mapper objects. These mappers are responsible
+    for mapping HPO terms. The agemapper and the sexmapper are specialized for the respective columns. The
+    variant mapper is useful if there is a single variant column that is all HGVS or structural variants. In some
+    cases, it is preferable to use the variant_dictionary, which has key=string (cell contents) and value=Hgvs or
+    StructuralVariant object.
+
+    :param df: tabular data abotu a cohort
+    :type df: pd.DataFrame
+    :param hpo_cr: HpoConceptRecognizer for text mining
+    :type  hpo_cr: pyphetools.creation.HpoConceptRecognizer
+    :param column_mapper_d: Dictionary with key: Column name, value: ColumnMapper object
+    :type column_mapper_d: Dict[pyphetools.creation.ColumnMapper]
+    :param individual_column_name: label of column with individual/proband/patient identifier
+    :type individual_column_name: str
+    :param metadata: GA4GH MetaData object
+    :type metadata: PPkt.MetaData
+    :param agemapper:Mapper for the Age column. Defaults to AgeColumnMapper.not_provided()
+    :type agemapper: pyphetools.creation.AgeColumnMapper
+    :param sexmapper: Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
+    :type sexmapper: pyphetools.creation.SexColumnMapper
+    :param variant_mapper: column mapper for HGVS-encoded variant column. Defaults to None.
+    :type variant_mapper: pyphetools.creation.VariantColumnMapper
+    :param variant_dictionary: dictionary with key:string (cell contents), value: corresponding Variant
+    :type variant_dictionary: Dict[str, Variant]
+    :param pmid: PubMed identifier for the cohort. Defaults to None.
+    :type pmid: str
+    :raises: ValueError - several of the input arguments are checked.
     """
 
     def __init__(self, 
@@ -29,35 +59,7 @@ class CohortEncoder:
                  variant_mapper=None,
                  pmid=None,
                  delimiter=None):
-        """Map a table of data to Individual/GA4GH Phenopacket Schema objects
-
-        The column_mapper_d is a dictionary with key=column names, and value=Mapper objects. These mappers are responsible
-        for mapping HPO terms. The agemapper and the sexmapper are specialized for the respective columns. The
-        variant mapper is useful if there is a single variant column that is all HGVS or structural variants. In some
-        cases, it is preferable to use the variant_dictionary, which has key=string (cell contents) and value=Hgvs or
-        StructuralVariant object.
-
-        :param df: tabular data abotu a cohort
-        :type df: pd.DataFrame
-        :param hpo_cr: HpoConceptRecognizer for text mining
-        :type  hpo_cr: pyphetools.creation.HpoConceptRecognizer
-        :param column_mapper_d: Dictionary with key: Column name, value: ColumnMapper object
-        :type column_mapper_d: Dict[pyphetools.creation.ColumnMapper]
-        :param individual_column_name: label of column with individual/proband/patient identifier
-        :type individual_column_name: str
-        :param metadata: GA4GH MetaData object
-        :type metadata: PPkt.MetaData
-        :param agemapper:Mapper for the Age column. Defaults to AgeColumnMapper.not_provided()
-        :type agemapper: pyphetools.creation.AgeColumnMapper
-        :param sexmapper: Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
-        :type sexmapper: pyphetools.creation.SexColumnMapper
-        :param variant_mapper: column mapper for HGVS-encoded variant column. Defaults to None.
-        :type variant_mapper: pyphetools.creation.VariantColumnMapper
-        :param variant_dictionary: dictionary with key:string (cell contents), value: corresponding Variant
-        :type variant_dictionary: Dict[str, Variant]
-        :param pmid: PubMed identifier for the cohort. Defaults to None.
-        :type pmid: str
-        :raises: ValueError - several of the input arguments are checked.
+        """Constructor
         """
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
@@ -95,6 +97,9 @@ class CohortEncoder:
     def preview_dataframe(self):
         """
         Generate a dataframe with a preview of the parsed contents
+
+        :returns: a DataFrame representing the cohort to check results
+        :rtype: pd.DataFrame
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
@@ -127,23 +132,28 @@ class CohortEncoder:
         return df.set_index('id')
 
     def set_disease(self, disease_id, label):
-        """_summary_
+        """Set the disease diagnosis for all patients in the cohort
+
         If all patients in the cohort have the same disease we can set it with this method
-        Args:
-            disease_id (str): disease identifier, e.g., OMIM:600123
-            label (str): disease name
+        :param disease_id: disease identifier, e.g., OMIM:600123
+        :type disease_id: str
+        :param label: disease name
+        :type label: str
         """
         self._disease_id = disease_id
         self._disease_label = label
         self._disease_dictionary = None
 
-    def set_disease_dictionary(self, disease_d):
-        self._disease_dictionary = disease_d
-        self._disease_id = None
-        self._disease_label = None
+    #def set_disease_dictionary(self, disease_d):
+    #    self._disease_dictionary = disease_d
+    #    self._disease_id = None
+    #    self._disease_label = None
 
     def get_individuals(self) -> List[Individual]:
         """Get a list of all Individual objects in the cohort
+
+        :returns: a list of all Individual objects in the cohort
+        :rtype: List[Individual]
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []

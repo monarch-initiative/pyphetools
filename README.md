@@ -10,9 +10,7 @@ Development goals include making builder code similar to the Java package to cre
 
 ## Documentation
 
-See the documentation for *stable* and *latest* package versions:
-- [latest](https://monarch-initiative.github.io/pyphetools/latest).
-- stable (TODO - update once the docs setup percolates to `main` branch)
+See the tutorial and detailed documentation [here](https://monarch-initiative.github.io/pyphetools).
 
 ## PyPI
 

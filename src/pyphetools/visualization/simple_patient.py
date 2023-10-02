@@ -14,6 +14,9 @@ class SimplePatient:
     frequencies of HPO terms in groups. The use case of the class is to facilitate visualization of 
     a collection of phenopackets from files or that have just been ingested using pyphetools. Each simple
     patient is essentially a wrapper around one phenopacket.
+
+    :param ga4gh_phenopacket: A Phenopacket object representing one individual
+    :type ga4gh_phenopacket: phenopackets.schema.v2.phenopackets_pb2.Phenopacket
     """
 
     def __init__(self, ga4gh_phenopacket) -> None:

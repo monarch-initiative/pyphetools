@@ -71,12 +71,38 @@ class Individual:
 
     @property
     def interpretation_list(self):
+        """
+        :returns: a list of GA4GH Genomic Interpretations
+        :rtype:
+        """
         return self._interpretation_list
 
     def add_variant(self, v, acmg=None):
+        """
+        :param v: A Variant obeserved in this individual
+        :type v: Variant
+        :param acmg: One of the five ACMG pathogenicity categories
+        :type acmg: str
+        """
         if not isinstance(v, Variant):
             raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
         self._interpretation_list.append(v.to_ga4gh_variant_interpretation(acmg=acmg))
+
+
+    def set_disease(self, disease_id, disease_label):
+        """
+        Set the disease diagnosis for this individual
+
+        This method is typically useful for a cohort with multiple diagnoses; otherwise, the disease can be set by the
+        CohortEncoder
+
+        :param disease_id: The disease identifier, typically a CURIE such as OMIM:600432
+        :type disease_id: str
+        :param disease_label: The disease name
+        :type disease_label: str
+        """
+        self._disease_id = disease_id
+        self._disease_label = disease_label
 
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_

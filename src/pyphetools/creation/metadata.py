@@ -53,7 +53,7 @@ default_versions = {
     'geno': '2022-03-05',
     'hgnc': '06/01/23',
     'omim': 'January 4, 2023',
-    'mondo': 'v2023-01-04',
+    'mondo': '2023-09-12',
     'so': "2021-11-22"
 }
 
@@ -61,9 +61,19 @@ default_versions = {
 class MetaData:
     """
     A representation of the MetaData element of the GA4GH Phenopacket Schema
+
+    :param created_by: identifier (such as ORCID id) of the person who created this Phenopacket
+    :type created_by: str
+    :param pmid: PubMed identifier of the article from which the data for the phenopacket was taken, optional
+    :type pmid: str
+    :param pubmed_title: title of the article (if any), for use in the Resource section
+    :type pubmed_title: str
     """
 
     def __init__(self, created_by, pmid=None, pubmed_title=None) -> None:
+        """
+        Constructor
+        """
         self._created_by = created_by
         self._schema_version = "2.0"
         self._extref = None
@@ -79,6 +89,13 @@ class MetaData:
         """
         Add resources for HPO (with specified version), GENO, HGNC, and OMIM (with default versions)
         The HPO version can be easily obtained from the HpoParser using the get_version() function
+
+        :param version: version of the Human Phenotype Ontology (HPO) used to create this phenopacket
+        :type version: str
+        :param pmid: PubMed identifier of the article from which the data for the phenopacket was taken, optional
+        :type pmid: str
+        :param pubmed_title: title of the article (if any), for use in the Resource section
+        :type pubmed_title: str
         """
         self.geno()
         self.hgnc()
@@ -87,6 +104,10 @@ class MetaData:
         self.hpo(version=version)
 
     def hpo(self, version):
+        """
+        :param version: version of the Human Phenotype Ontology (HPO) used to create this phenopacket
+        :type version: str
+        """
         self._resource_d["hp"] = Resource(resource_id="hp",
                                           name="human phenotype ontology",
                                           namespace_prefix="HP",
@@ -128,6 +149,10 @@ class MetaData:
                                             version=version)
 
     def mondo(self, version=default_versions.get('mondo')):
+        """
+        Add a resource for Mondo to the current MetaData object
+        :param version: the Mondo version
+        """
         self._resource_d["mondo"] = Resource(resource_id="mondo",
                                              name="Mondo Disease Ontology",
                                              namespace_prefix="MONDO",
@@ -147,6 +172,8 @@ class MetaData:
     def to_ga4gh(self):
         """
         Use a time stamp for the current instant
+        :returns: A MetaData formated as a GA4GH Phenopacket Schema message
+        :rtype: PPkt.MetaData
         """
         metadata = PPKt.MetaData()
         metadata.created_by = self._created_by
