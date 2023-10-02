@@ -50,7 +50,7 @@ Most notebooks will want to first import all necessary packages. It is helpful t
   from collections import defaultdict
   import re
   from pyphetools.creation import *
-  from pyphetools.output import PhenopacketTable
+  from pyphetools.visualization import PhenopacketTable
   import importlib.metadata
   __version__ = importlib.metadata.version("pyphetools")
   print(f"Using pyphetools version {__version__}")

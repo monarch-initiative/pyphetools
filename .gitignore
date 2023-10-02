@@ -141,7 +141,7 @@ generated/
 modules.rst
 pyphetools.analyze.rst
 pyphetools.creation.rst
-pyphetools.output.rst
+pyphetools.visualize.rst
 pyphetools.rst
 pyphetools.validation.rst
 test.rst
