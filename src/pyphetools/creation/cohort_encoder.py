@@ -1,11 +1,11 @@
 import pandas as pd
 from math import isnan
 from typing import List, Dict
-import phenopackets as PPkt
 import os
 
 from .age_column_mapper import AgeColumnMapper
 from .constants import Constants
+from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
 from .sex_column_mapper import SexColumnMapper
@@ -144,10 +144,15 @@ class CohortEncoder:
         self._disease_label = label
         self._disease_dictionary = None
 
-    #def set_disease_dictionary(self, disease_d):
-    #    self._disease_dictionary = disease_d
-    #    self._disease_id = None
-    #    self._disease_label = None
+    def set_disease_dictionary(self, disease_d:Dict[str, Disease]):
+        """Set the dictionary of disease ontology terms
+
+        For tables with multiple different diseases, we provide a dictionary that has as key
+        the string used in the original table and as value
+        """
+        self._disease_dictionary = disease_d
+        self._disease_id = None
+        self._disease_label = None
 
     def get_individuals(self) -> List[Individual]:
         """Get a list of all Individual objects in the cohort
@@ -205,8 +210,8 @@ class CohortEncoder:
                 if individual_id not in self._disease_dictionary:
                     raise ValueError(f"Could not find disease link for {individual_id}")
                 disease = self._disease_dictionary.get(individual_id)
-                disease_id = disease.get('id')
-                disease_label = disease.get('label')
+                disease_id = disease.id
+                disease_label = disease.label
                 indi = Individual(individual_id=individual_id, 
                                   sex=sex, 
                                   age=age, 
