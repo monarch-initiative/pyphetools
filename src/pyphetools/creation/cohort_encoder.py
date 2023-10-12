@@ -8,6 +8,7 @@ from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .ontology_qc import OntologyQC
 from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
@@ -93,6 +94,10 @@ class CohortEncoder:
         self._pmid = pmid
         self._disease_dictionary = None
         self._delimiter = delimiter
+        ontology = hpo_cr.get_hpo_ontology()
+        if ontology is None:
+            raise ValueError("ontology cannot be None")
+        self._qc = OntologyQC(ontology=ontology)
 
     def preview_dataframe(self):
         """
@@ -220,7 +225,6 @@ class CohortEncoder:
                                   interpretation_list=interpretation_list,
                                   disease_id=disease_id, 
                                   disease_label=disease_label)
-                individuals.append(indi)
             elif self._disease_dictionary is None and self._disease_id is not None and self._disease_label is not None:
                 indi = Individual(individual_id=individual_id, 
                                   sex=sex, 
@@ -229,9 +233,9 @@ class CohortEncoder:
                                   pmid=self._pmid,
                                   interpretation_list=interpretation_list, disease_id=self._disease_id,
                                   disease_label=self._disease_label)
-                individuals.append(indi)
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
+            hpo_terms = self._qc.clean_terms(indi.hpo_terms)
         return individuals
 
     def output_phenopackets(self, outdir="phenopackets"):

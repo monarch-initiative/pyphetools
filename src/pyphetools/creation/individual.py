@@ -1,6 +1,7 @@
 import phenopackets
 import re
 import os
+from typing import List
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
 from .hgvs_variant import Variant
@@ -55,6 +56,10 @@ class Individual:
 
     @property
     def id(self):
+        """
+        :returns: the individual identifier
+        :rtype: str
+        """
         return self._individual_id
 
     @property
@@ -115,6 +120,13 @@ class Individual:
         """
         self._disease_id = disease_id
         self._disease_label = disease_label
+
+    def set_hpo_terms(self, cleansed_hpo_terms):
+        """
+        :param cleansed_hpo_terms: a list of HpTerm objects that has been cleansed by OntologyQC
+        :type cleansed_hpo_terms: List[pyphetools.creation.HpTerm]
+        """
+        self._hpo_terms = cleansed_hpo_terms
 
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_

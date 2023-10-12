@@ -12,6 +12,7 @@ from .hpotk_parser import HpoToolkitParser
 from .hp_term import HpTerm
 from .individual import Individual
 from .metadata import MetaData
+from .ontology_qc import OntologyQC
 from .option_column_mapper import OptionColumnMapper
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator
@@ -38,6 +39,7 @@ __all__ = [
     "HpTerm",
     "Individual",
     "MetaData",
+    "OntologyQC",
     "OptionColumnMapper",
     "SexColumnMapper",
     "SimpleColumnMapper",
