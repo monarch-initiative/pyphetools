@@ -1,3 +1,5 @@
+import hpotk
+
 from .hpo_cr import HpoConceptRecognizer
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
@@ -49,7 +51,7 @@ class ConceptMatch:
 
 class HpoExactConceptRecognizer(HpoConceptRecognizer):
     # self._label_to_id_d, self._id_to_primary_label
-    def __init__(self, label_to_id, id_to_primary_label):
+    def __init__(self, label_to_id, id_to_primary_label, ontology:hpotk.Ontology=None):
         super().__init__()
         if not isinstance(label_to_id, dict):
             raise ValueError("label_to_id_d argument must be dictionary")
@@ -57,6 +59,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             raise ValueError("labels_to_primary_label_d argument must be dictionary")
         self._id_to_primary_label = id_to_primary_label
         self._label_to_id = label_to_id
+        self._ontology = ontology
 
     def parse_cell(self, cell_contents, custom_d=None) -> List[HpTerm]:
         """parse the contents of one table cell
@@ -173,3 +176,10 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=excluded)
             simple_mapper_d[column_name] = mpr
         return simple_mapper_d
+
+    def get_hpo_ontology(self):
+        """
+        :returns: a reference to the HPO-toolkit Ontology object for the HPO
+        :rtype: hpotk.MinimalOntology
+        """
+        return self._ontology

@@ -59,14 +59,26 @@ class Individual:
 
     @property
     def sex(self):
+        """
+        :returns: one of 'MALE', 'FEMALE', 'OTHER', 'UNKNOWN'
+        :rtype: str
+        """
         return self._sex
 
     @property
     def age(self):
+        """
+        :returns: an iso8601 representation of age
+        :rtype: str
+        """
         return self._age
 
     @property
     def hpo_terms(self):
+        """
+        :returns: a list of observed and excluded HPO terms
+        :rtype: List[pyphetools.creation.HpTerm]
+        """
         return self._hpo_terms
 
     @property
@@ -107,8 +119,8 @@ class Individual:
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_
         Transform the data into GA4GH Phenopacket format
-        Returns:
-            _type_: _description_
+        :returns:  a GA4GH Phenopacket representing this individual
+        :
         """
         if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
             raise ValueError(f"metadata argument must be GA4GH Phenopacket Schema MetaData but was {type(metadata)}")

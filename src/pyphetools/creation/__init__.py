@@ -8,6 +8,7 @@ from .disease import Disease
 from .hgvs_variant import HgvsVariant
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_parser import HpoParser
+from .hpotk_parser import HpoToolkitParser
 from .hp_term import HpTerm
 from .individual import Individual
 from .metadata import MetaData
@@ -33,6 +34,7 @@ __all__ = [
     "HgvsVariant",
     "HpoConceptRecognizer",
     "HpoParser",
+    "HpoToolkitParser",
     "HpTerm",
     "Individual",
     "MetaData",
