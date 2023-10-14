@@ -32,7 +32,7 @@ keywords = [
     "GA4GH",
     "HPO"]
 dependencies = [
-    "hpo-toolkit>=0.2.0",
+    "hpo-toolkit>=0.3.0",
     "openpyxl",
     "pandas",
     "phenopackets",
@@ -43,10 +43,6 @@ dynamic = ["version"]
 [project.optional-dependencies]
 test = ["pytest"]
 
-
-
-#[project.optional-dependencies]
-#dev = ["black", "bumpver", "isort", "pip-tools", "pytest"]
 
 [project.urls]
 homepage = "https://github.com/monarch-initiative/pyphetools"

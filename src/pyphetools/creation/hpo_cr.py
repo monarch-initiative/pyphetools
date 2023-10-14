@@ -27,3 +27,11 @@ class HpoConceptRecognizer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         pass
+
+    @abc.abstractmethod
+    def get_hpo_ontology(self):
+        """
+        :returns: a reference to the HPO-toolkit Ontology object for the HPO
+        :rtype: hpotk.MinimalOntology
+        """
+        pass

@@ -1,6 +1,7 @@
 import phenopackets
 import re
 import os
+from typing import List
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
 from .hgvs_variant import Variant
@@ -55,18 +56,34 @@ class Individual:
 
     @property
     def id(self):
+        """
+        :returns: the individual identifier
+        :rtype: str
+        """
         return self._individual_id
 
     @property
     def sex(self):
+        """
+        :returns: one of 'MALE', 'FEMALE', 'OTHER', 'UNKNOWN'
+        :rtype: str
+        """
         return self._sex
 
     @property
     def age(self):
+        """
+        :returns: an iso8601 representation of age
+        :rtype: str
+        """
         return self._age
 
     @property
     def hpo_terms(self):
+        """
+        :returns: a list of observed and excluded HPO terms
+        :rtype: List[pyphetools.creation.HpTerm]
+        """
         return self._hpo_terms
 
     @property
@@ -104,11 +121,18 @@ class Individual:
         self._disease_id = disease_id
         self._disease_label = disease_label
 
+    def set_hpo_terms(self, cleansed_hpo_terms):
+        """
+        :param cleansed_hpo_terms: a list of HpTerm objects that has been cleansed by OntologyQC
+        :type cleansed_hpo_terms: List[pyphetools.creation.HpTerm]
+        """
+        self._hpo_terms = cleansed_hpo_terms
+
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_
         Transform the data into GA4GH Phenopacket format
-        Returns:
-            _type_: _description_
+        :returns:  a GA4GH Phenopacket representing this individual
+        :
         """
         if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
             raise ValueError(f"metadata argument must be GA4GH Phenopacket Schema MetaData but was {type(metadata)}")

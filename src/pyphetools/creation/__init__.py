@@ -4,12 +4,15 @@ from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
 from .constant_column_mapper import ConstantColumnMapper
 from .custom_column_mapper import CustomColumnMapper
+from .disease import Disease
 from .hgvs_variant import HgvsVariant
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_parser import HpoParser
+from .hpotk_parser import HpoToolkitParser
 from .hp_term import HpTerm
 from .individual import Individual
 from .metadata import MetaData
+from .ontology_qc import OntologyQC
 from .option_column_mapper import OptionColumnMapper
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator
@@ -28,12 +31,15 @@ __all__ = [
     "ConstantColumnMapper",
     "ColumnMapper",
     "CustomColumnMapper",
+    "Disease",
     "HgvsVariant",
     "HpoConceptRecognizer",
     "HpoParser",
+    "HpoToolkitParser",
     "HpTerm",
     "Individual",
     "MetaData",
+    "OntologyQC",
     "OptionColumnMapper",
     "SexColumnMapper",
     "SimpleColumnMapper",
