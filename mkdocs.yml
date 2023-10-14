@@ -44,7 +44,9 @@ nav:
     - Variant column mapper: 'user-guide/variant_column_mapper.md'
     - Cohort encoder: 'user-guide/cohort_encoder.md'
     - Visualization: 'user-guide/visualization.md'
-  - API: 'api.md'
+  - API:
+    - "overview": 'api/overview.md'
+    - "creation": 'api/creation.md'
 
 
 plugins:
