@@ -1,0 +1,26 @@
+name: mkdocs-generation 
+on:
+  push:
+    branches:
+      - master 
+      - main
+permissions:
+  contents: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: 3.x
+      - uses: actions/cache@v2
+        with:
+          key: ${{ github.ref }}
+          path: .cache
+      - run: pip install mkdocs-material
+      - run: pip install mkdocs-material[imaging]
+      - run: pip install pillow cairosvg
+      - run: pip install mkdocs-material-extensions
+      - run: pip install mkdocstrings[python]
+      - run: mkdocs gh-deploy --force
