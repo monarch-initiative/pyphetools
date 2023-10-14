@@ -32,9 +32,14 @@ class OntologyQC:
 
     def _fix_conflicts(self, observed_hpo_terms:List[HpTerm], excluded_hpo_terms) -> List[HpTerm]:
         """
-        This class detects excluded superclasses that have observed subclasses -- a conflict
+        This class detects excluded superclasses that have observed subclasses -- a conflict.
 
-        If conflicts are detected, the offending superclass is removed.
+        For instance, if an individual is annotated to the terms (1) excluded: Seizure [HP:0001250] and (2)
+        observed - Clonic Seizure [HP:0020221], this is a conflict, because a person with clonic seizure also
+        can be said to have seizure. Here, we assume that the excluded annotation is an error that we
+        want to remove automatically and issue a warning. Thus, in this example, we would remove the
+        annotation excluded: Seizure [HP:0001250], and in general the excluded superclass is removed
+        if this kind of conflict is detected
 
         :param observed_hpo_terms:list of HPO terms (observed), can be empty
         :type observed_hpo_terms:List[HpTerm]
@@ -48,7 +53,7 @@ class OntologyQC:
         conflicting_term_id_set = set()
         for term in observed_hpo_terms:
             for tid in all_excluded_term_ids:
-                if self._ontology.graph.is_ancestor_of(term.id, tid):
+                if self._ontology.graph.is_ancestor_of(tid, term.id):
                     conflicting_term_id_set.add(tid)
         if len(conflicting_term_id_set) > 0:
             excluded_hpo_terms = [term for term in excluded_hpo_terms if term.id not in conflicting_term_id_set]
@@ -64,7 +69,9 @@ class OntologyQC:
         redundant_term_id_set = set()
         for term in all_terms:
             for tid in all_term_ids:
-                if self._ontology.graph.is_ancestor_of(term.id, tid):
+                # The ancesotr, e.g. Seizure comes first, the other term, e.g. Clonic seizure, second
+                # in the following function call
+                if self._ontology.graph.is_ancestor_of(tid, term.id):
                     redundant_term_id_set.add(tid)
         # When we get here, we have scanned all terms for redundant ancestors
         non_redundant_terms = [ term for term in hpo_terms if term.id not in redundant_term_id_set]
@@ -84,7 +91,7 @@ class OntologyQC:
             observed_hpo_terms = self._fix_redundancies(observed_hpo_terms)
             excluded_hpo_terms = self._fix_redundancies(excluded_hpo_terms)
         if fix_conflicts:
-            hpo_terms, conflict_report = self._fix_conflicts(observed_hpo_terms, excluded_hpo_terms)
+            hpo_terms = self._fix_conflicts(observed_hpo_terms, excluded_hpo_terms)
         return hpo_terms
 
     def has_error(self):
