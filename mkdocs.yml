@@ -46,13 +46,17 @@ nav:
     - Visualization: 'user-guide/visualization.md'
   - API:
     - "overview": 'api/overview.md'
-    - "creation": 'api/creation.md'
-
+    - "validation": 'api/validation.md'
+    - "visualization": 'api/visualization.md'
 
 plugins:
   - social
   - search
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            docstring_style: sphinx
 
 
 extra:
