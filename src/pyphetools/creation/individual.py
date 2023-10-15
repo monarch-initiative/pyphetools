@@ -10,6 +10,21 @@ from .hgvs_variant import Variant
 class Individual:
     """
     A class to represent one individual of the cohort
+
+    :param individual_id: The individual identifier
+    :type individual_id: str
+    :param hpo_terms: List of HpTerm objects
+    :type hpo_terms: List[pyphetools.creation.HpTerm]
+    :param sex: String corresponding to the sex of the individual, default, n/a
+    :type sex: str
+    :param age: String corresponding to the age of the individual (ISO), default, n/a
+    :type age: str
+    :param interpretation_list: list of GA4GH VariationInterpretation objects
+    :type interpretation_list: List[VariationInterpretation], optional
+    :param disease_id: String corresponding to the disease ID, default
+    :type disease_id: str, optional
+    :param disease_label: String corresponding to the disease label, default
+    :type disease_label: str, optional
     """
 
     def __init__(self, individual_id,
@@ -20,22 +35,7 @@ class Individual:
                  interpretation_list=None,
                  disease_id=None,
                  disease_label=None):
-        """All of the data we will transform into a single GA4GH phenopacket
-        
-        :param individual_id: The individual identifier
-        :type individual_id: str
-        :param hpo_terms: List of HpTerm objects
-        :type hpo_terms: List[pyphetools.creation.HpTerm]
-        :param sex: String corresponding to the sex of the individual, default, n/a
-        :type sex: str
-        :param age: String corresponding to the age of the individual (ISO), default, n/a
-        :type age: str
-        :param interpretation_list: list of GA4GH VariationInterpretation objects (optional)
-        :type interpretation_list: list
-        :param disease_id: String corresponding to the disease ID, default, (optional)
-        :type disease_id: str
-        :param disease_label: String corresponding to the disease label, default, (optional)
-        :type disease_label: str
+        """Constructor
         """
         if isinstance(individual_id, int):
             self._individual_id = str(individual_id)

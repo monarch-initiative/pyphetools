@@ -5,7 +5,8 @@ from .hp_term import HpTerm
 
 
 class ConstantColumnMapper(ColumnMapper):
-    """Column mapper for cases in all patients have an (optionally excluded)HPO term.
+    """Column mapper for cases in which all patients have an (optionally excluded) HPO term.
+
     :param hpo_id: HPO  id, e.g., HP:0004321
     :type hpo_id: str
     :param hpo_label: Corresponding term label

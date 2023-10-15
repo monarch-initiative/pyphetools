@@ -28,14 +28,14 @@ class CaseEncoder:
     :type individual_id: str
     :param metadata: GA4GH MetaData object
     :type metadata: phenopackets.MetaData
-    :param  age_at_last_exam: An ISO8601 string (e.g., P42Y2M) representing the age of the individual, optional
-    :type age_at_last_exam: str
-    :param  sex: a string such as "male" or "FEMALE"
+    :param  age_at_last_exam: An ISO8601 string (e.g., P42Y2M) representing the age of the individual
+    :type age_at_last_exam: str, optional
+    :param sex: A string such as "male" or "FEMALE"
     :type sex: str
-    :param  disease_id: a CURIE (e.g. OMIM:600213) for the current disease, optional
-    :type disease_id: str
-    :param  disease_label: Name (label) of the disease diagnosis for the case report, optional
-    :type disease_label: str
+    :param disease_id: a CURIE (e.g. OMIM:600213) for the current disease
+    :type disease_id: str, optional
+    :param disease_label: Name (label) of the disease diagnosis for the case report
+    :type disease_label: str, optional
     """
 
     def __init__(self, 

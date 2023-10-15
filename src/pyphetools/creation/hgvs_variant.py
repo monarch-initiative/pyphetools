@@ -1,6 +1,7 @@
 import phenopackets 
 from .variant import Variant
 import string
+from typing import Dict
 import random
 
 ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
@@ -12,6 +13,21 @@ ACCEPTABLE_GENOMES = {"GRCh37", "GRCh38", "hg19", "hg38"}
 class HgvsVariant(Variant):
     """
     This encapsulates variant data that we retrieve from Variant Validator
+
+    :param assembly: the genome build (one of hg19, hg38)
+    :type assembly: str
+    :param vcf_d: dictionary with values for chr, pos, ref, alt (VCF)
+    :type vcf_d: Dict[str]
+    :param symbol: the gene symbol
+    :type symbol: str, optional
+    :param hgnc: The Human Gene Nomenclature Comittee (HNGC) identifier, e.g. HGNS:123
+    :type hgnc: str, optional
+    :param transcript: identifier of the transcript for defininf the variant
+    :type transcript: str, optional
+    :param g_hgvs: genomic hgvs
+    :type g_hgvs: str, optional
+    :param variant_id: variant identifier
+    :type variant_id: str, optional
     """
     def __init__(self, assembly, vcf_d, symbol=None, hgnc=None, hgvs=None, transcript=None, g_hgvs=None, variant_id=None) -> None:
         if not assembly in ACCEPTABLE_GENOMES:

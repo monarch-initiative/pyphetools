@@ -7,6 +7,7 @@ from .custom_column_mapper import CustomColumnMapper
 from .disease import Disease
 from .hgvs_variant import HgvsVariant
 from .hpo_cr import HpoConceptRecognizer
+from .hpo_exact_cr import HpoExactConceptRecognizer
 from .hpo_parser import HpoParser
 from .hp_term import HpTerm
 from .individual import Individual
@@ -33,6 +34,7 @@ __all__ = [
     "Disease",
     "HgvsVariant",
     "HpoConceptRecognizer",
+    "HpoExactConceptRecognizer",
     "HpoParser",
     "HpTerm",
     "Individual",

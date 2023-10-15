@@ -12,6 +12,12 @@ PHENOTYPE_ROOT = "HP:0000118"
 class HpoParser:
     """
     Class to retrieve and parse the HPO JSON file using the HPO-Toolkit
+
+    Users probably will want to pass the path to the hp.json file, but if not, the hp.json file
+    will be downloadede each time the constructor is run
+
+    :param hpo_json_file: path to the hp.json file
+    :type hpo_json_file: str, optional
     """
 
     def __init__(self, hpo_json_file:str=None):
