@@ -4,7 +4,7 @@ import os
 import phenopackets
 from .phenopacket_validator import PhenopacketValidator
 from .validation_result import ValidationResult
-from typing import List
+from typing import List, Union
 
 
 class ContentValidator(PhenopacketValidator):
@@ -67,11 +67,10 @@ class ContentValidator(PhenopacketValidator):
     def validate_phenopacket_list(self, phenopacket_list) -> List[ValidationResult]:
         """phenopacket_list can be a list of phenopacket objects or paths to JSON files
 
-        Args:
-            phenopacket_list (_type_): _description_
-
-        Returns:
-            List[ValidationResult]: _description_
+        :param phenopacket_list: list of GA4GH phenopackets to be validated
+        :type phenopacket_list: Union[List[phenopackets.Phenopackets], List[str]]
+        :returns: potentially empty list of warnings and errors
+        :rtype: List[ValidationResult]
         """
         validation_results = []
         for pp in phenopacket_list:

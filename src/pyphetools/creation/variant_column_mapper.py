@@ -101,7 +101,7 @@ class VariantColumnMapper:
             else:
                 result_strings = []
                 for v in variant_interpretation_list:
-                    result_strings.append(self.variant_interpretation_to_string(v))
+                    result_strings.append(v.__str__())
                 dlist.append({"variant": ": ".join(result_strings)})
         return pd.DataFrame(dlist)
 

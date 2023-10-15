@@ -236,6 +236,8 @@ class CohortEncoder:
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
             hpo_terms = self._qc.clean_terms(indi.hpo_terms)
+            indi.set_hpo_terms(hpo_terms)
+            individuals.append(indi)
         return individuals
 
     def output_phenopackets(self, outdir="phenopackets"):

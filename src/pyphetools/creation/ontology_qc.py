@@ -1,5 +1,5 @@
 import hpotk
-from typing import List
+from typing import List, Optional
 from .hp_term import HpTerm
 from enum import Enum
 
@@ -9,12 +9,31 @@ class Category(Enum):
 
 
 class QcError:
+    """
+    Data class for quality control errors
+
+    :param category: type of QcError
+    :type category: Category
+    :param term: HpTerm that caused the error
+    :type term: HpTerm
+    """
     def __init__(self, category:Category, term:HpTerm):
         self._category = category
         self._term = term
 
-    def report(self):
-        pass
+    def is_redundant(self):
+        return Category.REDUNDANT == self._category
+
+    def is_conflict(self):
+        return Category.CONFLICT == self._category
+
+    @property
+    def category(self):
+        return self._category
+
+    @property
+    def term(self):
+        return self._term
 
 
 class OntologyQC:
@@ -64,6 +83,15 @@ class OntologyQC:
 
 
     def _fix_redundancies(self, hpo_terms:List[HpTerm]) -> List[HpTerm]:
+        """
+        Remove redundant terms from a list of HPO terms.
+
+        As a side effect, add a QcError for each removed redundant term
+        :param hpo_terms: original term list that might contain redundancies
+        :type hpo_terms: List[HpTerm]
+        :returns: list of HPO terms without redundancies
+        :rtype hpo_terms: List[HpTerm]
+        """
         all_terms = set(hpo_terms)
         all_term_ids = {term.id for term in hpo_terms}
         redundant_term_id_set = set()
@@ -84,6 +112,12 @@ class OntologyQC:
 
 
     def clean_terms(self, hpo_terms:List[HpTerm], fix_conflicts=True, fix_redundancies=True) -> List[HpTerm]:
+        """
+        :param hpo_terms: original term list that might contain redundancies or conflicts
+        :type hpo_terms: List[HpTerm]
+        :returns: list of HPO terms without redundancies/conflicts
+        :rtype hpo_terms: List[HpTerm]
+        """
         observed_hpo_terms = [term for term in hpo_terms if term.observed]
         excluded_hpo_terms = [term for term in hpo_terms if not term.observed]
         self._errors = []
@@ -98,3 +132,22 @@ class OntologyQC:
         return len(self._errors) > 0
 
 
+    def get_error_string(self):
+        """
+        create and return a string that summarizes the redundancies and conflicts that were corrected
+
+        :returns: a string summarizing errors or None if there were none
+        :rtype: Optional[str]
+        """
+        if not self.has_error():
+            return None
+        redundancies = [e for e in self._errors if e.is_redundant()]
+        conflicts = [e for e in self._errors if e.is_conflict()]
+        e_string = ""
+        if len(redundancies) > 0:
+            red_terms = [e.hpo_term_and_id for e in redundancies]
+            e_string = "The following redundant terms were removed: " + ", ".join(red_terms) + ". "
+        if len(conflicts) > 0:
+            conf_terms = [e.hpo_term_and_id for e in conflicts]
+            e_string = e_string + "The following conflicting excluded terms were removed: " + ", ".join(conf_terms) + ". "
+        return e_string
