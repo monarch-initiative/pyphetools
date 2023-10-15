@@ -29,7 +29,7 @@ class CohortEncoder:
     :param df: tabular data abotu a cohort
     :type df: pd.DataFrame
     :param hpo_cr: HpoConceptRecognizer for text mining
-    :type  hpo_cr: pyphetools.creation.HpoConceptRecognizer
+    :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
     :param column_mapper_d: Dictionary with key: Column name, value: ColumnMapper object
     :type column_mapper_d: Dict[pyphetools.creation.ColumnMapper]
     :param individual_column_name: label of column with individual/proband/patient identifier
@@ -236,13 +236,15 @@ class CohortEncoder:
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
             hpo_terms = self._qc.clean_terms(indi.hpo_terms)
+            indi.set_hpo_terms(hpo_terms)
+            individuals.append(indi)
         return individuals
 
     def output_phenopackets(self, outdir="phenopackets"):
         """Output data about all individuals as GA4GH phenopackets
 
-        Args:
-            outdir (str): name of directory to write phenopackets (default: 'phenopackets')
+        :param outdir: name of directory to write phenopackets (default: 'phenopackets')
+        :type outdir: str
         """
         if not os.path.exists(outdir):
             os.makedirs(outdir)

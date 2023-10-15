@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.pyphetools.creation import HpoToolkitParser, OntologyQC, HpTerm
+from src.pyphetools.creation import HpoParser, OntologyQC, HpTerm
 
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
@@ -9,7 +9,7 @@ HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 class TestOntologyQC(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        parser = HpoToolkitParser(hpo_json_file=HP_JSON_FILENAME)
+        parser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
         hpo_cr = parser.get_hpo_concept_recognizer()
         ontology = hpo_cr.get_hpo_ontology()
         cls._qc = OntologyQC(ontology=ontology)

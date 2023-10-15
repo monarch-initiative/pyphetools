@@ -5,7 +5,6 @@ from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
 
-from collections import defaultdict
 import re
 from typing import List
 from collections import defaultdict
