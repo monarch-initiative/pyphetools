@@ -1,8 +1,8 @@
 import pandas as pd
 from math import isnan
-from typing import List, Dict
-import os
+from typing import Dict, List
 
+from .abstract_encoder import AbstractEncoder
 from .age_column_mapper import AgeColumnMapper
 from .constants import Constants
 from .disease import Disease
@@ -13,7 +13,7 @@ from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
 
-class CohortEncoder:
+class CohortEncoder(AbstractEncoder):
     """Map a table of data to Individual/GA4GH Phenopacket Schema objects
 
     Encode a cohort of individuals with clinical data in a table as a collection of GA4GH Phenopackets
@@ -42,8 +42,6 @@ class CohortEncoder:
     :type sexmapper: pyphetools.creation.SexColumnMapper
     :param variant_mapper: column mapper for HGVS-encoded variant column. Defaults to None.
     :type variant_mapper: pyphetools.creation.VariantColumnMapper
-    :param variant_dictionary: dictionary with key:string (cell contents), value: corresponding Variant
-    :type variant_dictionary: Dict[str, Variant]
     :param pmid: PubMed identifier for the cohort. Defaults to None.
     :type pmid: str
     :raises: ValueError - several of the input arguments are checked.
@@ -62,6 +60,7 @@ class CohortEncoder:
                  delimiter=None):
         """Constructor
         """
+        super().__init__()
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
                 "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
@@ -217,18 +216,18 @@ class CohortEncoder:
                 disease = self._disease_dictionary.get(individual_id)
                 disease_id = disease.id
                 disease_label = disease.label
-                indi = Individual(individual_id=individual_id, 
-                                  sex=sex, 
-                                  age=age, 
+                indi = Individual(individual_id=individual_id,
+                                  sex=sex,
+                                  age=age,
                                   hpo_terms=hpo_terms,
                                   pmid=self._pmid,
                                   interpretation_list=interpretation_list,
-                                  disease_id=disease_id, 
+                                  disease_id=disease_id,
                                   disease_label=disease_label)
             elif self._disease_dictionary is None and self._disease_id is not None and self._disease_label is not None:
-                indi = Individual(individual_id=individual_id, 
-                                  sex=sex, 
-                                  age=age, 
+                indi = Individual(individual_id=individual_id,
+                                  sex=sex,
+                                  age=age,
                                   hpo_terms=hpo_terms,
                                   pmid=self._pmid,
                                   interpretation_list=interpretation_list, disease_id=self._disease_id,
@@ -239,18 +238,3 @@ class CohortEncoder:
             indi.set_hpo_terms(hpo_terms)
             individuals.append(indi)
         return individuals
-
-    def output_phenopackets(self, outdir="phenopackets"):
-        """Output data about all individuals as GA4GH phenopackets
-
-        :param outdir: name of directory to write phenopackets (default: 'phenopackets')
-        :type outdir: str
-        """
-        if not os.path.exists(outdir):
-            os.makedirs(outdir)
-        individual_list = self.get_individuals()
-        written = Individual.output_individuals_as_phenopackets(individual_list=individual_list,
-                                                                metadata=self._metadata,
-                                                                pmid=self._pmid,
-                                                                outdir=outdir)
-        print(f"Wrote {written} phenopackets to {outdir}")

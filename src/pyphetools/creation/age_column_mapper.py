@@ -2,6 +2,7 @@ from collections import defaultdict
 import pandas as pd
 import re
 from .constants import Constants
+from typing import Dict
 
 from enum import Enum
 
@@ -25,19 +26,24 @@ class AgeColumnMapper:
     
     """
     
-    def __init__(self, ageEncodingType, column_name) -> None:
+    def __init__(self, ageEncodingType, column_name, string_to_iso_d=None) -> None:
        
         """
         :param ageEncodingType: Formatting convention used to represent the age
         :type ageEncodingType: one of Year (e.g. 42), ISO 8601 (e.g. P42Y2M), year/month (e.g. 42y2m)
         :param column_name: Name of the Age column in the original table
         :type column_name: str
+        :param string_to_iso_d: dictionary from free text (input table) to ISO8601 strings
+        :type string_to_iso_d: Dict[str,str], optional
         """
-       
+
+        if string_to_iso_d is None:
+            string_to_iso_d = {}
         self._age_econding = ageEncodingType
         if column_name is None:
             raise ValueError("Must provide non-null column_name argument")
         self._column_name = column_name
+        self._string_to_iso_d = string_to_iso_d
 
     def map_cell(self, cell_contents) -> str:
 
@@ -48,10 +54,8 @@ class AgeColumnMapper:
         :type cell_contents: can be a string or numerical type
         """
         
-        if isinstance(cell_contents, str):
-            contents = cell_contents.strip()
-        else:
-            contents = cell_contents
+        contents = str(cell_contents)
+        contents = contents.strip()
         if self._age_econding == AgeEncodingType.YEAR:
             isostring = self.get_iso8601_from_int_or_float_year(contents)
             if isostring is None:
@@ -83,7 +87,7 @@ class AgeColumnMapper:
                 print(f"Could not parse {contents} as ISO8601 period")
                 return Constants.NOT_PROVIDED
         elif self._age_econding == AgeEncodingType.CUSTOM:
-            raise ValueError("TODO NOT IMPLEMENTED YET")
+            return self._string_to_iso_d.get(cell_contents, Constants.NOT_PROVIDED)
         elif self._age_econding == AgeEncodingType.NOT_PROVIDED:
             return Constants.NOT_PROVIDED
 
@@ -150,3 +154,16 @@ class AgeColumnMapper:
     @staticmethod
     def iso8601(column_name):
         return AgeColumnMapper(ageEncodingType=AgeEncodingType.ISO8601, column_name=column_name)
+
+    @staticmethod
+    def custom_dictionary(column_name, string_to_iso_d):
+        """
+        Create an AgeColumnMapper for free text input data such as Fetus, 1.5, birth, 51 days
+        :param column_name: name of the age column in the input table
+        :type column_name: str
+        :param string_to_iso_d: dictionary with free text to ISO 8601
+        :type string_to_iso_d: Dict[str,str)
+        """
+        return AgeColumnMapper(ageEncodingType=AgeEncodingType.CUSTOM,
+                               column_name=column_name,
+                               string_to_iso_d=string_to_iso_d)
