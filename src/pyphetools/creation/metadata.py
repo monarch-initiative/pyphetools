@@ -78,11 +78,7 @@ class MetaData:
         self._schema_version = "2.0"
         self._extref = None
         if pmid is not None and pubmed_title is not None:
-            self._extref  = PPKt.ExternalReference()
-            self._extref.id = pmid
-            pm = pmid.replace("PMID:", "")
-            self._extref .reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
-            self._extref .description = pubmed_title
+            self.set_external_reference(pmid=pmid, pubmed_title=pubmed_title)
         self._resource_d = defaultdict(Resource)
 
     def default_versions_with_hpo(self, version, pmid=None, pubmed_title=None):
@@ -167,6 +163,21 @@ class MetaData:
                                              iriprefix="http://purl.obolibrary.org/obo/SO_",
                                              url="http://purl.obolibrary.org/obo/so.obo",
                                              version=version)
+
+    def set_external_reference(self, pmid, pubmed_title) -> None:
+        """
+        Set the external reference for this phenopacket/individual to be the PubMed identifier and title of an article
+
+        :param pmid: The PubMed identifier of the publication from which the data was derived
+        :type pmid: str
+        :param pubmed_title: The title of the publication
+        :type pubmed_title: str
+        """
+        self._extref = PPKt.ExternalReference()
+        self._extref.id = pmid
+        pm = pmid.replace("PMID:", "")
+        self._extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
+        self._extref.description = pubmed_title
         
 
     def to_ga4gh(self):

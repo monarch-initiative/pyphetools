@@ -30,6 +30,7 @@ class Individual:
     def __init__(self, individual_id,
                  hpo_terms,
                  pmid=None,
+                 title=None,
                  sex=Constants.NOT_PROVIDED,
                  age=Constants.NOT_PROVIDED,
                  interpretation_list=None,
@@ -53,6 +54,7 @@ class Individual:
         self._disease_id = disease_id
         self._disease_label = disease_label
         self._pmid = pmid
+        self._title = title
 
     @property
     def id(self):
@@ -191,8 +193,10 @@ class Individual:
                 genomic_interpretation.variant_interpretation.CopyFrom(var)
                 interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
             php.interpretations.append(interpretation)
-        if metadata is not None:
-            php.meta_data.CopyFrom(metadata)
+        if self._pmid is not None and self._title is not None:
+            # overrides the "general" setting of the external reference for the entire cohort
+            metadata.set_external_reference(pmid=self._pmid, pubmed_title=self._title)
+        php.meta_data.CopyFrom(metadata)
         return php
 
     @staticmethod

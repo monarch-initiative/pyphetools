@@ -7,6 +7,25 @@ HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 # The API requires us to pass a column name but the column name will not be used in the tests
 TEST_COLUMN = "test"
 
+string_to_iso_dict = {
+    'Fetus': 'nan',
+    "1.5": "P1Y6M",
+    "3.5": "P3Y6M",
+    'birth': "P1D",
+    '51 days': "P1M21D",
+    '19 months': "P1Y7M",
+    '10 monhts': "P10M",
+    '14 months': "P1Y2M",
+    '23 months': "P1Y11M",
+    '22 mohts': "P1Y10M",
+    '9 months': "P9M",
+    '12 years': "P12Y",
+    '1 day of age': "P1D",
+    '4.5 years': "P4Y6M",
+    '4 months': "P4M",
+    '1 month': "P1M"
+}
+
 class TestOptionMapper(unittest.TestCase):
 
     def test_year(self):
@@ -85,3 +104,14 @@ class TestOptionMapper(unittest.TestCase):
         age_iso = ageMapper.map_cell(age_string)
         self.assertEqual("P8Y1M", age_iso)
 
+    def test_custom_dictionary(self):
+        ageMapper = AgeColumnMapper.custom_dictionary(column_name=TEST_COLUMN, string_to_iso_d=string_to_iso_dict)
+        age_iso = ageMapper.map_cell("1.5")
+        self.assertEqual("P1Y6M", age_iso)
+        age_iso = ageMapper.map_cell("3.5")
+        self.assertEqual("P3Y6M", age_iso)
+        age_iso = ageMapper.map_cell("birth")
+        self.assertEqual("P1D", age_iso)
+        age_iso = ageMapper.map_cell("NOT THERE")
+        NOT_PROVIDED = 'NOT_PROVIDED' # from Constants.py which is not exported
+        self.assertEqual(NOT_PROVIDED, age_iso)

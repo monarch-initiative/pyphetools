@@ -24,6 +24,10 @@ class ValidationResult:
     @property
     def message(self):
         return self._message
+
+    @property
+    def error_level(self):
+        return self._error_level
     
     
     @staticmethod
@@ -33,8 +37,9 @@ class ValidationResult:
     @staticmethod
     def warning(phenopacket_id:str, message:str):
         return ValidationResult(phenopacket_id=phenopacket_id, message=message, errorlevel=ErrorLevel.WARNING)
-        
-    
+
+    def __repr__(self):
+        return f"{self._error_level}: {self._message}"
         
         
         
