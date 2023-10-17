@@ -54,15 +54,16 @@ class MixedCohortEncoder(AbstractEncoder):
                  column_mapper_d,
                  individual_column_name,
                  disease_id_mapper,
-                 pmid_column,
                  metadata,
+                 pmid_column,
+                 title_column=None,
                  variant_mapper=None,
                  agemapper=AgeColumnMapper.not_provided(),
                  sexmapper=SexColumnMapper.not_provided(),
                  delimiter=None):
         """Constructor
         """
-        super().__init__()
+        super().__init__(metadata=metadata)
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
                 "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
@@ -73,15 +74,6 @@ class MixedCohortEncoder(AbstractEncoder):
             raise ValueError(f"column_mapper_d argument must be a dictionary but was {type(column_mapper_d)}")
         if not isinstance(individual_column_name, str):
             raise ValueError(f"individual_column_name argument must be a string but was {type(individual_column_name)}")
-        if metadata is None:
-            raise ValueError("Must pass a metadata object to constructor")
-        # the following workaround is needed because isinstance gets confused about the two following classes
-        elif str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
-            self._metadata = metadata
-        elif str(type(metadata)) == "<class 'pyphetools.creation.metadata.MetaData'>":
-            self._metadata = metadata.to_ga4gh()
-        else:
-            raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
         self._df = df.astype(str)
         self._column_mapper_d = column_mapper_d
         self._id_column_name = individual_column_name
@@ -89,6 +81,7 @@ class MixedCohortEncoder(AbstractEncoder):
         self._sex_mapper = sexmapper
         self._disease_id_mapper = disease_id_mapper
         self._pmid_column = pmid_column
+        self._title_column = title_column
         self._variant_mapper = variant_mapper
         self._delimiter = delimiter
         ontology = hpo_cr.get_hpo_ontology()
@@ -130,6 +123,11 @@ class MixedCohortEncoder(AbstractEncoder):
             else:
                 sex_cell_contents = row[sex_column_name]
                 sex = self._sex_mapper.map_cell(sex_cell_contents)
+            pmid = row[self._pmid_column]
+            if self._title_column is not None:
+                title = row[self._title_column]
+            else:
+                title = None
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 if column_name not in df.columns:
@@ -153,14 +151,15 @@ class MixedCohortEncoder(AbstractEncoder):
             disease_cell_contents = row[disease_column_name]
             if disease_cell_contents is None:
                 raise ValueError(f"Could not extract disease identifier for row {row}")
-            disease = self._disease_id_mapper.get(disease_cell_contents)
+            disease = self._disease_id_mapper.map_cell(disease_cell_contents)
             disease_id = disease.id
             disease_label = disease.label
             indi = Individual(individual_id=individual_id,
                                   sex=sex,
                                   age=age,
                                   hpo_terms=hpo_terms,
-                                  pmid=self._pmid,
+                                  pmid=pmid,
+                                  title=title,
                                   interpretation_list=interpretation_list,
                                   disease_id=disease_id,
                                   disease_label=disease_label)

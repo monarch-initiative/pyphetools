@@ -60,7 +60,7 @@ class CohortEncoder(AbstractEncoder):
                  delimiter=None):
         """Constructor
         """
-        super().__init__()
+        super().__init__(metadata=metadata)
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
                 "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
@@ -73,15 +73,6 @@ class CohortEncoder(AbstractEncoder):
             raise ValueError(f"individual_column_name argument must be a string but was {type(individual_column_name)}")
         if variant_mapper is not None and not isinstance(variant_mapper, VariantColumnMapper):
             raise ValueError(f"variant_mapper argument must be VariantColumnMapper but was {type(variant_mapper)}")
-        if metadata is None:
-            raise ValueError("Must pass a metadata object to constructor")
-        # the following workaround is needed because isinstance gets confused about the two following classes
-        elif str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
-            self._metadata = metadata
-        elif str(type(metadata)) == "<class 'pyphetools.creation.metadata.MetaData'>":
-            self._metadata = metadata.to_ga4gh()
-        else:
-            raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
         self._df = df.astype(str)
         self._column_mapper_d = column_mapper_d
         self._id_column_name = individual_column_name
