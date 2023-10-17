@@ -201,7 +201,7 @@ class Individual:
             pm = self._pmid.replace("PMID:", "")
             extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
             extref.description = self._title
-            metadata.set_external_reference(pmid=self._pmid, pubmed_title=self._title)
+            metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php
 
