@@ -195,7 +195,13 @@ class Individual:
             php.interpretations.append(interpretation)
         if self._pmid is not None and self._title is not None:
             # overrides the "general" setting of the external reference for the entire cohort
-            metadata.set_external_reference(pmid=self._pmid, pubmed_title=self._title)
+            metadata.external_references.clear()
+            extref = phenopackets.ExternalReference()
+            extref.id = self._pmid
+            pm = self._pmid.replace("PMID:", "")
+            extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
+            extref.description = self._title
+            metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php
 

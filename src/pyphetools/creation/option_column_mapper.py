@@ -45,6 +45,7 @@ class OptionColumnMapper(ColumnMapper):
         """
         results = []
         contents = cell_contents.strip()
+        # First check for negated terms
         if contents in self._excluded_d:
             if isinstance(contents, list):
                 for itm in contents:
@@ -58,20 +59,32 @@ class OptionColumnMapper(ColumnMapper):
                 term.excluded()
                 results.append(term)
             return results
-        delimiters = ',;|/'
-        regex_pattern = '|'.join(map(re.escape, delimiters))
-        chunks = re.split(regex_pattern, contents)
-        chunks = [chunk.strip() for chunk in chunks]
-
+        # Now collect HPO labels corresponding to the cell concents
         hpo_labels = set()
-        for c in chunks:
-            for my_key, my_label in self._option_d.items():
-                if my_key in c:
-                    if isinstance(my_label, list):
-                        for itm in my_label:
-                            hpo_labels.add(itm)
-                    else:
-                        hpo_labels.add(my_label)
+
+        # first check if there is an exact match with the entire string
+        if cell_contents in self._option_d:
+            hpo_lbl = self._option_d.get(cell_contents)
+            if isinstance(hpo_lbl, list):
+                for hp in hpo_lbl:
+                    hpo_labels.add(hp)
+            else:
+                hpo_labels.add(hpo_lbl)
+        else:
+            # check if a portion of the cell contents (separated by delimiters) is a match
+            delimiters = ',;|/'
+            regex_pattern = '|'.join(map(re.escape, delimiters))
+            chunks = re.split(regex_pattern, contents)
+            chunks = [chunk.strip() for chunk in chunks]
+            for c in chunks:
+                for my_key, my_label in self._option_d.items():
+                    if my_key in c:
+                        if isinstance(my_label, list):
+                            for itm in my_label:
+                                hpo_labels.add(itm)
+                        else:
+                            hpo_labels.add(my_label)
+        # Now create HpTerm objects for each match
         for label in hpo_labels:    
             term = self._hpo_cr.get_term_from_label(label=label)
             results.append(term)

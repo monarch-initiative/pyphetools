@@ -115,3 +115,18 @@ class TestOptionMapper(unittest.TestCase):
         age_iso = ageMapper.map_cell("NOT THERE")
         NOT_PROVIDED = 'NOT_PROVIDED' # from Constants.py which is not exported
         self.assertEqual(NOT_PROVIDED, age_iso)
+
+    def test_by_month(self):
+        ageMapper = AgeColumnMapper.by_month(column_name=TEST_COLUMN)
+        age_iso = ageMapper.map_cell(5)
+        self.assertEqual("P5M", age_iso)
+        age_iso = ageMapper.map_cell("5")
+        self.assertEqual("P5M", age_iso)
+        age_iso = ageMapper.map_cell(0.5)
+        self.assertEqual("P15D", age_iso)
+        age_iso = ageMapper.map_cell(0.8)
+        self.assertEqual("P24D", age_iso)
+        age_iso = ageMapper.map_cell(12)
+        self.assertEqual("P1Y", age_iso)
+
+

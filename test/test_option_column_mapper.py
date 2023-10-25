@@ -142,4 +142,25 @@ class TestOptionMapper(unittest.TestCase):
         hpo_term_list = autisticMapper.map_cell("yes - was being investigated")
         self.assertEqual(1, len(hpo_term_list))
 
+    def test_metabolic(self):
+        """
+        This test is for cases where the slash could be misinterpreted as a delimiter
+        Now the code checks first for exact matches with the cell contents and the options_d
+        """
+        urine_xa_d = {'11.7umol/mmolCr': "Xanthinuria",
+                      '1.7umol/mmolCr': "Xanthinuria"}
+        urine_not_xa_d = {'0.04mmol/L': "Xanthinuria",
+                          "1.6umol/mmolCr": "Xanthinuria",
+                          "0.0214XA/Cr": "Xanthinuria",
+                          "normal": "Xanthinuria"}
+        urineXAmapper = OptionColumnMapper(concept_recognizer=self.hpo_cr,
+                                           option_d=urine_xa_d,
+                                           excluded_d=urine_not_xa_d)
+        hpo_term_list = urineXAmapper.map_cell('11.7umol/mmolCr')
+        self.assertEqual(1, len((hpo_term_list)))
+        hpterm = hpo_term_list[0]
+        self.assertEqual("Xanthinuria", hpterm.label)
+        self.assertEqual("HP:0010934", hpterm.id)
+
+
 

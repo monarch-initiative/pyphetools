@@ -3,7 +3,7 @@ site_name: pyphetools
 theme:
   name: "material"
   features:
-    - navigation.tabs
+    #- navigation.tabs
     - navigation.sections
     - toc.integrate
     - navigation.top
@@ -35,15 +35,16 @@ nav:
   - Developers: 'developers.md'
   - User guide:
     - Intro: 'user-guide/intro.md'
-    - Tutorial: 'user-guide/tutorial.md'
-    - Simple column mapper: 'user-guide/simple_column_mapper.md'
-    - Constant column mapper: 'user-guide/constant_column_mapper.md'
-    - Custom column mapper: 'user-guide/custom_column_mapper.md'
-    - Option column mapper: 'user-guide/option_column_mapper.md'
-    - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
-    - Variant column mapper: 'user-guide/variant_column_mapper.md'
-    - Cohort encoder: 'user-guide/cohort_encoder.md'
-    - Visualization: 'user-guide/visualization.md'
+    - "Tutorial":
+      - Introduction: 'user-guide/tutorial.md'
+      - Simple column mapper: 'user-guide/simple_column_mapper.md'
+      - Constant column mapper: 'user-guide/constant_column_mapper.md'
+      - Custom column mapper: 'user-guide/custom_column_mapper.md'
+      - Option column mapper: 'user-guide/option_column_mapper.md'
+      - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
+      - Variant column mapper: 'user-guide/variant_column_mapper.md'
+      - Cohort encoder: 'user-guide/cohort_encoder.md'
+      - Visualization: 'user-guide/visualization.md'
   - API:
     - "overview": 'api/overview.md'
     - "creation":
@@ -74,8 +75,15 @@ nav:
       - "VariantColumnMapper": "api/creation/variant_column_mapper.md"
       - "Variant": "api/creation/variant.md"
       - "VariantValidator": "api/creation/variant_validator.md"
-    - "validation": 'api/validation.md'
-    - "visualization": 'api/visualization.md'
+    - "validation":
+      - "overview": "api/validation.md"
+      - "ContentValidator": "api/validation/content_validator.md"
+      - "ValidationResult": "api/validation/validation_result.md"
+    - "visualization":
+      - "overview": "api/visualization.md"
+      - "DetailedSupplTable":  "api/visualization/detailed_suppl_table.md"
+      - "PhenopacketIngestor": "api/visualization/phenopacket_ingestor.md"
+      - "PhenopacketTable": "api/visualization/phenopacket_table.md"
 
 plugins:
   - social
