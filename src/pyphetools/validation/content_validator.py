@@ -8,17 +8,32 @@ from typing import List, Union
 
 
 class ContentValidator(PhenopacketValidator):
+    """
+    Validate a list of phenopackets as to whether they have a minunum number of phenotypic features and alleles
+    :param min_var: minimum number of variants for this phenopacket to be considered valid
+    :type min_var: int
+    :param min_hpo: minimum number of phenotypic features (HP terms) for this phenopacket to be considered valid
+    :type min_hpo: int
+    :param min_allele: minimum number of alleles for this phenopacket to be considered valid
+    :type min_allele: int
+
+    """
     def __init__(self, min_var:int, min_hpo:int, min_allele:int=None) -> None:
         self._min_var = min_var
         self._min_hpo = min_hpo
         self._min_allele = min_allele
-        
-        
+
+
     def validate_phenopacket(self, phenopacket) -> List[ValidationResult]:
+        """
+        check a single phenopacket
+        :returns: a potential empty list of validations
+        :rtype: List[ValidationResult]
+        """
         if isinstance(phenopacket, str):
             # the user passed a file
             if not os.path.isfile(phenopacket):
-                raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket}'") 
+                raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket}'")
             with open(phenopacket) as f:
                 data = f.read()
                 jsondata = json.loads(data)
@@ -43,7 +58,7 @@ class ContentValidator(PhenopacketValidator):
                         n_var += 1
                         vint = genomic_interpretation.variant_interpretation
                         if vint.variation_descriptor is not None:
-                            vdesc =   vint.variation_descriptor                          
+                            vdesc =   vint.variation_descriptor
                             if vdesc.allelic_state is not None:
                                 gtype = vdesc.allelic_state
                                 if gtype.label == "heterozygous": # "GENO:0000135"
@@ -63,7 +78,7 @@ class ContentValidator(PhenopacketValidator):
             msg = f"Minimum alleles required {self._min_allele} but only {n_alleles} found"
             validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
         return validation_results
-    
+
     def validate_phenopacket_list(self, phenopacket_list) -> List[ValidationResult]:
         """phenopacket_list can be a list of phenopacket objects or paths to JSON files
 
@@ -76,7 +91,6 @@ class ContentValidator(PhenopacketValidator):
         for pp in phenopacket_list:
             validation_results.extend(self.validate_phenopacket(pp))
         return validation_results
- 
 
-                            
-                
+
+

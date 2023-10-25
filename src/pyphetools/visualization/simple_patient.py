@@ -10,8 +10,8 @@ from .simple_variant import SimpleVariant
 class SimplePatient:
     """
     This class flattens all observed terms into a set and also recorded variants, sex, identifier, and age
-    The class purposefully disregards information about the time course in order to be able to count the 
-    frequencies of HPO terms in groups. The use case of the class is to facilitate visualization of 
+    The class purposefully disregards information about the time course in order to be able to count the
+    frequencies of HPO terms in groups. The use case of the class is to facilitate visualization of
     a collection of phenopackets from files or that have just been ingested using pyphetools. Each simple
     patient is essentially a wrapper around one phenopacket.
 
@@ -20,7 +20,7 @@ class SimplePatient:
     """
 
     def __init__(self, ga4gh_phenopacket) -> None:
-        if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
+        if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":
             raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
         else:
             ppack = ga4gh_phenopacket
@@ -38,7 +38,7 @@ class SimplePatient:
             print("Warning: No age found for phenopacket")
             self._time_at_last_encounter = None
         else:
-            self._time_at_last_encounter = subj.time_at_last_encounter.age.iso8601duration 
+            self._time_at_last_encounter = subj.time_at_last_encounter.age.iso8601duration
         if ppack.subject.sex == phenopackets.MALE:
             self._sex = "MALE"
         elif ppack.subject.sex == phenopackets.FEMALE:
@@ -83,24 +83,21 @@ class SimplePatient:
             eref = mdata.external_references[0]
             self._pmid = eref.id
 
-
-         
-        
     @staticmethod
     def from_file(phenopacket_file):
         """
         Return a SimplePatient object that corresponds to a phenopacket (JSON) file
-        :param phenopacket_file: A phenopacket file (JSON format) 
+        :param phenopacket_file: A phenopacket file (JSON format)
         :type ppkt_file: string representing a path to a file
         """
         if not os.path.isfile(phenopacket_file):
-            raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket_file}'") 
+            raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket_file}'")
         with open(phenopacket_file) as f:
             data = f.read()
             jsondata = json.loads(data)
             ppack = Parse(json.dumps(jsondata), phenopackets.Phenopacket())
             return SimplePatient(ga4gh_phenopacket=ppack)
-        
+
 
     @staticmethod
     def from_individual(individual, metadata):
@@ -126,7 +123,7 @@ class SimplePatient:
 
     def get_age(self):
         return self._time_at_last_encounter
-    
+
     def get_disease(self):
         if self._disease is None:
             return "n/a"
@@ -147,13 +144,13 @@ class SimplePatient:
 
     def get_variant_list(self):
         return self._variant_list
-    
+
     def has_pmid(self):
         return self._pmid is not None
-    
+
     def get_pmid(self):
         return self._pmid
-    
+
     def contains_observed_term_id(self, hpo_term_id):
         return hpo_term_id in self._observed
 
