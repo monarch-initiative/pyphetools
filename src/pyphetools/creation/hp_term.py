@@ -19,7 +19,7 @@ class HpTerm:
     :param resolution: an ISO8601 string representing the age of resolution, optional
     :type resolution: str
     """
-    def __init__(self, hpo_id, label, observed=True, measured=True, onset=None, resolution=None):
+    def __init__(self, hpo_id, label, observed=True, measured=True, onset=Constants.NOT_PROVIDED, resolution=None):
         if hpo_id is None or len(hpo_id) == 0 or not hpo_id.startswith("HP"):
             raise ValueError(f"invalid id argument: '{hpo_id}'")
         if label is None or len(label) == 0:
@@ -36,16 +36,30 @@ class HpTerm:
             self._resolution = Constants.NOT_PROVIDED
         else:
             self._resolution = resolution
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self._id == other._id and self._label == other._label and self._measured == other._measured and self._onset == other._onset and self._resolution == other._resolution
+        else:
+            return NotImplemented
         
     def __hash__(self):
         return hash((self._id, self._label, self._observed, self._measured, self._onset, self._resolution))
         
     @property
     def id(self):
+        """
+        :returns: The HPO identifier, e.g., HP:0001166
+        :rtype: str
+        """
         return self._id
     
     @property
     def label(self):
+        """
+        :returns: The HPO label, e.g., Arachnodactyly
+        :rtype: str
+        """
         return self._label
     
     @property
@@ -54,18 +68,37 @@ class HpTerm:
     
     @property
     def measured(self):
+        """
+        :returns: True iff a measurement to assess this abnormality (HpTerm) was performed
+        :rtype: bool
+        """
         return self._measured
     
     @property
     def onset(self):
+        """
+        :returns: iso8601 string representing the age this abnormality first was observed
+        :rtype: str, optional
+        """
         return self._onset
+
+    def set_onset(self, onset):
+        self._onset = onset
     
     @property
     def resolution(self):
+        """
+        :returns: iso8601 string representing the age this abnormality resolved
+        :rtype: str, optional
+        """
         return self._resolution
     
     @property
     def display_value(self):
+        """
+        :returns: One of three strings describing the status of the term: "not measured", "excluded", or "observed"
+        :rtype: str
+        """
         if not self._measured:
             return "not measured"
         if not self._observed:
@@ -75,6 +108,10 @@ class HpTerm:
     
     @property
     def hpo_term_and_id(self):
+        """
+        :returns: A string such as Arachnodactyly (HP:0001166) for display
+        :rtype: str
+        """
         return f"{self._label} ({self._id})"
     
     def __str__(self) -> str:
@@ -89,9 +126,16 @@ class HpTerm:
         return self.__str__()
 
     def excluded(self):
+        """
+        Sets the current term to excluded (i.e., the abnormality was sought but explicitly ruled out clinically)
+        """
         self._observed = False
         
     def to_phenotypic_feature(self):
+        """
+        :returns: A GA4GH PhenotypcFeature corresponding to this HpTerm
+        :rtype: phenopackets.PhenotypicFeature
+        """
         pf = phenopackets.PhenotypicFeature()
         pf.type.id = self._id
         pf.type.label = self._label

@@ -71,7 +71,7 @@ class TestCaseParse(unittest.TestCase):
         encoder = CaseEncoder(hpo_cr=self._hpo_cr, individual_id="id", metadata=metadata.to_ga4gh(), pmid="PMID:1")
         df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded)
         self.assertEqual(1, len(df))
-        
+
         self.assertEqual("HP:0001250", df.iloc[0]['id'])
         self.assertEqual("Seizure",df.iloc[0]['label'])
         self.assertFalse(df.iloc[0]['observed'])
@@ -82,17 +82,17 @@ class TestCaseParse(unittest.TestCase):
         Test that we construct the phenopacket ID to include the PMID and the individual id
         """
         ppkt = self._parser.get_phenopacket()
+        print(ppkt)
         expected_ppkt_id = "PMID_123_A"
         self.assertEqual(expected_ppkt_id, ppkt.id)
 
 
     def test_age_last_exam(self):
-        ppkt = self._parser.get_phenopacket()
-        self.assertIsNotNone(ppkt.subject)
-        self.assertIsNotNone(ppkt.subject.time_at_last_encounter)
-        isoage = ppkt.subject.time_at_last_encounter.age.iso8601duration
+        individual = self._parser.get_individual()
+        self.assertIsNotNone(individual)
+        self.assertIsNotNone(individual.age)
         expected_age = "P4Y11M"
-        self.assertEqual(expected_age, isoage)
+        self.assertEqual(expected_age, individual.age)
 
     def test_sex(self):
         ppkt = self._parser.get_phenopacket()
@@ -100,4 +100,39 @@ class TestCaseParse(unittest.TestCase):
         self.assertIsNotNone(ppkt.subject.sex)
         expected_sex = PPkt.Sex.FEMALE
         self.assertEqual(expected_sex, ppkt.subject.sex)
+
+
+    def test_flag_redundant_terms(self):
+        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
+        metadata.default_versions_with_hpo(version="2022-05-05")
+        age_of_last_examination = "P4Y11M"
+        sex = "female"
+        encoder = CaseEncoder(hpo_cr=self._hpo_cr,
+                                  individual_id="A",
+                                  pmid="PMID:123",
+                                  age_at_last_exam=age_of_last_examination,
+                                  sex=sex,
+                                  metadata=metadata.to_ga4gh())
+        vignette1 = "He had conductive hearing impairment."
+        # Conductive hearing impairment HP:0000405
+        results = encoder.add_vignette(vignette=vignette1)
+        self.assertEqual(1, len(results))
+        tid = results.loc[(results['id'] == 'HP:0000405')]['id'].values[0]
+        self.assertEqual("HP:0000405", tid)
+        label = results.loc[(results['id'] == 'HP:0000405')]['label'].values[0]
+        self.assertEqual("Conductive hearing impairment", label)
+        # Hearing impairment HP:0000365
+        # REDUNDANT!
+        vignette2 = "He had hearing impairment."
+        results = encoder.add_vignette(vignette=vignette2)
+        self.assertEqual(1, len(results))
+        tid = results.loc[(results['id'] == 'HP:0000365')]['id'].values[0]
+        self.assertEqual("HP:0000365", tid)
+        label = results.loc[(results['id'] == 'HP:0000365')]['label'].values[0]
+        self.assertEqual("Hearing impairment", label)
+        # THe QC should pick up the redundancy
+        individual = encoder.get_individual()
+        self.assertTrue(encoder.has_errors())
+
+
 

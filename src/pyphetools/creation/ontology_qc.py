@@ -2,6 +2,7 @@ import hpotk
 from typing import List, Optional
 from .hp_term import HpTerm
 from enum import Enum
+from collections import defaultdict
 
 class Category(Enum):
     REDUNDANT = 1
@@ -10,7 +11,7 @@ class Category(Enum):
 
 class QcError:
     """
-    Data class for quality control errors
+    Data class for quality control errors. Should not be used by client code.
 
     :param category: type of QcError
     :type category: Category
@@ -18,6 +19,8 @@ class QcError:
     :type term: HpTerm
     """
     def __init__(self, category:Category, term:HpTerm):
+        if not isinstance(term, HpTerm):
+            raise ValueError(f"\"term\" argument must be HpTerm but was {type(term)}")
         self._category = category
         self._term = term
 
@@ -34,6 +37,13 @@ class QcError:
     @property
     def term(self):
         return self._term
+
+    def get_summary(self):
+        """
+        :returns: A summary of the error, intended to show in the notebook
+        :rtype: str
+        """
+        return f"{self._category}: {self._term.label} ({self._term.id})"
 
 
 class OntologyQC:
@@ -60,14 +70,16 @@ class OntologyQC:
         annotation excluded: Seizure [HP:0001250], and in general the excluded superclass is removed
         if this kind of conflict is detected
 
-        :param observed_hpo_terms:list of HPO terms (observed), can be empty
-        :type observed_hpo_terms:List[HpTerm]
-        :param excluded_hpo_terms:list of HPO terms (excluded), can be empty
-        :type excluded_hpo_terms:List[HpTerm]
+        :param observed_hpo_terms: list of HPO terms (observed), can be empty
+        :type observed_hpo_terms: List[HpTerm]
+        :param excluded_hpo_terms: list of HPO terms (excluded), can be empty
+        :type excluded_hpo_terms: List[HpTerm]
+        :returns: the potentially cleansed list of excluded terms (the observed terms are never changed by this method
+        :rtype: List[HpTerm]
         """
         if len(excluded_hpo_terms) == 0:
             # i.e., there can be no conflict
-            return observed_hpo_terms
+            return excluded_hpo_terms
         all_excluded_term_ids = {term.id for term in excluded_hpo_terms}
         conflicting_term_id_set = set()
         for term in observed_hpo_terms:
@@ -76,8 +88,7 @@ class OntologyQC:
                     conflicting_term_id_set.add(tid)
         if len(conflicting_term_id_set) > 0:
             excluded_hpo_terms = [term for term in excluded_hpo_terms if term.id not in conflicting_term_id_set]
-        observed_hpo_terms.extend(excluded_hpo_terms)
-        return observed_hpo_terms
+        return excluded_hpo_terms
 
 
 
@@ -93,19 +104,18 @@ class OntologyQC:
         :rtype hpo_terms: List[HpTerm]
         """
         all_terms = set(hpo_terms)
-        all_term_ids = {term.id for term in hpo_terms}
-        redundant_term_id_set = set()
+        redundant_term_set = set()
         for term in all_terms:
-            for tid in all_term_ids:
-                # The ancesotr, e.g. Seizure comes first, the other term, e.g. Clonic seizure, second
+            for term2 in all_terms:
+                # The ancestor, e.g. Seizure comes first, the other term, e.g. Clonic seizure, second
                 # in the following function call
-                if self._ontology.graph.is_ancestor_of(tid, term.id):
-                    redundant_term_id_set.add(tid)
+                if self._ontology.graph.is_ancestor_of(term2.id, term.id):
+                    redundant_term_set.add(term2)
         # When we get here, we have scanned all terms for redundant ancestors
-        non_redundant_terms = [ term for term in hpo_terms if term.id not in redundant_term_id_set]
-        if len(redundant_term_id_set) > 0:
-            for tid in redundant_term_id_set:
-                error = QcError(Category.REDUNDANT, tid)
+        non_redundant_terms = [ term for term in hpo_terms if term not in redundant_term_set]
+        if len(redundant_term_set) > 0:
+            for term in redundant_term_set:
+                error = QcError(Category.REDUNDANT, term)
                 self._errors.append(error)
         return non_redundant_terms
 
@@ -118,18 +128,37 @@ class OntologyQC:
         :returns: list of HPO terms without redundancies/conflicts
         :rtype hpo_terms: List[HpTerm]
         """
-        observed_hpo_terms = [term for term in hpo_terms if term.observed]
-        excluded_hpo_terms = [term for term in hpo_terms if not term.observed]
-        self._errors = []
-        if fix_redundancies:
-            observed_hpo_terms = self._fix_redundancies(observed_hpo_terms)
-            excluded_hpo_terms = self._fix_redundancies(excluded_hpo_terms)
-        if fix_conflicts:
-            hpo_terms = self._fix_conflicts(observed_hpo_terms, excluded_hpo_terms)
-        return hpo_terms
+        by_age_dictionary =  defaultdict(list)
+        for term in hpo_terms:
+            by_age_dictionary[term.onset].append(term)
+        clean_terms = []
+        self._errors.clear() # reset
+        for onset, term_list in by_age_dictionary.items():
+            observed_hpo_terms = [term for term in term_list if term.observed]
+            excluded_hpo_terms = [term for term in term_list if not term.observed]
+            if fix_redundancies:
+                observed_hpo_terms = self._fix_redundancies(observed_hpo_terms)
+                excluded_hpo_terms = self._fix_redundancies(excluded_hpo_terms)
+            if fix_conflicts:
+                # this method checks and may fix the excluded terms (only)
+                excluded_hpo_terms = self._fix_conflicts(observed_hpo_terms, excluded_hpo_terms)
+            clean_terms.extend(observed_hpo_terms)
+            clean_terms.extend(excluded_hpo_terms)
+        return clean_terms
 
     def has_error(self):
+        """
+        :returns: True iff errors were encountered
+        :rtype: boolean
+        """
         return len(self._errors) > 0
+
+    def get_error_list(self):
+        """
+        :returns: a potential empty list of errors
+        :rtype: List[str]
+        """
+        return [x.get_summary() for x in self._errors]
 
 
     def get_error_string(self):

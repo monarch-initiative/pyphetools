@@ -4,6 +4,7 @@ import os
 from typing import List
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
+from .hp_term import HpTerm
 from .hgvs_variant import Variant
 
 
@@ -28,12 +29,12 @@ class Individual:
     """
 
     def __init__(self, individual_id,
-                 hpo_terms,
+                 hpo_terms=[],
                  pmid=None,
                  title=None,
                  sex=Constants.NOT_PROVIDED,
                  age=Constants.NOT_PROVIDED,
-                 interpretation_list=None,
+                 interpretation_list=[],
                  disease_id=None,
                  disease_label=None):
         """Constructor
@@ -72,6 +73,9 @@ class Individual:
         """
         return self._sex
 
+    def set_sex(self, sex):
+        self._sex = sex
+
     @property
     def age(self):
         """
@@ -79,6 +83,9 @@ class Individual:
         :rtype: str
         """
         return self._age
+
+    def set_age(self, iso_age):
+        self._age = iso_age
 
     @property
     def hpo_terms(self):
@@ -107,6 +114,15 @@ class Individual:
             raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
         self._interpretation_list.append(v.to_ga4gh_variant_interpretation(acmg=acmg))
 
+    def add_hpo_term(self, term:HpTerm):
+        """
+        Adds one HPO term to the current individual.
+        :param term: An HPO term (observed or excluded, potentially with Age of observation
+        :type term: HpTerm
+        """
+        if not isinstance(term, HpTerm):
+            raise ValueError(f"\"term\" argument must be HpTerm but was {type(term)}")
+        self._hpo_terms.append(term)
 
     def set_disease(self, disease_id, disease_label):
         """
@@ -129,6 +145,16 @@ class Individual:
         :type cleansed_hpo_terms: List[pyphetools.creation.HpTerm]
         """
         self._hpo_terms = cleansed_hpo_terms
+
+    @property
+    def pmid(self):
+        return self._pmid
+
+    def set_pmid(self, pmid):
+        """
+        :param pmid: The PubMed identifier for the publication in which this individual was described
+        """
+        self._pmid = pmid
 
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """_summary_

@@ -18,6 +18,9 @@ class TestOntologyQC(unittest.TestCase):
         self.assertIsNotNone(self._qc)
 
     def test_conflict(self):
+        """
+        Arachnodactyly is a child of Slender finger, and so the following is a conflict
+        """
         arachTerm = HpTerm(hpo_id="HP:0001166", label="Arachnodactyly", observed=True)
         slenderTerm = HpTerm(hpo_id="HP:0001238", label="Slender finger", observed=False)
         hpo_terms = [arachTerm, slenderTerm]
@@ -25,6 +28,9 @@ class TestOntologyQC(unittest.TestCase):
         self.assertEqual(1, len(qc_hpo_terms))
 
     def test_do_not_detect_conflict_if_there_is_no_conflict(self):
+        """
+        These terms are unrelated so it is NOT a conflict
+        """
         arachTerm = HpTerm(hpo_id="HP:0001166", label="Arachnodactyly", observed=True)
         # the following is not a conflict and should not be removed
         hipDislocation = HpTerm(hpo_id="HP:0002827", label="Hip dislocation", observed=False)
