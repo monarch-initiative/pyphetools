@@ -10,6 +10,21 @@ from typing import List, Union
 class ContentValidator(PhenopacketValidator):
     """
     Validate a list of phenopackets as to whether they have a minunum number of phenotypic features and alleles
+
+    The following example shows how to use this class to assess whether each phenopacket in the directory called "phenopackets" contains at least one variant and at least three HPO terms.
+
+        from pyphetools.visualization import PhenopacketIngestor
+        from pyphetools.validation import ContentValidator
+        ingestor = PhenopacketIngestor(indir="phenopackets")
+        ppkt_d = ingestor.get_phenopacket_dictionary()
+        ppkt_list = list(ppkt_d.values())
+        validator = ContentValidator(min_var=1, min_hpo=3)
+        errors = validator.validate_phenopacket_list(ppkt_list)
+        print(f"{len(errors)} errors were identified")
+
+    Note that this class does not test for all errors. Use phenopacket-tools to check for redundant or conflicting
+    annotations.
+
     :param min_var: minimum number of variants for this phenopacket to be considered valid
     :type min_var: int
     :param min_hpo: minimum number of phenotypic features (HP terms) for this phenopacket to be considered valid

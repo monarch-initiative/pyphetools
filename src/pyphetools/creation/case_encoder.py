@@ -4,12 +4,13 @@ import phenopackets
 import re
 from typing import List
 from collections import defaultdict
-from .hp_term import HpTerm
-from .hpo_cr import HpoConceptRecognizer
-from .simple_column_mapper import SimpleColumnMapper
 from .column_mapper import ColumnMapper
 from .constants import Constants
+from .hp_term import HpTerm
+from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .ontology_qc import OntologyQC
+from .simple_column_mapper import SimpleColumnMapper
 from .variant import Variant
 
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
@@ -38,14 +39,14 @@ class CaseEncoder:
     :type disease_label: str, optional
     """
 
-    def __init__(self, 
-                 hpo_cr: HpoConceptRecognizer, 
-                 pmid: str, 
-                 individual_id:str, 
-                 metadata:phenopackets.MetaData, 
-                 age_at_last_exam=None, 
+    def __init__(self,
+                 hpo_cr: HpoConceptRecognizer,
+                 pmid: str,
+                 individual_id:str,
+                 metadata:phenopackets.MetaData,
+                 age_at_last_exam:str=None,
                  sex:str=None,
-                 disease_id:str=None, 
+                 disease_id:str=None,
                  disease_label:str=None) -> None:
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
@@ -53,7 +54,6 @@ class CaseEncoder:
         self._hpo_concept_recognizer = hpo_cr
         if not pmid.startswith("PMID:"):
             raise ValueError(f"Malformed pmid argument ({pmid}). Must start with PMID:")
-        self._pmid = pmid
         if age_at_last_exam is not None:
             match = re.search(ISO8601_REGEX, age_at_last_exam)
             if match:
@@ -63,22 +63,30 @@ class CaseEncoder:
         else:
             self._age_at_last_examination = None
         self._seen_hpo_terms = set() # Use to prevent duplicate HP annotations
-        self._annotations = defaultdict(list)
-        self._individual_id = individual_id
         if not isinstance(metadata, phenopackets.MetaData):
             raise ValueError(f"metadata argument must be phenopackets.MetaData but was {type(metadata)}")
         self._metadata = metadata
         female_symbols = {"f", "girl", "female", "woman", "w"}
         male_symbols = {"f", "boy", "male", "man", "m"}
         if sex in female_symbols:
-            self._sex = Constants.FEMALE_SYMBOL
+            sex_symbol = Constants.FEMALE_SYMBOL
         elif sex in male_symbols:
-            self._sex = Constants.MALE_SYMBOL
+            sex_symbol = Constants.MALE_SYMBOL
         else:
-            self._sex = Constants.UNKOWN_SEX_SYMBOL
-        self._disease_id = disease_id
-        self._disease_label = disease_label
-        self._interpretations = []
+            sex_symbol = Constants.UNKOWN_SEX_SYMBOL
+        ontology = hpo_cr.get_hpo_ontology()
+        if ontology is None:
+            raise ValueError("ontology cannot be None")
+        self._qc = OntologyQC(ontology=ontology)
+        self._validation_errors = []
+        self._individual = Individual(individual_id=individual_id, sex=sex_symbol)
+        if age_at_last_exam is not None:
+            self._individual.set_age(age_at_last_exam)
+        if disease_id is not None and disease_label is not None:
+            self._individual.set_disease(disease_id=disease_id, disease_label=disease_label)
+        if pmid is not None:
+            self._individual.set_pmid(pmid=pmid)
+
 
     def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms=None) -> List[
         HpTerm]:
@@ -112,22 +120,21 @@ class CaseEncoder:
             text = text.replace(fp, " ")
         # results will be a list with HpTerm elements
         results = self._hpo_concept_recognizer.parse_cell(cell_contents=text, custom_d=custom_d)
-        hpo_list = []
-        for trm in results:
-            if trm in self._seen_hpo_terms:
+        if custom_age is not None:
+            current_age = custom_age
+        elif self._age_at_last_examination is not None:
+            current_age = self._age_at_last_examination
+        else:
+            current_age = Constants.NOT_PROVIDED
+        for term in results:
+            if term in self._seen_hpo_terms:
                 continue
             else:
-                self._seen_hpo_terms.add(trm)
-            hpo_list.append(trm)
-        if custom_age is not None:
-            self._annotations[custom_age].extend(results)
-        elif self._age_at_last_examination is not None:
-            self._annotations[self._age_at_last_examination].extend(results)
-        else:
-            self._annotations["N/A"].extend(results)
-        for r in results:
-            if r.label in excluded_terms:
-                r.excluded()
+                self._seen_hpo_terms.add(term)
+            if term.label in excluded_terms:
+                term.excluded()
+            term.set_onset(current_age)
+            self._individual.add_hpo_term(term)
         return HpTerm.term_list_to_dataframe(results)
 
     def add_term(self, label=None, hpo_id=None, excluded=False, custom_age=None):
@@ -138,36 +145,48 @@ class CaseEncoder:
             hpo_term = results[0]
             hpo_term._observed = not excluded
             if custom_age is not None:
-                self._annotations[custom_age].append(hpo_term)
+                hpo_term.set_onset(custom_age)
+                self._individual.add_hpo_term(hpo_term)
             elif self._age_at_last_examination is not None:
-                self._annotations[self._age_at_last_examination].append(hpo_term)
+                hpo_term.set_onset(self._age_at_last_examination)
+                self._individual.add_hpo_term(hpo_term)
             else:
-                self._annotations["N/A"].append(hpo_term)
+                hpo_term.set_onset(Constants.NOT_PROVIDED)
+                self._individual.add_hpo_term(hpo_term)
             return HpTerm.term_list_to_dataframe([hpo_term])
         elif hpo_id is not None:
             hpo_term = self._hpo_concept_recognizer.get_term_from_id(hpo_id)
             if excluded:
                 hpo_term._observed = not excluded
             if custom_age is not None:
-                self._annotations[custom_age].append(hpo_term)
+                hpo_term.set_onset(custom_age)
+                self._individual.add_hpo_term(hpo_term)
             elif self._age_at_last_examination is not None:
-                self._annotations[self._age_at_last_examination].append(hpo_term)
+                hpo_term.set_onset(self._age_at_last_examination)
+                self._individual.add_hpo_term(hpo_term)
             else:
-                self._annotations["N/A"].append(hpo_term)
+                hpo_term.set_onset(Constants.NOT_PROVIDED)
+                self._individual.add_hpo_term(hpo_term)
             return HpTerm.term_list_to_dataframe([hpo_term])
         else:
             return ValueError("Must call function with non-None value for either id or label argument")
-        
-        
-    def add_variant_or_interpretation(self, variant):
-        if isinstance(variant, Variant):
-            self._interpretations.append(variant.to_ga4gh_variant_interpretation())
-        elif isinstance(variant, phenopackets.VariantInterpretation):
-            self._interpretations.append(variant)
+
+
+    def add_variant_or_interpretation(self, variant_or_variantInterpretation):
+        """
+        :param variant_or_variantInterpretation: A presumed pathogenic variant observed in the current individual
+        :type variant_or_variantInterpretation: Union[Variant, phenopackets.VariantInterpretation]
+        """
+        if isinstance(variant_or_variantInterpretation, Variant):
+            interpretation = variant_or_variantInterpretation.to_ga4gh_variant_interpretation()
+            self._individual.add_variant(interpretation)
+        elif isinstance(variant_or_variantInterpretation, phenopackets.VariantInterpretation):
+            self._individual.add_variant(variant_or_variantInterpretation)
         else:
             raise ValueError(f"variant argument must be pyphetools Variant or GA4GH \
-                phenopackets.VariantInterpretation but was {type(variant)}")
-            
+                phenopackets.VariantInterpretation but was {type(variant_or_variantInterpretation)}")
+
+
 
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         if observed is None or excluded is None:
@@ -177,37 +196,40 @@ class CaseEncoder:
         simple_mapper_d = defaultdict(ColumnMapper)
         for column_name, hpo_label in column_name_to_hpo_label_map.items():
             hp_term = self._hpo_concept_recognizer.get_term_from_label(hpo_label)
-            mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=None,
-                                     non_measured=non_measured)
+            mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=None,non_measured=non_measured)
             simple_mapper_d[column_name] = mpr
         return simple_mapper_d
 
     def get_hpo_term_dict(self):
         return self._annotations
-    
+
     def get_individual(self):
         """
         :return: the pyphetools Individual object corresponding to the current case report
         """
-        interpretations = self._interpretations
-        if not isinstance(interpretations, list):
-            interpretations = [interpretations]
-        individual = Individual(individual_id=self._individual_id, 
+
+        """
+        individual = Individual(individual_id=self._individual_id,
                                 sex=self._sex,
                                 age=self._age_at_last_examination,
                                 hpo_terms=self._annotations,
                                 pmid=self._pmid,
                                 interpretation_list=interpretations,
-                                disease_id=self._disease_id, 
+                                disease_id=self._disease_id,
                                 disease_label=self._disease_label)
-        return individual
+        """
+        hpo_terms = self._qc.clean_terms(self._individual.hpo_terms)
+        self._individual.set_hpo_terms(hpo_terms)
+        self._validation_errors = self._qc.get_error_list()
+        return self._individual
 
     def get_phenopacket(self):
         """
         :return: the GA4GH phenopacket corresponding to the current case report
         """
         individual = self.get_individual()
-        phenopacket_id = self._pmid.replace(":", "_") + "_" + individual.id.replace(" ", "_").replace(":", "_")
+        pmid = individual.pmid
+        phenopacket_id = pmid.replace(":", "_") + "_" + individual.id.replace(" ", "_").replace(":", "_")
         return individual.to_ga4gh_phenopacket(metadata=self._metadata, phenopacket_id=phenopacket_id)
 
     def output_phenopacket(self, outdir):
@@ -227,3 +249,9 @@ class CaseEncoder:
         with open(outpth, "wt") as fh:
             fh.write(json_string)
             print(f"Wrote phenopacket to {outpth}")
+
+    def has_errors(self):
+        return len(self._validation_errors) > 0
+
+    def get_validation_errors(self):
+        return self._validation_errors
