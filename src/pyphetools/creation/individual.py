@@ -106,13 +106,20 @@ class Individual:
     def add_variant(self, v, acmg=None):
         """
         :param v: A Variant obeserved in this individual
-        :type v: Variant
+        :type v: Union[Variant, phenopackets.schema.v2.core.interpretation_pb2.VariantInterpretation]
         :param acmg: One of the five ACMG pathogenicity categories
         :type acmg: str
         """
-        if not isinstance(v, Variant):
-            raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
-        self._interpretation_list.append(v.to_ga4gh_variant_interpretation(acmg=acmg))
+        if isinstance(v, Variant):
+            variant = v.to_ga4gh_variant_interpretation(acmg=acmg)
+        else:
+            variant = v
+        if str(type(variant)) == "<class 'phenopackets.schema.v2.core.interpretation_pb2.VariantInterpretation'>":
+            self._interpretation_list.append(variant)
+        else:
+            raise ValueError(f"variant argument must be pyphetools Variant or GA4GH VariantInterpretation but was {type(variant)}")
+
+
 
     def add_hpo_term(self, term:HpTerm):
         """
