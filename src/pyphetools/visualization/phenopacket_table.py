@@ -6,7 +6,12 @@ from .simple_patient import SimplePatient
 class PhenopacketTable:
     """
     This class creates a table with a summary of all phenopackets in a cohort of individuals
-    It should be used with HTML, display from IPython.display 
+    Create Individual objects and transform them into phenopackets, or import GA4GH phenopackets and display them.
+
+        from IPython.display import HTML, display
+        phenopackets = [i.to_ga4gh_phenopacket(metadata=metadata) for i in individuals]
+        table = PhenopacketTable(phenopacket_list=phenopackets)
+        display(HTML(table.to_html()))
     """
     def __init__(self, phenopacket_list) -> None:
         """
