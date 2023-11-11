@@ -2,6 +2,7 @@ from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from typing import List
 import pandas as pd
+import math
 
 
 class ThresholdedColumnMapper(ColumnMapper):
@@ -22,14 +23,19 @@ class ThresholdedColumnMapper(ColumnMapper):
             contents = cell_contents.strip()
             if contents == self._observed_code:
                 return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
+            if contents.lower() == "nan":
+                return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
         elif isinstance(cell_contents, int):
             contents = cell_contents
         elif isinstance(cell_contents, float):
+            if math.isnan(cell_contents):
+                return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
             contents = cell_contents
         else:
             raise ValueError(
                 f"Malformed cell contents for ThresholdedColumnMapper: {cell_contents}, type={type(cell_contents)}")
         try:
+            
             value = float(contents)
             if self._call_if_above:
                 if value > self._threshold:
