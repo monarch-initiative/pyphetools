@@ -1,6 +1,7 @@
 import unittest
 import os
-from src.pyphetools.creation import HpoParser, OntologyQC, HpTerm
+from src.pyphetools.creation import HpoParser, HpTerm
+from src.pyphetools.validation import OntologyQC
 
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')

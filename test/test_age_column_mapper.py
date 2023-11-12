@@ -34,38 +34,38 @@ class TestOptionMapper(unittest.TestCase):
         self.assertEqual("P3Y", p3)
         p42 = ageMapper.map_cell("42")
         self.assertEqual("P42Y", p42)
-        
+
     def test_iso8601(self):
         ageMapper = AgeColumnMapper.iso8601(column_name=TEST_COLUMN)
         p3y = ageMapper.map_cell("P3Y")
         self.assertEqual("P3Y", p3y)
         p3m25d = ageMapper.map_cell("P3Y2M5D")
         self.assertEqual("P3Y2M5D", p3m25d)
-        
+
     def test_year_month_both_1(self):
         ageMapper = AgeColumnMapper.by_year_and_month(column_name=TEST_COLUMN)
         age_string = "14 y 8 m"
         age_iso = ageMapper.map_cell(age_string)
         self.assertEqual("P14Y8M", age_iso)
-        
+
     def test_year_month_both_2(self):
         ageMapper = AgeColumnMapper.by_year_and_month(column_name=TEST_COLUMN)
         age_string = "7 y 6 m"
         age_iso = ageMapper.map_cell(age_string)
         self.assertEqual("P7Y6M", age_iso)
-        
+
     def test_year_month_both_3(self):
         ageMapper = AgeColumnMapper.by_year_and_month(column_name=TEST_COLUMN)
         age_string = "7y6m"
         age_iso = ageMapper.map_cell(age_string)
         self.assertEqual("P7Y6M", age_iso)
-        
+
     def test_year_month_just_year_1(self):
         ageMapper = AgeColumnMapper.by_year_and_month(column_name=TEST_COLUMN)
         age_string = "7 y"
         age_iso = ageMapper.map_cell(age_string)
         self.assertEqual("P7Y", age_iso)
-        
+
     def test_year_month_just_month_1(self):
         ageMapper = AgeColumnMapper.by_year_and_month(column_name=TEST_COLUMN)
         age_string = "2 m"

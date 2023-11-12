@@ -15,7 +15,6 @@ from .hp_term import HpTerm
 from .individual import Individual
 from .metadata import MetaData
 from .mixed_cohort_encoder import MixedCohortEncoder
-from .ontology_qc import OntologyQC
 from .option_column_mapper import OptionColumnMapper
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator

@@ -8,7 +8,6 @@ from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
-from .ontology_qc import OntologyQC
 from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
@@ -47,14 +46,14 @@ class CohortEncoder(AbstractEncoder):
     :raises: ValueError - several of the input arguments are checked.
     """
 
-    def __init__(self, 
-                 df, 
-                 hpo_cr, 
-                 column_mapper_d, 
-                 individual_column_name, 
+    def __init__(self,
+                 df,
+                 hpo_cr,
+                 column_mapper_d,
+                 individual_column_name,
                  metadata,
-                 agemapper=AgeColumnMapper.not_provided(), 
-                 sexmapper=SexColumnMapper.not_provided(), 
+                 agemapper=AgeColumnMapper.not_provided(),
+                 sexmapper=SexColumnMapper.not_provided(),
                  variant_mapper=None,
                  pmid=None,
                  delimiter=None):
@@ -86,7 +85,6 @@ class CohortEncoder(AbstractEncoder):
         ontology = hpo_cr.get_hpo_ontology()
         if ontology is None:
             raise ValueError("ontology cannot be None")
-        self._qc = OntologyQC(ontology=ontology)
 
     def preview_dataframe(self):
         """
@@ -219,7 +217,5 @@ class CohortEncoder(AbstractEncoder):
                                   disease=self._disease)
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
-            hpo_terms = self._qc.clean_terms(indi.hpo_terms)
-            indi.set_hpo_terms(hpo_terms)
             individuals.append(indi)
         return individuals

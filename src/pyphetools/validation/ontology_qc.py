@@ -1,6 +1,6 @@
 import hpotk
 from typing import List, Optional
-from .hp_term import HpTerm
+from ..creation.hp_term import HpTerm
 from enum import Enum
 from collections import defaultdict
 

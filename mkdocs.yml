@@ -44,6 +44,7 @@ nav:
       - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
       - Variant column mapper: 'user-guide/variant_column_mapper.md'
       - Cohort encoder: 'user-guide/cohort_encoder.md'
+      - Validation: 'user-guide/validation.md'
       - Visualization: 'user-guide/visualization.md'
   - API:
     - "overview": 'api/overview.md'
@@ -65,7 +66,6 @@ nav:
       - "Individual": "api/creation/individual.md"
       - "MetaData": "api/creation/metadata.md"
       - "MixedCohortEncoder": "api/creation/mixed_cohort_encoder.md"
-      - "OntologyQC": "api/creation/ontology_qc.md"
       - "OptionColumnMapper": "api/creation/option_column_mapper.md"
       - "SexColumnMapper": "api/creation/sex_column_mapper.md"
       - "SimpleColumnMapper": "api/creation/simple_column_mapper.md"
@@ -78,6 +78,7 @@ nav:
     - "validation":
       - "overview": "api/validation.md"
       - "ContentValidator": "api/validation/content_validator.md"
+      - "OntologyQC": "api/validation/ontology_qc.md"
       - "ValidationResult": "api/validation/validation_result.md"
     - "visualization":
       - "overview": "api/visualization.md"
