@@ -31,13 +31,13 @@ class Individual:
     """
 
     def __init__(self, individual_id,
-                 hpo_terms=[],
-                 pmid=None,
-                 title=None,
-                 sex=Constants.NOT_PROVIDED,
-                 age=Constants.NOT_PROVIDED,
-                 interpretation_list=[],
-                 disease=None):
+                hpo_terms=[],
+                pmid=None,
+                title=None,
+                sex=Constants.NOT_PROVIDED,
+                age=Constants.NOT_PROVIDED,
+                interpretation_list=[],
+                disease=None):
         """Constructor
         """
         if isinstance(individual_id, int):
@@ -159,6 +159,20 @@ class Individual:
         """
         self._pmid = pmid
 
+    def get_phenopacket_id(self, phenopacket_id=None):
+        if phenopacket_id is None:
+            indi_id = self._individual_id.replace(" ", "_")
+            if self._pmid is not None:
+                pmid = self._pmid.replace(":", "_")
+                ppkt_id = f"{pmid}_{indi_id}"
+            else:
+                ppkt_id = indi_id
+        else:
+            ppkt_id = phenopacket_id
+        ppkt_id = ppkt_id.replace(" ", "_")
+        return ppkt_id
+
+
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
         """
         Transform the data into GA4GH Phenopacket format
@@ -170,16 +184,7 @@ class Individual:
         if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
             raise ValueError(f"metadata argument must be pyphetools.MetaData or GA4GH MetaData but was {type(metadata)}")
         php = phenopackets.Phenopacket()
-        indi_id = self._individual_id.replace(" ", "_")
-        if phenopacket_id is None:
-            if self._pmid is not None:
-                pmid = self._pmid.replace(":", "_")
-                ppkt_id = f"{pmid}_{indi_id}"
-            else:
-                ppkt_id = indi_id
-        else:
-            ppkt_id = phenopacket_id
-        php.id = ppkt_id.replace(" ", "_")
+        php.id = self.get_phenopacket_id(phenopacket_id=phenopacket_id)
         php.subject.id = self._individual_id
         if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE

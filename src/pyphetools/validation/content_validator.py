@@ -4,6 +4,7 @@ import os
 import phenopackets
 from .phenopacket_validator import PhenopacketValidator
 from .validation_result import ValidationResult
+from ..creation.individual import Individual
 from typing import List, Union
 
 
@@ -39,9 +40,47 @@ class ContentValidator(PhenopacketValidator):
         self._min_allele = min_allele
 
 
+    def validate_individual(self, individual:Individual) -> List[ValidationResult]:
+        """
+        check a single Individual as to whether there are sufficient HPO terms and alleles/variants
+        :returns: a potential empty list of validations
+        :rtype: List[ValidationResult]
+        """
+        validation_results = []
+        n_pf = len(individual.hpo_terms)
+        n_var = 0
+        n_alleles = 0
+        pp_id = individual.get_phenopacket_id()
+        for interpretation in individual.interpretation_list:
+            if interpretation.diagnosis is not None:
+                dx = interpretation.diagnosis
+                for genomic_interpretation in dx.genomic_interpretations:
+                    n_var += 1
+                    vint = genomic_interpretation.variant_interpretation
+                    if vint.variation_descriptor is not None:
+                        vdesc =   vint.variation_descriptor
+                        if vdesc.allelic_state is not None:
+                            gtype = vdesc.allelic_state
+                            if gtype.label == "heterozygous": # "GENO:0000135"
+                                n_alleles += 1
+                            elif gtype.label == "homozygous": # "GENO:0000136"
+                                n_alleles += 2
+                            elif gtype.label == "hemizygous": # "GENO:0000134"
+                                n_alleles += 1
+        if n_pf < self._min_hpo:
+            msg = f"Minimum HPO terms required {self._min_hpo} but only {n_pf} found"
+            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
+        if n_var < self._min_var:
+            msg = f"Minimum variants required {self._min_var} but only {n_var} found"
+            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
+        if self._min_allele is not None and n_alleles < self._min_allele:
+            msg = f"Minimum alleles required {self._min_allele} but only {n_alleles} found"
+            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
+        return validation_results
+
     def validate_phenopacket(self, phenopacket) -> List[ValidationResult]:
         """
-        check a single phenopacket
+        check a single phenopacket as to whether there are sufficient HPO terms and alleles/variants
         :returns: a potential empty list of validations
         :rtype: List[ValidationResult]
         """
@@ -94,18 +133,7 @@ class ContentValidator(PhenopacketValidator):
             validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
         return validation_results
 
-    def validate_phenopacket_list(self, phenopacket_list) -> List[ValidationResult]:
-        """phenopacket_list can be a list of phenopacket objects or paths to JSON files
 
-        :param phenopacket_list: list of GA4GH phenopackets to be validated
-        :type phenopacket_list: Union[List[phenopackets.Phenopackets], List[str]]
-        :returns: potentially empty list of warnings and errors
-        :rtype: List[ValidationResult]
-        """
-        validation_results = []
-        for pp in phenopacket_list:
-            validation_results.extend(self.validate_phenopacket(pp))
-        return validation_results
 
 
 

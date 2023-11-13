@@ -44,7 +44,6 @@ __all__ = [
     "Individual",
     "MetaData",
     "MixedCohortEncoder",
-    "OntologyQC",
     "OptionColumnMapper",
     "SexColumnMapper",
     "SimpleColumnMapper",

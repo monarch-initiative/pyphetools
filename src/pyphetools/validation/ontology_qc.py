@@ -1,49 +1,10 @@
 import hpotk
 from typing import List, Optional
 from ..creation.hp_term import HpTerm
-from enum import Enum
+from .validation_result import ValidationResult, ValidationResultBuilder
 from collections import defaultdict
+from ..creation.individual import Individual
 
-class Category(Enum):
-    REDUNDANT = 1
-    CONFLICT = 2
-
-
-class QcError:
-    """
-    Data class for quality control errors. Should not be used by client code.
-
-    :param category: type of QcError
-    :type category: Category
-    :param term: HpTerm that caused the error
-    :type term: HpTerm
-    """
-    def __init__(self, category:Category, term:HpTerm):
-        if not isinstance(term, HpTerm):
-            raise ValueError(f"\"term\" argument must be HpTerm but was {type(term)}")
-        self._category = category
-        self._term = term
-
-    def is_redundant(self):
-        return Category.REDUNDANT == self._category
-
-    def is_conflict(self):
-        return Category.CONFLICT == self._category
-
-    @property
-    def category(self):
-        return self._category
-
-    @property
-    def term(self):
-        return self._term
-
-    def get_summary(self):
-        """
-        :returns: A summary of the error, intended to show in the notebook
-        :rtype: str
-        """
-        return f"{self._category}: {self._term.label} ({self._term.id})"
 
 
 class OntologyQC:
@@ -54,9 +15,14 @@ class OntologyQC:
 
     """
 
-    def __init__(self, ontology:hpotk.MinimalOntology):
+    def __init__(self, ontology:hpotk.MinimalOntology, individual:Individual, fix_conflicts=True, fix_redundancies=True):
         self._ontology = ontology
+        self._individual = individual
+        self._phenopacket_id = individual.get_phenopacket_id()
+        self._fix_conflict_flag = fix_conflicts
+        self._fix_redundancy_flag = fix_redundancies
         self._errors = []
+        self._clean_hpo_terms = self._clean_terms()
 
 
     def _fix_conflicts(self, observed_hpo_terms:List[HpTerm], excluded_hpo_terms) -> List[HpTerm]:
@@ -86,6 +52,8 @@ class OntologyQC:
             for tid in all_excluded_term_ids:
                 if self._ontology.graph.is_ancestor_of(tid, term.id):
                     conflicting_term_id_set.add(tid)
+                    error = ValidationResultBuilder(ppkt_id=self._phenopacket_id).error().conflict().set_term(term=term).build()
+                    self._errors.append(error)
         if len(conflicting_term_id_set) > 0:
             excluded_hpo_terms = [term for term in excluded_hpo_terms if term.id not in conflicting_term_id_set]
         return excluded_hpo_terms
@@ -97,7 +65,7 @@ class OntologyQC:
         """
         Remove redundant terms from a list of HPO terms.
 
-        As a side effect, add a QcError for each removed redundant term
+        As a side effect, add a ValidationResult for each removed redundant term
         :param hpo_terms: original term list that might contain redundancies
         :type hpo_terms: List[HpTerm]
         :returns: list of HPO terms without redundancies
@@ -115,13 +83,13 @@ class OntologyQC:
         non_redundant_terms = [ term for term in hpo_terms if term not in redundant_term_set]
         if len(redundant_term_set) > 0:
             for term in redundant_term_set:
-                error = QcError(Category.REDUNDANT, term)
+                error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_term(term).build()
                 self._errors.append(error)
         return non_redundant_terms
 
 
 
-    def clean_terms(self, hpo_terms:List[HpTerm], fix_conflicts=True, fix_redundancies=True) -> List[HpTerm]:
+    def _clean_terms(self) -> List[HpTerm]:
         """
         :param hpo_terms: original term list that might contain redundancies or conflicts
         :type hpo_terms: List[HpTerm]
@@ -129,39 +97,39 @@ class OntologyQC:
         :rtype hpo_terms: List[HpTerm]
         """
         by_age_dictionary =  defaultdict(list)
-        for term in hpo_terms:
+        for term in self._individual.hpo_terms:
             by_age_dictionary[term.onset].append(term)
         clean_terms = []
         self._errors.clear() # reset
         for onset, term_list in by_age_dictionary.items():
             observed_hpo_terms = [term for term in term_list if term.observed]
             excluded_hpo_terms = [term for term in term_list if not term.observed]
-            if fix_redundancies:
+            if self._fix_redundancy_flag:
                 observed_hpo_terms = self._fix_redundancies(observed_hpo_terms)
                 excluded_hpo_terms = self._fix_redundancies(excluded_hpo_terms)
-            if fix_conflicts:
+            if self._fix_conflict_flag:
                 # this method checks and may fix the excluded terms (only)
                 excluded_hpo_terms = self._fix_conflicts(observed_hpo_terms, excluded_hpo_terms)
             clean_terms.extend(observed_hpo_terms)
             clean_terms.extend(excluded_hpo_terms)
         return clean_terms
 
-    def has_error(self):
+    def has_error(self) -> bool:
         """
         :returns: True iff errors were encountered
         :rtype: boolean
         """
         return len(self._errors) > 0
 
-    def get_error_list(self):
+    def get_error_list(self) -> List[ValidationResult]:
         """
         :returns: a potential empty list of errors
         :rtype: List[str]
         """
-        return [x.get_summary() for x in self._errors]
+        return self._errors
 
 
-    def get_error_string(self):
+    def get_error_string(self) -> str:
         """
         create and return a string that summarizes the redundancies and conflicts that were corrected
 
@@ -180,3 +148,10 @@ class OntologyQC:
             conf_terms = [e.hpo_term_and_id for e in conflicts]
             e_string = e_string + "The following conflicting excluded terms were removed: " + ", ".join(conf_terms) + ". "
         return e_string
+
+
+    @staticmethod
+    def qc_cohort(individual_list:List[Individual]) -> List[Individual] :
+
+
+        return individual_list
