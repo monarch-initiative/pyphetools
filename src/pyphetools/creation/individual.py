@@ -4,8 +4,10 @@ import os
 from typing import List
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
+from .disease import Disease
 from .hp_term import HpTerm
 from .hgvs_variant import Variant
+from .metadata import MetaData
 
 
 class Individual:
@@ -29,14 +31,13 @@ class Individual:
     """
 
     def __init__(self, individual_id,
-                 hpo_terms=[],
-                 pmid=None,
-                 title=None,
-                 sex=Constants.NOT_PROVIDED,
-                 age=Constants.NOT_PROVIDED,
-                 interpretation_list=[],
-                 disease_id=None,
-                 disease_label=None):
+                hpo_terms=[],
+                pmid=None,
+                title=None,
+                sex=Constants.NOT_PROVIDED,
+                age=Constants.NOT_PROVIDED,
+                interpretation_list=[],
+                disease=None):
         """Constructor
         """
         if isinstance(individual_id, int):
@@ -52,8 +53,7 @@ class Individual:
         self._age = age
         self._hpo_terms = hpo_terms
         self._interpretation_list = interpretation_list
-        self._disease_id = disease_id
-        self._disease_label = disease_label
+        self._disease = disease
         self._pmid = pmid
         self._title = title
 
@@ -106,13 +106,20 @@ class Individual:
     def add_variant(self, v, acmg=None):
         """
         :param v: A Variant obeserved in this individual
-        :type v: Variant
+        :type v: Union[Variant, phenopackets.schema.v2.core.interpretation_pb2.VariantInterpretation]
         :param acmg: One of the five ACMG pathogenicity categories
         :type acmg: str
         """
-        if not isinstance(v, Variant):
-            raise ValueError(f"variant argument must be pyphetools Variant type but was {type(v)}")
-        self._interpretation_list.append(v.to_ga4gh_variant_interpretation(acmg=acmg))
+        if isinstance(v, Variant):
+            variant = v.to_ga4gh_variant_interpretation(acmg=acmg)
+        else:
+            variant = v
+        if str(type(variant)) == "<class 'phenopackets.schema.v2.core.interpretation_pb2.VariantInterpretation'>":
+            self._interpretation_list.append(variant)
+        else:
+            raise ValueError(f"variant argument must be pyphetools Variant or GA4GH VariantInterpretation but was {type(variant)}")
+
+
 
     def add_hpo_term(self, term:HpTerm):
         """
@@ -124,20 +131,15 @@ class Individual:
             raise ValueError(f"\"term\" argument must be HpTerm but was {type(term)}")
         self._hpo_terms.append(term)
 
-    def set_disease(self, disease_id, disease_label):
+    def set_disease(self, disease):
         """
-        Set the disease diagnosis for this individual
-
         This method is typically useful for a cohort with multiple diagnoses; otherwise, the disease can be set by the
         CohortEncoder
 
-        :param disease_id: The disease identifier, typically a CURIE such as OMIM:600432
-        :type disease_id: str
-        :param disease_label: The disease name
-        :type disease_label: str
+        :param disease: the disease diagnosis for this individual
+        :type disease: Disease
         """
-        self._disease_id = disease_id
-        self._disease_label = disease_label
+        self._disease = disease
 
     def set_hpo_terms(self, cleansed_hpo_terms):
         """
@@ -152,21 +154,14 @@ class Individual:
 
     def set_pmid(self, pmid):
         """
-        :param pmid: The PubMed identifier for the publication in which this individual was described
+        :param pmid: The PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
+        :type pmid: str
         """
         self._pmid = pmid
 
-    def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
-        """_summary_
-        Transform the data into GA4GH Phenopacket format
-        :returns:  a GA4GH Phenopacket representing this individual
-        :
-        """
-        if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
-            raise ValueError(f"metadata argument must be GA4GH Phenopacket Schema MetaData but was {type(metadata)}")
-        php = phenopackets.Phenopacket()
-        indi_id = self._individual_id.replace(" ", "_")
+    def get_phenopacket_id(self, phenopacket_id=None):
         if phenopacket_id is None:
+            indi_id = self._individual_id.replace(" ", "_")
             if self._pmid is not None:
                 pmid = self._pmid.replace(":", "_")
                 ppkt_id = f"{pmid}_{indi_id}"
@@ -174,7 +169,22 @@ class Individual:
                 ppkt_id = indi_id
         else:
             ppkt_id = phenopacket_id
-        php.id = ppkt_id.replace(" ", "_")
+        ppkt_id = ppkt_id.replace(" ", "_")
+        return ppkt_id
+
+
+    def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
+        """
+        Transform the data into GA4GH Phenopacket format
+        :returns:  a GA4GH Phenopacket representing this individual
+        :rtype: phenopackets.Phenopacket
+        """
+        if isinstance(metadata, MetaData):
+            metadata = metadata.to_ga4gh()
+        if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
+            raise ValueError(f"metadata argument must be pyphetools.MetaData or GA4GH MetaData but was {type(metadata)}")
+        php = phenopackets.Phenopacket()
+        php.id = self.get_phenopacket_id(phenopacket_id=phenopacket_id)
         php.subject.id = self._individual_id
         if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = phenopackets.Sex.MALE
@@ -208,9 +218,9 @@ class Individual:
             interpretation = phenopackets.Interpretation()
             interpretation.id = self._individual_id
             interpretation.progress_status = phenopackets.Interpretation.ProgressStatus.SOLVED
-            if self._disease_id is not None and self._disease_label is not None:
-                interpretation.diagnosis.disease.id = self._disease_id
-                interpretation.diagnosis.disease.label = self._disease_label
+            if self._disease is not None:
+                interpretation.diagnosis.disease.id = self._disease.id
+                interpretation.diagnosis.disease.label = self._disease.label
             for var in self._interpretation_list:
                 genomic_interpretation = phenopackets.GenomicInterpretation()
                 genomic_interpretation.subject_or_biosample_id = self._individual_id

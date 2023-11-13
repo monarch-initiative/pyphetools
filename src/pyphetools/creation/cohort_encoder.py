@@ -8,7 +8,6 @@ from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
-from .ontology_qc import OntologyQC
 from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
@@ -47,14 +46,14 @@ class CohortEncoder(AbstractEncoder):
     :raises: ValueError - several of the input arguments are checked.
     """
 
-    def __init__(self, 
-                 df, 
-                 hpo_cr, 
-                 column_mapper_d, 
-                 individual_column_name, 
+    def __init__(self,
+                 df,
+                 hpo_cr,
+                 column_mapper_d,
+                 individual_column_name,
                  metadata,
-                 agemapper=AgeColumnMapper.not_provided(), 
-                 sexmapper=SexColumnMapper.not_provided(), 
+                 agemapper=AgeColumnMapper.not_provided(),
+                 sexmapper=SexColumnMapper.not_provided(),
                  variant_mapper=None,
                  pmid=None,
                  delimiter=None):
@@ -78,8 +77,7 @@ class CohortEncoder(AbstractEncoder):
         self._id_column_name = individual_column_name
         self._age_mapper = agemapper
         self._sex_mapper = sexmapper
-        self._disease_id = None
-        self._disease_label = None
+        self._disease = None
         self._variant_mapper = variant_mapper
         self._pmid = pmid
         self._disease_dictionary = None
@@ -87,7 +85,6 @@ class CohortEncoder(AbstractEncoder):
         ontology = hpo_cr.get_hpo_ontology()
         if ontology is None:
             raise ValueError("ontology cannot be None")
-        self._qc = OntologyQC(ontology=ontology)
 
     def preview_dataframe(self):
         """
@@ -126,17 +123,16 @@ class CohortEncoder(AbstractEncoder):
         df = pd.DataFrame(individuals)
         return df.set_index('id')
 
-    def set_disease(self, disease_id, label):
+    def set_disease(self, disease:Disease):
         """Set the disease diagnosis for all patients in the cohort
 
         If all patients in the cohort have the same disease we can set it with this method
-        :param disease_id: disease identifier, e.g., OMIM:600123
-        :type disease_id: str
+        :param disease: Disease object
+        :type disease: Disease
         :param label: disease name
         :type label: str
         """
-        self._disease_id = disease_id
-        self._disease_label = label
+        self._disease = disease
         self._disease_dictionary = None
 
     def set_disease_dictionary(self, disease_d:Dict[str, Disease]):
@@ -146,8 +142,7 @@ class CohortEncoder(AbstractEncoder):
         the string used in the original table and as value
         """
         self._disease_dictionary = disease_d
-        self._disease_id = None
-        self._disease_label = None
+        self._disease = None
 
     def get_individuals(self) -> List[Individual]:
         """Get a list of all Individual objects in the cohort
@@ -201,31 +196,26 @@ class CohortEncoder(AbstractEncoder):
                     interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
             else:
                 interpretation_list = []
-            if self._disease_dictionary is not None and self._disease_id is None and self._disease_label is None:
+            if self._disease_dictionary is not None and self._disease is None:
                 if individual_id not in self._disease_dictionary:
                     raise ValueError(f"Could not find disease link for {individual_id}")
                 disease = self._disease_dictionary.get(individual_id)
-                disease_id = disease.id
-                disease_label = disease.label
                 indi = Individual(individual_id=individual_id,
                                   sex=sex,
                                   age=age,
                                   hpo_terms=hpo_terms,
                                   pmid=self._pmid,
                                   interpretation_list=interpretation_list,
-                                  disease_id=disease_id,
-                                  disease_label=disease_label)
-            elif self._disease_dictionary is None and self._disease_id is not None and self._disease_label is not None:
+                                  disease=disease)
+            elif self._disease_dictionary is None and self._disease is not None:
                 indi = Individual(individual_id=individual_id,
                                   sex=sex,
                                   age=age,
                                   hpo_terms=hpo_terms,
                                   pmid=self._pmid,
-                                  interpretation_list=interpretation_list, disease_id=self._disease_id,
-                                  disease_label=self._disease_label)
+                                  interpretation_list=interpretation_list,
+                                  disease=self._disease)
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
-            hpo_terms = self._qc.clean_terms(indi.hpo_terms)
-            indi.set_hpo_terms(hpo_terms)
             individuals.append(indi)
         return individuals

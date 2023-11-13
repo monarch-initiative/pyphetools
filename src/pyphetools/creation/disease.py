@@ -23,3 +23,12 @@ class Disease:
     @property
     def label(self):
         return self._label
+
+    def __hash__(self):
+        return hash((self._id, self._label))
+
+    def __eq__(self, other):
+        return (self._id, self._label) == (other._id, other._label)
+
+    def __repr__(self):
+        return f'{self._label} ({self._id})'

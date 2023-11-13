@@ -8,7 +8,6 @@ from .age_column_mapper import AgeColumnMapper
 from .abstract_encoder import AbstractEncoder
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
-from .ontology_qc import OntologyQC
 from .sex_column_mapper import SexColumnMapper
 
 
@@ -87,7 +86,6 @@ class MixedCohortEncoder(AbstractEncoder):
         ontology = hpo_cr.get_hpo_ontology()
         if ontology is None:
             raise ValueError("ontology cannot be None")
-        self._qc = OntologyQC(ontology=ontology)
 
 
     def get_individuals(self) -> List[Individual]:
@@ -163,7 +161,5 @@ class MixedCohortEncoder(AbstractEncoder):
                                   interpretation_list=interpretation_list,
                                   disease_id=disease_id,
                                   disease_label=disease_label)
-            hpo_terms = self._qc.clean_terms(indi.hpo_terms)
-            indi.set_hpo_terms(hpo_terms)
             individuals.append(indi)
         return individuals

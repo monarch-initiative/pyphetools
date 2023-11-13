@@ -9,7 +9,6 @@ from .constants import Constants
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
-from .ontology_qc import OntologyQC
 from .simple_column_mapper import SimpleColumnMapper
 from .variant import Variant
 
@@ -77,8 +76,6 @@ class CaseEncoder:
         ontology = hpo_cr.get_hpo_ontology()
         if ontology is None:
             raise ValueError("ontology cannot be None")
-        self._qc = OntologyQC(ontology=ontology)
-        self._validation_errors = []
         self._individual = Individual(individual_id=individual_id, sex=sex_symbol)
         if age_at_last_exam is not None:
             self._individual.set_age(age_at_last_exam)
@@ -218,9 +215,6 @@ class CaseEncoder:
                                 disease_id=self._disease_id,
                                 disease_label=self._disease_label)
         """
-        hpo_terms = self._qc.clean_terms(self._individual.hpo_terms)
-        self._individual.set_hpo_terms(hpo_terms)
-        self._validation_errors = self._qc.get_error_list()
         return self._individual
 
     def get_phenopacket(self):
@@ -250,8 +244,3 @@ class CaseEncoder:
             fh.write(json_string)
             print(f"Wrote phenopacket to {outpth}")
 
-    def has_errors(self):
-        return len(self._validation_errors) > 0
-
-    def get_validation_errors(self):
-        return self._validation_errors

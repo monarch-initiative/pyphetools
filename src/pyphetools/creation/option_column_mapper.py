@@ -124,7 +124,11 @@ class OptionColumnMapper(ColumnMapper):
     def autoformat(df: pd.DataFrame, concept_recognizer, delimiter=",", omit_columns=None) -> str:
         """Autoformat code from the columns so that we can easily copy-paste and change it.
 
-        This method intends to save time by preformatting code the create OptionMappers.
+        This method intends to save time by preformatting code the create OptionMappers. The following commands
+        will print out skeleton Python code that can be easily adapted to create a mapper.
+
+            result = OptionColumnMapper.autoformat(df=dft, concept_recognizer=hpo_cr, delimiter=",")
+            print(result)
         
         :param df: data frame with the data about the individuals
         :type df: pd.DataFrame

@@ -9,9 +9,14 @@ import phenopackets as PPKt
 class PhenopacketIngestor:
     """
     Ingest a collection of GA4GH Phenopacket objects from a directory
+
+    :param indir: input directory
+    :type indir: str
+    :param recursive: Iff True, search subdirectorys for phenopackets
+    :type recursive: bool, default False
     """
-    
-    def __init__(self, indir) -> None:
+
+    def __init__(self, indir, recursive:bool=False) -> None:
         if not os.path.isdir(indir):
             raise ValueError(f"indir argument {indir} must be directory!")
         self._indir = indir
@@ -33,11 +38,10 @@ class PhenopacketIngestor:
             patient = SimplePatient(ga4gh_phenopacket=ppack)
             patient_d[patient.get_subject_id()] = patient
         return patient_d
-                    
+
 
     def get_phenopacket_dictionary(self) -> Dict:
         patient_d = defaultdict(SimplePatient)
         for ppack in self._phenopackets:
             patient_d[ppack.id] = ppack
         return patient_d
-        
