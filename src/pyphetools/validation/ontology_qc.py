@@ -88,6 +88,21 @@ class OntologyQC:
         return non_redundant_terms
 
 
+    def _check_terms(self, hpo_terms:List[HpTerm]) -> None:
+        for term in hpo_terms:
+            hpo_id = term.id
+            if not hpo_id in self._ontology:
+                error = ValidationResultBuilder(self._phenopacket_id).error().malformed_hpo_id(hpo_id).build()
+                self._errors.append(error)
+            else:
+                hpo_term = self._ontology.get_term(term_id=hpo_id)
+                if hpo_term.name != term.label:
+                    error = ValidationResultBuilder(self._phenopacket_id).error().malformed_hpo_label(term.label).build()
+                    self._errors.append(error)
+
+
+
+
 
     def _clean_terms(self) -> List[HpTerm]:
         """
@@ -99,6 +114,7 @@ class OntologyQC:
         by_age_dictionary =  defaultdict(list)
         for term in self._individual.hpo_terms:
             by_age_dictionary[term.onset].append(term)
+        self._check_terms(self._individual.hpo_terms)
         clean_terms = []
         self._errors.clear() # reset
         for onset, term_list in by_age_dictionary.items():
@@ -127,6 +143,9 @@ class OntologyQC:
         :rtype: List[str]
         """
         return self._errors
+
+    def get_clean_terms(self):
+        return self._clean_hpo_terms
 
 
     def get_error_string(self) -> str:

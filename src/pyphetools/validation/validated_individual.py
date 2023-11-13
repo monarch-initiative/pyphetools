@@ -3,32 +3,43 @@ from ..creation.individual import Individual
 from .content_validator import ContentValidator
 from typing import List
 from .validation_result import ValidationResult
-
+from .ontology_qc import OntologyQC
+import hpotk
 
 class ValidatedIndividual:
 
     def __init__(self, individual:Individual) -> None:
         self._individual = individual
+        self._clean_terms = []
+        self._validation_errors = []
 
+    def validate(self, ontology:hpotk.MinimalOntology, min_var:int, min_hpo:int, min_allele:int=None) -> None:
+        """validate an Individual object for errors in the Ontology or the minimum number of HPO terms/alleles/variants
 
-
-
-
-
-
-
-    def validate_phenopacket_list(self, individual_list,min_var:int, min_hpo:int, min_allele:int=None) -> List[ValidatedIndividual]:
-        """individual_list can be a list of individuals
-
-        :param phenopacket_list: list of GA4GH phenopackets to be validated
-        :type phenopacket_list: Union[List[phenopackets.Phenopackets], List[str]]
-        :returns: potentially empty list of warnings and errors
-        :rtype: List[ValidationResult]
+        :param ontology: HPO object
+        :type ontology: hpotk.MinimalOntology
+        :param min_var: minimum number of variants for this phenopacket to be considered valid
+        :type min_var: int
+        :param min_hpo: minimum number of phenotypic features (HP terms) for this phenopacket to be considered valid
+        :type min_hpo: int
+        :param min_allele: minimum number of alleles for this phenopacket to be considered valid
+        :type min_allele: int
         """
-        validated_individual_list = []
-        for individual in individual_list:
-            cvalidator = ContentValidator(min_hpo=min_hpo, min_allele=min_allele, min_var=min_var)
-            validation_results = cvalidator.validate_individual(individual=individual)
+        cvalidator = ContentValidator(min_hpo=min_hpo, min_allele=min_allele, min_var=min_var)
+        validation_results = cvalidator.validate_individual(individual=self._individual)
+        self._validation_errors.extend(validation_results)
+        qc = OntologyQC(individual=self._individual, ontology=ontology)
+        qc_validation_results = qc.get_error_list()
+        self._validation_errors.extend(qc_validation_results)
+        self._clean_terms = qc.get_clean_terms()
 
-            validation_results.extend(self.validate_phenopacket(pp))
-        return validation_results
+    def get_individual_with_clean_terms(self) -> Individual:
+        indi = self._individual
+        indi.set_hpo_terms(self._clean_terms)
+        return indi
+
+    def get_validation_errors(self) -> List[ValidationResult]:
+        return self._validation_errors
+
+    def has_error(self) -> bool:
+        return len(self._validation_errors) > 0

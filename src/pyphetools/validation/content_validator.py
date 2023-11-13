@@ -51,22 +51,18 @@ class ContentValidator(PhenopacketValidator):
         n_var = 0
         n_alleles = 0
         pp_id = individual.get_phenopacket_id()
-        for interpretation in individual.interpretation_list:
-            if interpretation.diagnosis is not None:
-                dx = interpretation.diagnosis
-                for genomic_interpretation in dx.genomic_interpretations:
-                    n_var += 1
-                    vint = genomic_interpretation.variant_interpretation
-                    if vint.variation_descriptor is not None:
-                        vdesc =   vint.variation_descriptor
-                        if vdesc.allelic_state is not None:
-                            gtype = vdesc.allelic_state
-                            if gtype.label == "heterozygous": # "GENO:0000135"
-                                n_alleles += 1
-                            elif gtype.label == "homozygous": # "GENO:0000136"
-                                n_alleles += 2
-                            elif gtype.label == "hemizygous": # "GENO:0000134"
-                                n_alleles += 1
+        for variant_interpretation in individual.interpretation_list:
+            n_var += 1
+            if variant_interpretation.variation_descriptor is not None:
+                vdesc =  variant_interpretation.variation_descriptor
+                if vdesc.allelic_state is not None:
+                    gtype = vdesc.allelic_state
+                    if gtype.label == "heterozygous": # "GENO:0000135"
+                        n_alleles += 1
+                    elif gtype.label == "homozygous": # "GENO:0000136"
+                        n_alleles += 2
+                    elif gtype.label == "hemizygous": # "GENO:0000134"
+                        n_alleles += 1
         if n_pf < self._min_hpo:
             msg = f"Minimum HPO terms required {self._min_hpo} but only {n_pf} found"
             validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))

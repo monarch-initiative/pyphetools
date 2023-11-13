@@ -22,7 +22,9 @@ class Category(Enum):
     INSUFFICIENT_HPOS = 3
     INSUFFICIENT_ALLELES = 4
     INSUFFICIENT_VARIANTS = 5
-    UNKNOWN = 6
+    MALFORMED_ID = 6
+    MALFORMED_LABEL = 7
+    UNKNOWN = 8
 
 
 class ValidationResult:
@@ -72,15 +74,6 @@ class ValidationResult:
     def category(self):
         return self._category
 
-
-    @staticmethod
-    def error(phenopacket_id:str, message:str, category:Category):
-        return ValidationResult(phenopacket_id=phenopacket_id, message=message, category=category, term=None, errorlevel=ErrorLevel.ERROR)
-
-    @staticmethod
-    def warning(phenopacket_id:str, message:str, category:Category):
-        return ValidationResult(phenopacket_id=phenopacket_id, message=message, category=category, term=None,  errorlevel=ErrorLevel.WARNING)
-
     def __repr__(self):
         return f"{self._error_level}: {self._message}"
 
@@ -88,6 +81,9 @@ class ValidationResult:
 
 
 class ValidationResultBuilder:
+    """
+    This class is intended for internal use only, and makes constructing ValidatioResult objects a little easier.
+    """
 
     def __init__(self, ppkt_id:str):
         self._phenopacket_id = ppkt_id
@@ -127,6 +123,14 @@ class ValidationResultBuilder:
     def set_message(self, msg):
         self._message = msg
         return self
+
+    def malformed_hpo_id(self, hpo_id):
+        self._category = Category.MALFORMED_ID
+        self._message = f"Invalid HPO id {hpo_id}"
+
+    def malformed_hpo_label(self, hpo_label):
+        self._category = Category.MALFORMED_LABEL
+        self._message = f"Invalid HPO id {hpo_label}"
 
     def set_term(self, term:HpTerm):
         self._term = term
