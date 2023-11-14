@@ -37,11 +37,12 @@ nav:
     - Intro: 'user-guide/intro.md'
     - "Tutorial":
       - Introduction: 'user-guide/tutorial.md'
-      - Simple column mapper: 'user-guide/simple_column_mapper.md'
-      - Constant column mapper: 'user-guide/constant_column_mapper.md'
-      - Custom column mapper: 'user-guide/custom_column_mapper.md'
-      - Option column mapper: 'user-guide/option_column_mapper.md'
-      - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
+      - Column mappers:
+        - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
+        - Simple column mapper: 'user-guide/simple_column_mapper.md'
+        - Constant column mapper: 'user-guide/constant_column_mapper.md'
+        - Option column mapper: 'user-guide/option_column_mapper.md'
+        - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
       - Variant column mapper: 'user-guide/variant_column_mapper.md'
       - Cohort encoder: 'user-guide/cohort_encoder.md'
       - Validation: 'user-guide/validation.md'
@@ -55,7 +56,6 @@ nav:
       - "CohortEncoder": "api/creation/cohort_encoder.md"
       - "ColumnMapper": "api/creation/column_mapper.md"
       - "ConstantColumnMapper": "api/creation/constant_column_mapper.md"
-      - "CustomColumnMapper": "api/creation/custom_column_mapper.md"
       - "Disease": "api/creation/disease.md"
       - "DiseaseIdColumnMapper": "api/creation/disease_id_column_mapper.md"
       - "HgvsVariant": "api/creation/hgvs_variant.md"
