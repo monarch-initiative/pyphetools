@@ -75,7 +75,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         # lines = self._split_into_lines(cell_contents)
         cell_text = cell_contents.replace("\n", " ")
         if custom_d is None:
-            # initialize to empty dictionary if this argument is not passed 
+            # initialize to empty dictionary if this argument is not passed
             # to avoid needed to check for None in other functions
             custom_d = defaultdict()
         return self._parse_contents(cell_text=cell_text, custom_d=custom_d)
@@ -86,6 +86,18 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             cell_text (str): THe text of a table cell
             custom_d (dict): key - text in original table value-corresponding HPO label
         """
+        if cell_text in custom_d:
+            label = custom_d.get(cell_text)
+            results = []
+            if isinstance(label, list):
+                for lab in label:
+                    hp_term = self.get_term_from_label(label=lab)
+                    if hp_term is not None:
+                        results.append(hp_term)
+            else:
+                hp_term = self.get_term_from_label(label=label)
+                results.append(hp_term)
+            return results
         chunks = self._split_line_into_chunks(cell_text)
         results = []
         for chunk in chunks:
@@ -126,7 +138,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
 
     def _split_line_into_chunks(self, line):
         """Split a line into chunks and remove white space from beginning and end of each chunk
-        
+
         Args:
             line (str): one line of a potentially multi-line Table cell.
         """
@@ -152,7 +164,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
 
     def contains_term(self, hpo_id) -> bool:
         return hpo_id in self._id_to_primary_label
-    
+
     def contains_term_label(self, hpo_label) -> bool:
         """return True iff the argument is the primary label of an HPO term
         """

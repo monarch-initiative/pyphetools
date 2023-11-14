@@ -4,7 +4,6 @@ from .case_encoder import CaseEncoder
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
 from .constant_column_mapper import ConstantColumnMapper
-from .custom_column_mapper import CustomColumnMapper
 from .disease import Disease
 from .disease_id_column_mapper import DiseaseIdColumnMapper
 from .hgvs_variant import HgvsVariant
@@ -33,7 +32,6 @@ __all__ = [
     "ColumnMapper",
     "ConstantColumnMapper",
     "ColumnMapper",
-    "CustomColumnMapper",
     "Disease",
     "DiseaseIdColumnMapper",
     "HgvsVariant",

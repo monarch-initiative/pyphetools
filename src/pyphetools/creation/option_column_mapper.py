@@ -1,7 +1,7 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from .hpo_cr import HpoConceptRecognizer
-from typing import List, TypedDict
+from typing import List, Set
 import pandas as pd
 import re
 from collections import defaultdict
@@ -18,9 +18,13 @@ class OptionColumnMapper(ColumnMapper):
     :type option_d:TypedDict[str,str]
     :param excluded_d: dictionary with key: similar to option_d but for excluded HPO terms, optional
     :type excluded_d:TypedDict[str,str]
+    :param assumeExcluded: Assume that any phenotype mentioned in `option_d` is absent if it is not mentioned in a cell
+    :type assumeExcluded: bool
+    :param omitSet: set of strings to be excluded from concept recognition
+    :type omitSet: Set[str]
     """
-    
-    def __init__(self, concept_recognizer, option_d, excluded_d=None):
+
+    def __init__(self, concept_recognizer, option_d, excluded_d=None, assumeExcluded:bool=False, omitSet:Set[str]=None):
         """Constructor
         """
         super().__init__()
@@ -34,9 +38,30 @@ class OptionColumnMapper(ColumnMapper):
         if excluded_d is None:
             excluded_d = defaultdict()
         self._excluded_d = excluded_d
-        
+        if omitSet is None:
+            omitSet = set()
+        self._omit_set = omitSet
+
+
     def map_cell(self, cell_contents) -> List[HpTerm]:
-        """Map cell contents using the option dictionary 
+        for excl in self._omit_set:
+            cell_contents = cell_contents.replace(excl, " ")
+        # results is a list of HpTerm objects
+        results = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
+        if results is None:
+            results = []
+        if self._excluded_d is not None and len(self._excluded_d) > 0:
+            excluded_results = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._excluded_d)
+            if excluded_results is not None and len(excluded_results) > 0:
+                for er in excluded_results:
+                    er.excluded()
+                    results.append(er)
+        return results
+
+
+
+    def map_cellOLD(self, cell_contents) -> List[HpTerm]:
+        """Map cell contents using the option dictionary
 
         :param cell_contents: contents of one table cell
         :type cell_contents: str
@@ -85,12 +110,12 @@ class OptionColumnMapper(ColumnMapper):
                         else:
                             hpo_labels.add(my_label)
         # Now create HpTerm objects for each match
-        for label in hpo_labels:    
+        for label in hpo_labels:
             term = self._hpo_cr.get_term_from_label(label=label)
             results.append(term)
             results.sort(key=lambda term: term.label)
         return results
-        
+
     def preview_column(self, column) -> pd.DataFrame:
         """
         Generate a pandas dataframe with a summary of parsing of the entire column
@@ -111,15 +136,15 @@ class OptionColumnMapper(ColumnMapper):
             results  = self.map_cell(str(value))
             if results is None:
                 print(f"Got None results for {str(value)}")
-                dlist.append({"terms": "n/a"})  
+                dlist.append({"terms": "n/a"})
             elif len(results) > 0:
                 for hpterm in results:
                     column_val.append(f"{hpterm.id} ({hpterm.label}/{hpterm.display_value})")
-                dlist.append({"terms": "; ".join(column_val)})  
+                dlist.append({"terms": "; ".join(column_val)})
             else:
-                dlist.append({"terms": "n/a"})  
-        return pd.DataFrame(dlist)   
-    
+                dlist.append({"terms": "n/a"})
+        return pd.DataFrame(dlist)
+
     @staticmethod
     def autoformat(df: pd.DataFrame, concept_recognizer, delimiter=",", omit_columns=None) -> str:
         """Autoformat code from the columns so that we can easily copy-paste and change it.
@@ -129,7 +154,7 @@ class OptionColumnMapper(ColumnMapper):
 
             result = OptionColumnMapper.autoformat(df=dft, concept_recognizer=hpo_cr, delimiter=",")
             print(result)
-        
+
         :param df: data frame with the data about the individuals
         :type df: pd.DataFrame
         :param concept_recognizer: HpoConceptRecognizer for text mining
@@ -140,7 +165,7 @@ class OptionColumnMapper(ColumnMapper):
         :type omit_columns: List[str]
         :returns: a string that should be displayed using a print() command in the notebook - has info about automatically mapped columns
         :rtype: str
-        """  
+        """
         lines = []
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"argument \"df\" must be a pandas DataFrame but was {type(df)}")
@@ -162,7 +187,7 @@ class OptionColumnMapper(ColumnMapper):
                     for entry in str(df.iloc[i, y]).split(delimiter):
                         hpo_term = concept_recognizer.parse_cell(entry.strip())
                         if len(hpo_term) > 0:
-                            temp_dict[entry.strip()] = hpo_term[0].label                
+                            temp_dict[entry.strip()] = hpo_term[0].label
                         else:
                             temp_dict[entry.strip()] = 'PLACEHOLDER'
             col_name = str(df.columns[y]).lower().replace(", ","_").replace(' ', '_')
@@ -186,5 +211,4 @@ class OptionColumnMapper(ColumnMapper):
             lines.append(f"column_mapper_d['{str(df.columns[y])}'] = {col_name}Mapper")
             lines.append("")
         return "\n".join(lines)
-        
-   
+

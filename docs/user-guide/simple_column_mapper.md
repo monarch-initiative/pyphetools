@@ -3,8 +3,8 @@
 
 ColumnMapper for columns that contain information about a single phenotypic abnormality only.
 This kind of ColumnMapper should be used for columns that can be representing by one HPO term
-and which can contain symbols such as "+_" "Y", "yes" indicating that the abnormality was
-observed, symbols such as "-", "N", "no" indicating that the abnormality was explicity excluded
+and which can contain symbols such as "+", "Y", or "yes" indicating that the abnormality was
+observed, symbols such as "-", "N", or "no" indicating that the abnormality was explicity excluded,
 and (optionally) symbols indicating that the abnormality was not measured or assessed.
 
 For instance, the following mapper would generate a phenotypic feature for
@@ -23,12 +23,11 @@ not be included in the phenopacket).
 
 
 
-It can be convenient to add multiple SimpleColumnMappers at the same time. The following function enables this.
+It can be convenient to add multiple SimpleColumnMappers at the same time. The following function enables this. Note that the `HpoParser` object from the pyphetools.creation package is used to create a concept recognizer object. The `column_d` dictionary is used to store the individual mappers, and will be passed later on to a `CohortMapper` object.
 
 
 
 ```python title="Creating multiple SimpleColumnMapper objects at once"
-## Note that we previously have created an HPO Concept Recognizer object
 parser = HpoParser()
 hpo_cr = parser.get_hpo_concept_recognizer()
 ##
@@ -38,11 +37,11 @@ items = {
     'autism': ['Autism', 'HP:0000717'],
     'hypotonia': ['Hypotonia', 'HP:0001252'],
     'movement disorder': ['Abnormality of movement', 'HP:0100022'],
-    'CVI': ['Cerebral visual impairment', 'HP:0100704'], 
+    'CVI': ['Cerebral visual impairment', 'HP:0100704'],
     'seizures': ['Seizure','HP:0001250'],
     'DD': ['Global developmental delay', 'HP:0001263']
 }
-item_column_mapper_d = hpo_cr.initialize_simple_column_maps(column_name_to_hpo_label_map=items, 
+item_column_mapper_d = hpo_cr.initialize_simple_column_maps(column_name_to_hpo_label_map=items,
                             observed='yes',
                             excluded='no')
 # Transfer to column_mapper_d
