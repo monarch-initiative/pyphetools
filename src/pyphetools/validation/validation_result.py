@@ -4,9 +4,9 @@ from ..creation.hp_term import HpTerm
 
 
 class ErrorLevel(Enum):
-    WARNING = 1
-    ERROR = 2
-    UNKNOWN = 3
+    WARNING = "warning"
+    ERROR = "error"
+    UNKNOWN = "unknown"
 
 class Category(Enum):
     """
@@ -55,6 +55,8 @@ class ValidationResult:
             return 'error'
         elif self._error_level == ErrorLevel.WARNING:
             return 'warning'
+        elif self._error_level == ErrorLevel.UNKNOWN:
+            return 'unknown'
         else:
             raise ValueError(f"Did not recognize error level {self._error_level}")
 
@@ -74,8 +76,20 @@ class ValidationResult:
     def category(self):
         return self._category
 
+    def get_items_as_array(self):
+        if self.term is None:
+            term = ""
+        else:
+            term = self.term.hpo_term_and_id
+        return [self._error_level.name, self.category.name, self.message, term]
+
     def __repr__(self):
         return f"{self._error_level}: {self._message}"
+
+
+    @staticmethod
+    def get_header_fields():
+        return ["Level", "Category", "Message", "HPO Term"]
 
 
 
@@ -93,11 +107,11 @@ class ValidationResultBuilder:
         self._term = None
 
     def warning(self):
-        self._error_level = ErrorLevel.UNKNOWN
+        self._error_level = ErrorLevel.WARNING
         return self
 
     def error(self):
-        self._error_level = ErrorLevel.WARNING
+        self._error_level = ErrorLevel.ERROR
         return self
 
     def redundant(self):

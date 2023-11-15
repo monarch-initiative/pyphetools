@@ -20,11 +20,11 @@ class TestCaseParse(unittest.TestCase):
         age_of_last_examination = "P4Y11M"
         sex = "female"
         cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr,
-                                  individual_id="A",
-                                  pmid="PMID:123",
-                                  age_at_last_exam=age_of_last_examination,
-                                  sex=sex,
-                                  metadata=metadata.to_ga4gh())
+                                individual_id="A",
+                                pmid="PMID:123",
+                                age_at_last_exam=age_of_last_examination,
+                                sex=sex,
+                                metadata=metadata.to_ga4gh())
 
     def test_chief_complaint(self):
         """

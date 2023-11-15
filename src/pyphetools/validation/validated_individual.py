@@ -34,6 +34,10 @@ class ValidatedIndividual:
         self._clean_terms = qc.get_clean_terms()
 
     def get_individual_with_clean_terms(self) -> Individual:
+        """
+        :returns: The Individual object input to the class from which redundant/conflicting terms have been removed
+        :rtype: Individual
+        """
         indi = self._individual
         indi.set_hpo_terms(self._clean_terms)
         return indi
@@ -42,4 +46,8 @@ class ValidatedIndividual:
         return self._validation_errors
 
     def has_error(self) -> bool:
+        """
+        :returns: True iff this Individual had oneor more errors
+        :rtype: bool
+        """
         return len(self._validation_errors) > 0
