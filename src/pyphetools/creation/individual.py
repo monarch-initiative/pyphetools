@@ -1,7 +1,7 @@
-import phenopackets
+import phenopackets as PPKt
 import re
 import os
-from typing import List
+from typing import List, Union
 from google.protobuf.json_format import MessageToJson
 from .constants import Constants
 from .disease import Disease
@@ -23,21 +23,20 @@ class Individual:
     :param age: String corresponding to the age of the individual (ISO), default, n/a
     :type age: str
     :param interpretation_list: list of GA4GH VariationInterpretation objects
-    :type interpretation_list: List[VariationInterpretation], optional
-    :param disease_id: String corresponding to the disease ID, default
-    :type disease_id: str, optional
-    :param disease_label: String corresponding to the disease label, default
-    :type disease_label: str, optional
+    :type interpretation_list: List[PPKt.VariationInterpretation], optional
+    :param disease: object defining the disease diagnosos
+    :type disease: Disease, optional
     """
 
-    def __init__(self, individual_id,
-                hpo_terms=[],
-                pmid=None,
-                title=None,
-                sex=Constants.NOT_PROVIDED,
-                age=Constants.NOT_PROVIDED,
-                interpretation_list=[],
-                disease=None):
+    def __init__(self,
+                individual_id:str,
+                hpo_terms:List[HpTerm]=[],
+                pmid:str=None,
+                title:str=None,
+                sex:str=Constants.NOT_PROVIDED,
+                age:str=Constants.NOT_PROVIDED,
+                interpretation_list:List[PPKt.VariantInterpretation]=[],
+                disease:Disease=None):
         """Constructor
         """
         if isinstance(individual_id, int):
@@ -47,7 +46,7 @@ class Individual:
         else:
             raise ValueError(f"individual_id argument must be int or string but was {type(individual_id)}")
         if sex is None:
-            self._sex = phenopackets.Sex.UNKNOWN_SEX
+            self._sex = PPKt.Sex.UNKNOWN_SEX
         else:
             self._sex = sex
         self._age = age
@@ -96,17 +95,17 @@ class Individual:
         return self._hpo_terms
 
     @property
-    def interpretation_list(self):
+    def interpretation_list(self) -> List[PPKt.VariantInterpretation]:
         """
         :returns: a list of GA4GH Genomic Interpretations
-        :rtype:
+        :rtype: List[PPKt.VariantInterpretation]
         """
         return self._interpretation_list
 
-    def add_variant(self, v, acmg=None):
+    def add_variant(self, v:Union[Variant, PPKt.VariantInterpretation], acmg:str=None):
         """
         :param v: A Variant obeserved in this individual
-        :type v: Union[Variant, phenopackets.schema.v2.core.interpretation_pb2.VariantInterpretation]
+        :type v: Union[Variant, PPKt.VariantInterpretation]
         :param acmg: One of the five ACMG pathogenicity categories
         :type acmg: str
         """
@@ -114,14 +113,14 @@ class Individual:
             variant = v.to_ga4gh_variant_interpretation(acmg=acmg)
         else:
             variant = v
-        if str(type(variant)) == "<class 'phenopackets.schema.v2.core.interpretation_pb2.VariantInterpretation'>":
+        if isinstance(variant, PPKt.VariantInterpretation):
             self._interpretation_list.append(variant)
         else:
             raise ValueError(f"variant argument must be pyphetools Variant or GA4GH VariantInterpretation but was {type(variant)}")
 
 
 
-    def add_hpo_term(self, term:HpTerm):
+    def add_hpo_term(self, term:HpTerm) -> None:
         """
         Adds one HPO term to the current individual.
         :param term: An HPO term (observed or excluded, potentially with Age of observation
@@ -131,7 +130,7 @@ class Individual:
             raise ValueError(f"\"term\" argument must be HpTerm but was {type(term)}")
         self._hpo_terms.append(term)
 
-    def set_disease(self, disease):
+    def set_disease(self, disease:Disease) -> None:
         """
         This method is typically useful for a cohort with multiple diagnoses; otherwise, the disease can be set by the
         CohortEncoder
@@ -141,7 +140,7 @@ class Individual:
         """
         self._disease = disease
 
-    def set_hpo_terms(self, cleansed_hpo_terms):
+    def set_hpo_terms(self, cleansed_hpo_terms:List[HpTerm]):
         """
         :param cleansed_hpo_terms: a list of HpTerm objects that has been cleansed by OntologyQC
         :type cleansed_hpo_terms: List[pyphetools.creation.HpTerm]
@@ -152,14 +151,18 @@ class Individual:
     def pmid(self):
         return self._pmid
 
-    def set_pmid(self, pmid):
+    def set_pmid(self, pmid:str):
         """
         :param pmid: The PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
         :type pmid: str
         """
         self._pmid = pmid
 
-    def get_phenopacket_id(self, phenopacket_id=None):
+    def get_phenopacket_id(self, phenopacket_id=None) -> str:
+        """
+        :returns: the Phenopacket identifier for this individual
+        :rtype: str
+        """
         if phenopacket_id is None:
             indi_id = self._individual_id.replace(" ", "_")
             if self._pmid is not None:
@@ -181,19 +184,19 @@ class Individual:
         """
         if isinstance(metadata, MetaData):
             metadata = metadata.to_ga4gh()
-        if not str(type(metadata)) == "<class 'phenopackets.schema.v2.core.meta_data_pb2.MetaData'>":
+        if not isinstance(metadata, PPKt.MetaData):
             raise ValueError(f"metadata argument must be pyphetools.MetaData or GA4GH MetaData but was {type(metadata)}")
-        php = phenopackets.Phenopacket()
+        php = PPKt.Phenopacket()
         php.id = self.get_phenopacket_id(phenopacket_id=phenopacket_id)
         php.subject.id = self._individual_id
         if self._sex == Constants.MALE_SYMBOL:
-            php.subject.sex = phenopackets.Sex.MALE
+            php.subject.sex = PPKt.Sex.MALE
         elif self._sex == Constants.FEMALE_SYMBOL:
-            php.subject.sex = phenopackets.Sex.FEMALE
+            php.subject.sex = PPKt.Sex.FEMALE
         elif self._sex == Constants.OTHER_SEX_SYMBOL:
-            php.subject.sex = phenopackets.Sex.OTHER_SEX
+            php.subject.sex = PPKt.Sex.OTHER_SEX
         elif self._sex == Constants.UNKOWN_SEX_SYMBOL:
-            php.subject.sex = phenopackets.Sex.UNKNOWN_SEX
+            php.subject.sex = PPKt.Sex.UNKNOWN_SEX
         if self._age is not None and self._age != Constants.NOT_PROVIDED:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
         if isinstance(self._hpo_terms, list):
@@ -215,24 +218,24 @@ class Individual:
                         pf.onset.age.iso8601duration = age_key
                     php.phenotypic_features.append(pf)
         if len(self._interpretation_list) > 0:
-            interpretation = phenopackets.Interpretation()
+            interpretation = PPKt.Interpretation()
             interpretation.id = self._individual_id
-            interpretation.progress_status = phenopackets.Interpretation.ProgressStatus.SOLVED
+            interpretation.progress_status = PPKt.Interpretation.ProgressStatus.SOLVED
             if self._disease is not None:
                 interpretation.diagnosis.disease.id = self._disease.id
                 interpretation.diagnosis.disease.label = self._disease.label
             for var in self._interpretation_list:
-                genomic_interpretation = phenopackets.GenomicInterpretation()
+                genomic_interpretation = PPKt.GenomicInterpretation()
                 genomic_interpretation.subject_or_biosample_id = self._individual_id
                 # by assumption, variants passed to this package are all causative
-                genomic_interpretation.interpretation_status = phenopackets.GenomicInterpretation.InterpretationStatus.CAUSATIVE
+                genomic_interpretation.interpretation_status = PPKt.GenomicInterpretation.InterpretationStatus.CAUSATIVE
                 genomic_interpretation.variant_interpretation.CopyFrom(var)
                 interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
             php.interpretations.append(interpretation)
         if self._pmid is not None and self._title is not None:
             # overrides the "general" setting of the external reference for the entire cohort
             metadata.external_references.clear()
-            extref = phenopackets.ExternalReference()
+            extref = PPKt.ExternalReference()
             extref.id = self._pmid
             pm = self._pmid.replace("PMID:", "")
             extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
@@ -245,14 +248,14 @@ class Individual:
     def output_individuals_as_phenopackets(individual_list, metadata, pmid=None, outdir="phenopackets"):
         """write a list of Individial objects to file in GA4GH Phenopacket format
 
-        Args:
-            individual_list (list): list of Individual's
-            metadata (MetaData): GA4GH Phenopacket Schema MetaData object
-            pmid (str, optional): A string such as PMID:3415687. Defaults to None.
-            outdir (str, optional): Path to output directory. Defaults to "phenopackets". Created if not exists.
-
-        Returns:
-            int: number of phenopackets written
+        :param individual_list: List of individuals to be written to file as phenopackets
+        :type individual_list: List[Individual]
+        :param metadata: GA4GH Phenopacket Schema MetaData object
+        :type metadata: PPKt.MetaData
+        :param pmid: A string such as PMID:3415687. Defaults to None.
+        :type pmid: str
+        :param outdir: Path to output directory. Defaults to "phenopackets". Created if not exists.
+        :type outdir: str
         """
         if os.path.isfile(outdir):
             raise ValueError(f"Attempt to create directory with name of existing file {outdir}")

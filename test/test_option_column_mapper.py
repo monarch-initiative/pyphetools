@@ -12,9 +12,9 @@ class TestOptionMapper(unittest.TestCase):
         parser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
         cls.hpo_cr = parser.get_hpo_concept_recognizer()
         cls.severity_d = {'mild': 'Intellectual disability, mild',
-                          'moderate': 'Intellectual disability, moderate',
-                          'severe': 'Intellectual disability, severe'
-                          }
+                        'moderate': 'Intellectual disability, moderate',
+                        'severe': 'Intellectual disability, severe'
+                        }
 
     def test_hpo_cr_mild(self):
         """We should retrieve Intellectual disability, mild (HP:0001256)"""

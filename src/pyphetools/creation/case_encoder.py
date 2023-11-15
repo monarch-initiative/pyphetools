@@ -1,11 +1,13 @@
 from google.protobuf.json_format import MessageToJson
 import os
-import phenopackets
+import pandas as pd
+import phenopackets as PPKt
 import re
 from typing import List
 from collections import defaultdict
 from .column_mapper import ColumnMapper
 from .constants import Constants
+from .disease import Disease
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
@@ -16,9 +18,10 @@ ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 
 class CaseEncoder:
-    """encode a single case report with HPO terms in Phenopacket format
+    """Encode a single case report in GA4GH Phenopacket format.
 
-    Encode a single case report in GA4GH Phenopacket format.
+    This class should be used to encode a single case report; it outputs an Individual object that can be converted
+    into a GA4GH phenopacket.
 
     :param hpo_cr: HpoConceptRecognizer for text mining
     :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
@@ -32,21 +35,18 @@ class CaseEncoder:
     :type age_at_last_exam: str, optional
     :param sex: A string such as "male" or "FEMALE"
     :type sex: str
-    :param disease_id: a CURIE (e.g. OMIM:600213) for the current disease
-    :type disease_id: str, optional
-    :param disease_label: Name (label) of the disease diagnosis for the case report
-    :type disease_label: str, optional
+    :param disease: an object with the identifier and name of the disease diagnosis
+    :type disease: Disease, optional
     """
 
     def __init__(self,
-                 hpo_cr: HpoConceptRecognizer,
-                 pmid: str,
-                 individual_id:str,
-                 metadata:phenopackets.MetaData,
-                 age_at_last_exam:str=None,
-                 sex:str=None,
-                 disease_id:str=None,
-                 disease_label:str=None) -> None:
+                hpo_cr: HpoConceptRecognizer,
+                pmid: str,
+                individual_id:str,
+                metadata:PPKt.MetaData,
+                age_at_last_exam:str=None,
+                sex:str=None,
+                disease:Disease=None) -> None:
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
                 "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
@@ -62,16 +62,19 @@ class CaseEncoder:
         else:
             self._age_at_last_examination = None
         self._seen_hpo_terms = set() # Use to prevent duplicate HP annotations
-        if not isinstance(metadata, phenopackets.MetaData):
+        if not isinstance(metadata, PPKt.MetaData):
             raise ValueError(f"metadata argument must be phenopackets.MetaData but was {type(metadata)}")
         self._metadata = metadata
         female_symbols = {"f", "girl", "female", "woman", "w"}
         male_symbols = {"f", "boy", "male", "man", "m"}
-        if sex in female_symbols:
+        if sex is None:
+            sex_symbol = Constants.UNKOWN_SEX_SYMBOL
+        elif sex.lower() in female_symbols:
             sex_symbol = Constants.FEMALE_SYMBOL
-        elif sex in male_symbols:
+        elif sex.lower() in male_symbols:
             sex_symbol = Constants.MALE_SYMBOL
         else:
+            print(f"Warning: did not recognize sex symbol \"{sex}\"")
             sex_symbol = Constants.UNKOWN_SEX_SYMBOL
         ontology = hpo_cr.get_hpo_ontology()
         if ontology is None:
@@ -79,14 +82,13 @@ class CaseEncoder:
         self._individual = Individual(individual_id=individual_id, sex=sex_symbol)
         if age_at_last_exam is not None:
             self._individual.set_age(age_at_last_exam)
-        if disease_id is not None and disease_label is not None:
-            self._individual.set_disease(disease_id=disease_id, disease_label=disease_label)
+        if disease is not None:
+            self._individual.set_disease(disease=disease)
         if pmid is not None:
             self._individual.set_pmid(pmid=pmid)
 
 
-    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms=None) -> List[
-        HpTerm]:
+    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms=None) -> pd.DataFrame:
         """Add a description of a clinical encouter for text mining
 
         This method uses simple text mining to extract terms from the vignette. The optional custom_d argument can be
@@ -135,6 +137,17 @@ class CaseEncoder:
         return HpTerm.term_list_to_dataframe(results)
 
     def add_term(self, label=None, hpo_id=None, excluded=False, custom_age=None):
+        """
+        Add a single HPO term to the current case.
+        :param label: Label of the HPO term
+        :type label: str
+        :param hpo_id: identifier of the term, e.g. HP:0001234
+        :type po_id: str
+        :param excluded: True iff the abnormally was explicitly excludeds
+        :type excluded: bool
+        :param custom_age: an ISO 8601 string representing the age of onset of the abnormality
+        :type custom_age: str
+        """
         if label is not None:
             results = self._hpo_concept_recognizer.parse_cell(cell_contents=label, custom_d={})
             if len(results) != 1:
@@ -177,13 +190,11 @@ class CaseEncoder:
         if isinstance(variant_or_variantInterpretation, Variant):
             interpretation = variant_or_variantInterpretation.to_ga4gh_variant_interpretation()
             self._individual.add_variant(interpretation)
-        elif isinstance(variant_or_variantInterpretation, phenopackets.VariantInterpretation):
+        elif isinstance(variant_or_variantInterpretation, PPKt.VariantInterpretation):
             self._individual.add_variant(variant_or_variantInterpretation)
         else:
             raise ValueError(f"variant argument must be pyphetools Variant or GA4GH \
                 phenopackets.VariantInterpretation but was {type(variant_or_variantInterpretation)}")
-
-
 
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         if observed is None or excluded is None:
@@ -200,20 +211,10 @@ class CaseEncoder:
     def get_hpo_term_dict(self):
         return self._annotations
 
-    def get_individual(self):
+    def get_individual(self)-> Individual:
         """
         :return: the pyphetools Individual object corresponding to the current case report
-        """
-
-        """
-        individual = Individual(individual_id=self._individual_id,
-                                sex=self._sex,
-                                age=self._age_at_last_examination,
-                                hpo_terms=self._annotations,
-                                pmid=self._pmid,
-                                interpretation_list=interpretations,
-                                disease_id=self._disease_id,
-                                disease_label=self._disease_label)
+        :rtype: Individual
         """
         return self._individual
 
@@ -229,9 +230,8 @@ class CaseEncoder:
     def output_phenopacket(self, outdir):
         """write a phenopacket to an output directory
 
-        Args:
-            outdir (str): name of directory to write phenopackets
-            phenopacket (Phenopacket): GA4GH Phenopacket object
+        :param outdir: name of directory to write phenopackets
+        :type outdir: str
         """
         if not os.path.exists(outdir):
             os.makedirs(outdir)

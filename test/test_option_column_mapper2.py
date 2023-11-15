@@ -5,7 +5,7 @@ from src.pyphetools.creation import HpoParser, OptionColumnMapper
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 
 
-class TestCustomColumnMapper(unittest.TestCase):
+class TestOptionColumnMapper2(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:

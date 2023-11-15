@@ -41,6 +41,16 @@ class OptionColumnMapper(ColumnMapper):
         if omitSet is None:
             omitSet = set()
         self._omit_set = omitSet
+        self._assumeExcluded = assumeExcluded
+        if assumeExcluded:
+            # if we assume excluded, then individuals do NOT have the items in option_d if they are not mentioned in the cell
+            self._assume_excluded_d = defaultdict(HpTerm)
+            for hpo_label in option_d.values():
+                hpo_term = self._hpo_cr.get_term_from_label(hpo_label)
+                hpo_term.excluded()
+                self._assume_excluded_d[hpo_label] = hpo_term
+        else:
+            self._assume_excluded_d = {}
 
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
@@ -56,9 +66,12 @@ class OptionColumnMapper(ColumnMapper):
                 for er in excluded_results:
                     er.excluded()
                     results.append(er)
+        if self._assumeExcluded:
+            current_labels = { hpo_term.label for hpo_term in results}
+            for k, v in self._assume_excluded_d.items():
+                if v.label not in current_labels:
+                    results.append(v)
         return results
-
-
 
     def map_cellOLD(self, cell_contents) -> List[HpTerm]:
         """Map cell contents using the option dictionary

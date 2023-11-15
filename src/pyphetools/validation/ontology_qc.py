@@ -72,18 +72,19 @@ class OntologyQC:
         :rtype hpo_terms: List[HpTerm]
         """
         all_terms = set(hpo_terms)
-        redundant_term_set = set()
+        redundant_term_d = {}
         for term in all_terms:
             for term2 in all_terms:
                 # The ancestor, e.g. Seizure comes first, the other term, e.g. Clonic seizure, second
                 # in the following function call
                 if self._ontology.graph.is_ancestor_of(term2.id, term.id):
-                    redundant_term_set.add(term2)
+                    redundant_term_d[term2] = term
         # When we get here, we have scanned all terms for redundant ancestors
-        non_redundant_terms = [ term for term in hpo_terms if term not in redundant_term_set]
-        if len(redundant_term_set) > 0:
-            for term in redundant_term_set:
-                error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_term(term).build()
+        non_redundant_terms = [ term for term in hpo_terms if term not in redundant_term_d]
+        if len(redundant_term_d) > 0:
+            for term, descendant in redundant_term_d.items():
+                message = f"<b>{term.label}</b> is redundant because of <b>{descendant.label}</b>"
+                error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_message(message).set_term(term).build()
                 self._errors.append(error)
         return non_redundant_terms
 
@@ -99,10 +100,6 @@ class OntologyQC:
                 if hpo_term.name != term.label:
                     error = ValidationResultBuilder(self._phenopacket_id).error().malformed_hpo_label(term.label).build()
                     self._errors.append(error)
-
-
-
-
 
     def _clean_terms(self) -> List[HpTerm]:
         """
@@ -144,7 +141,7 @@ class OntologyQC:
         """
         return self._errors
 
-    def get_clean_terms(self):
+    def get_clean_terms(self) -> List[HpTerm]:
         return self._clean_hpo_terms
 
 
