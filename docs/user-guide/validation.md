@@ -42,6 +42,28 @@ Create a [ContentValidator](../api/validation/content_validator.md) for the phen
 checks that the generated phenopackets have a minimum number of HPO terms, alleles, and variants.
 
 ```python title="Generating GA4GH phenopackets from a pyphetools individual list"
-validator = ContentValidator(min_var=1, min_hpo=3)
-errors = validator.validate_phenopacket_list(ppkt_list)
+cohort = [individual1, individual2, individual3]
+validator = ContentValidator(cohort=cohort, ontology=hpo_ontology, min_hpo=1, allelic_requirement=AllelicRequirement.MONO_ALLELIC)
+validated_individuals = cvalidator.get_validated_individual_list()
+qc = QcVisualizer(ontology=hpo_ontology)
+display(HTML(qc.to_html(validated_individuals)))
 ```
+
+This will either print a message that no errors were found or show a table with a summary of the errors. If errors were found
+with incorrect HPO ids or labels, they need to be corrected in the previous part of the script. If redundancies or ontology conflicts are found, these can be corrected automatically by the following command
+
+
+```python title="Getting an individual list with corrected ontology errors (clean terms)"
+cl_individuals = [vi.get_individual_with_clean_terms() for vi in validated_individuals]
+```
+
+Them the above analysis can be repeated to check the results.
+
+```python title="Note the 'cohort' argument is pointing to the corrected individual objects"
+cvalidator = CohortValidator(cohort=cl_individuals, ontology=hpo_ontology, min_allele=1, min_hpo=1, min_var=1)
+qc = QcVisualizer(ontology=hpo_ontology)
+display(HTML(qc.to_html(cvalidator.get_validated_individual_list())))
+```
+
+
+If this analysis shows no error, then the script can proceed to [visualize](visualization.md) and output the phenopackets.
