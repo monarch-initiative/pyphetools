@@ -221,6 +221,7 @@ class CaseEncoder:
     def get_phenopacket(self):
         """
         :return: the GA4GH phenopacket corresponding to the current case report
+        :rtype: PPKt.Phenopacket
         """
         individual = self.get_individual()
         pmid = individual.pmid

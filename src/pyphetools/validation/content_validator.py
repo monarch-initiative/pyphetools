@@ -3,7 +3,8 @@ import json
 import os
 import phenopackets
 from .phenopacket_validator import PhenopacketValidator
-from .validation_result import ValidationResult
+from .validation_result import ValidationResult, ValidationResultBuilder
+from ..creation.allelic_requirement import AllelicRequirement
 from ..creation.individual import Individual
 from typing import List, Union
 
@@ -26,18 +27,15 @@ class ContentValidator(PhenopacketValidator):
     Note that this class does not test for all errors. Use phenopacket-tools to check for redundant or conflicting
     annotations.
 
-    :param min_var: minimum number of variants for this phenopacket to be considered valid
-    :type min_var: int
     :param min_hpo: minimum number of phenotypic features (HP terms) for this phenopacket to be considered valid
     :type min_hpo: int
-    :param min_allele: minimum number of alleles for this phenopacket to be considered valid
-    :type min_allele: int
+    :param allelic_requirement: used to check number of alleles and variants
+    :type allelic_requirement: AllelicRequirement
 
     """
-    def __init__(self, min_var:int, min_hpo:int, min_allele:int=None) -> None:
-        self._min_var = min_var
+    def __init__(self, min_hpo:int, allelic_requirement:AllelicRequirement=None) -> None:
         self._min_hpo = min_hpo
-        self._min_allele = min_allele
+        self._allelic_requirement = allelic_requirement
 
 
     def validate_individual(self, individual:Individual) -> List[ValidationResult]:
@@ -66,12 +64,26 @@ class ContentValidator(PhenopacketValidator):
         if n_pf < self._min_hpo:
             msg = f"Minimum HPO terms required {self._min_hpo} but only {n_pf} found"
             validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
-        if n_var < self._min_var:
-            msg = f"Minimum variants required {self._min_var} but only {n_var} found"
-            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
-        if self._min_allele is not None and n_alleles < self._min_allele:
-            msg = f"Minimum alleles required {self._min_allele} but only {n_alleles} found"
-            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
+        if self._expected_genotype is None:
+            return validation_results
+        if self._allelic_requirement == AllelicRequirement.MONO_ALLELIC:
+            if n_var != 1:
+                msg = f"Expected one variant for monoallelic but got {n_var} variants"
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_variant_count().set_message(msg=msg).build()
+                validation_results.append(val_result)
+            if n_alleles != 1:
+                msg = f"Expected one allele for monoallelic but got {n_alleles} alleles"
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_allele_count().set_message(msg=msg).build()
+                validation_results.append(val_result)
+        elif self._expected_genotype == AllelicRequirement.BI_ALLELIC:
+            if n_var < 1 or n_var > 2:
+                msg = f"Expected one or two variant for biallelic but got {n_var} variants"
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_variant_count().set_message(msg=msg).build()
+                validation_results.append(val_result)
+            if n_alleles != 2:
+                msg = f"Expected two alleles for biallelic but got {n_alleles} alleles"
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_allele_count().set_message(msg=msg).build()
+                validation_results.append(val_result)
         return validation_results
 
     def validate_phenopacket(self, phenopacket) -> List[ValidationResult]:

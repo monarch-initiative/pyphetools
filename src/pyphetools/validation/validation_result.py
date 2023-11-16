@@ -20,8 +20,8 @@ class Category(Enum):
     REDUNDANT = 1
     CONFLICT = 2
     INSUFFICIENT_HPOS = 3
-    INSUFFICIENT_ALLELES = 4
-    INSUFFICIENT_VARIANTS = 5
+    INCORRECT_ALLELE_COUNT = 4
+    INCORRECT_VARIANT_COUNT = 5
     MALFORMED_ID = 6
     MALFORMED_LABEL = 7
     UNKNOWN = 8
@@ -126,12 +126,12 @@ class ValidationResultBuilder:
         self._category = Category.INSUFFICIENT_HPOS
         return self
 
-    def insufficient_alleles(self):
-        self._category = Category.INSUFFICIENT_ALLELES
+    def incorrect_allele_count(self):
+        self._category = Category.INCORRECT_ALLELE_COUNT
         return self
 
-    def insufficient_variants(self):
-        self._category = Category.INSUFFICIENT_VARIANTS
+    def incorrect_variant_count(self):
+        self._category = Category.INCORRECT_VARIANT_COUNT
         return self
 
     def set_message(self, msg):

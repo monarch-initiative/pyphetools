@@ -30,12 +30,12 @@ class Individual:
 
     def __init__(self,
                 individual_id:str,
-                hpo_terms:List[HpTerm]=[],
+                hpo_terms:List[HpTerm]=None,
                 pmid:str=None,
                 title:str=None,
                 sex:str=Constants.NOT_PROVIDED,
                 age:str=Constants.NOT_PROVIDED,
-                interpretation_list:List[PPKt.VariantInterpretation]=[],
+                interpretation_list:List[PPKt.VariantInterpretation]=None,
                 disease:Disease=None):
         """Constructor
         """
@@ -50,8 +50,14 @@ class Individual:
         else:
             self._sex = sex
         self._age = age
-        self._hpo_terms = hpo_terms
-        self._interpretation_list = interpretation_list
+        if hpo_terms is None:
+            self._hpo_terms = list()
+        else:
+            self._hpo_terms = hpo_terms
+        if interpretation_list is None:
+            self._interpretation_list = list()
+        else:
+            self._interpretation_list = interpretation_list
         self._disease = disease
         self._pmid = pmid
         self._title = title

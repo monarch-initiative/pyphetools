@@ -1,4 +1,4 @@
-
+from ..creation.allelic_requirement import AllelicRequirement
 from ..creation.individual import Individual
 from .content_validator import ContentValidator
 from typing import List
@@ -13,19 +13,17 @@ class ValidatedIndividual:
         self._clean_terms = []
         self._validation_errors = []
 
-    def validate(self, ontology:hpotk.MinimalOntology, min_var:int, min_hpo:int, min_allele:int=None) -> None:
+    def validate(self, ontology:hpotk.MinimalOntology, min_hpo:int, allelic_requirement:AllelicRequirement=None) -> None:
         """validate an Individual object for errors in the Ontology or the minimum number of HPO terms/alleles/variants
 
         :param ontology: HPO object
         :type ontology: hpotk.MinimalOntology
-        :param min_var: minimum number of variants for this phenopacket to be considered valid
-        :type min_var: int
         :param min_hpo: minimum number of phenotypic features (HP terms) for this phenopacket to be considered valid
         :type min_hpo: int
-        :param min_allele: minimum number of alleles for this phenopacket to be considered valid
-        :type min_allele: int
+        :param allelic_requirement: used to check number of alleles and variants
+        :type allelic_requirement: AllelicRequirement
         """
-        cvalidator = ContentValidator(min_hpo=min_hpo, min_allele=min_allele, min_var=min_var)
+        cvalidator = ContentValidator(min_hpo=min_hpo, allelic_requirement=allelic_requirement)
         validation_results = cvalidator.validate_individual(individual=self._individual)
         self._validation_errors.extend(validation_results)
         qc = OntologyQC(individual=self._individual, ontology=ontology)
