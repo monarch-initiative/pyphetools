@@ -105,11 +105,11 @@ class MetaData:
         :type version: str
         """
         self._resource_d["hp"] = Resource(resource_id="hp",
-                                          name="human phenotype ontology",
-                                          namespace_prefix="HP",
-                                          iriprefix="http://purl.obolibrary.org/obo/HP_",
-                                          url="http://purl.obolibrary.org/obo/hp.owl",
-                                          version=version)
+                                        name="human phenotype ontology",
+                                        namespace_prefix="HP",
+                                        iriprefix="http://purl.obolibrary.org/obo/HP_",
+                                        url="http://purl.obolibrary.org/obo/hp.owl",
+                                        version=version)
 
     def geno(self, version=default_versions.get('geno')):
         """_summary_
@@ -150,19 +150,19 @@ class MetaData:
         :param version: the Mondo version
         """
         self._resource_d["mondo"] = Resource(resource_id="mondo",
-                                             name="Mondo Disease Ontology",
-                                             namespace_prefix="MONDO",
-                                             iriprefix="http://purl.obolibrary.org/obo/MONDO_",
-                                             url="http://purl.obolibrary.org/obo/mondo.obo",
-                                             version=version)
-        
+                                            name="Mondo Disease Ontology",
+                                            namespace_prefix="MONDO",
+                                            iriprefix="http://purl.obolibrary.org/obo/MONDO_",
+                                            url="http://purl.obolibrary.org/obo/mondo.obo",
+                                            version=version)
+
     def sequence_ontology(self, version=default_versions.get("so")):
         self._resource_d["so"] = Resource(resource_id="so",
-                                             name="Sequence types and features ontology",
-                                             namespace_prefix="SO",
-                                             iriprefix="http://purl.obolibrary.org/obo/SO_",
-                                             url="http://purl.obolibrary.org/obo/so.obo",
-                                             version=version)
+                                            name="Sequence types and features ontology",
+                                            namespace_prefix="SO",
+                                            iriprefix="http://purl.obolibrary.org/obo/SO_",
+                                            url="http://purl.obolibrary.org/obo/so.obo",
+                                            version=version)
 
     def set_external_reference(self, pmid, pubmed_title) -> None:
         """
@@ -178,7 +178,21 @@ class MetaData:
         pm = pmid.replace("PMID:", "")
         self._extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
         self._extref.description = pubmed_title
-        
+
+    def get_pmid(self)->str:
+        """
+        :returns: The PubMed identifier
+        :rtype: str:
+        :raises ValueError: Throw an error if no PMID is available
+        """
+        if self._extref is not None:
+            if self._extref.id.startswith("PMID"):
+                return self._extref.id
+            else:
+                raise ValueError(f"Malformed PMID in external reference: {self._extref.id}")
+        else:
+            raise ValueError("Could not get PMID because MetaData._extref was None")
+
 
     def to_ga4gh(self):
         """

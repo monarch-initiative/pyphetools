@@ -64,7 +64,7 @@ class ContentValidator(PhenopacketValidator):
         if n_pf < self._min_hpo:
             msg = f"Minimum HPO terms required {self._min_hpo} but only {n_pf} found"
             validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
-        if self._expected_genotype is None:
+        if self._allelic_requirement is None:
             return validation_results
         if self._allelic_requirement == AllelicRequirement.MONO_ALLELIC:
             if n_var != 1:
@@ -75,7 +75,7 @@ class ContentValidator(PhenopacketValidator):
                 msg = f"Expected one allele for monoallelic but got {n_alleles} alleles"
                 val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_allele_count().set_message(msg=msg).build()
                 validation_results.append(val_result)
-        elif self._expected_genotype == AllelicRequirement.BI_ALLELIC:
+        elif self._allelic_requirement == AllelicRequirement.BI_ALLELIC:
             if n_var < 1 or n_var > 2:
                 msg = f"Expected one or two variant for biallelic but got {n_var} variants"
                 val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_variant_count().set_message(msg=msg).build()

@@ -251,15 +251,15 @@ class Individual:
         return php
 
     @staticmethod
-    def output_individuals_as_phenopackets(individual_list, metadata, pmid=None, outdir="phenopackets"):
-        """write a list of Individial objects to file in GA4GH Phenopacket format
+    def output_individuals_as_phenopackets(individual_list, metadata:MetaData, outdir="phenopackets"):
+        """write a list of Individual objects to file in GA4GH Phenopacket format
+
+        This methods depends on the MetaData object having a PMID and will fail otherwise
 
         :param individual_list: List of individuals to be written to file as phenopackets
         :type individual_list: List[Individual]
-        :param metadata: GA4GH Phenopacket Schema MetaData object
-        :type metadata: PPKt.MetaData
-        :param pmid: A string such as PMID:3415687. Defaults to None.
-        :type pmid: str
+        :param metadata: pyphetools MetaData object
+        :type metadata: MetaData
         :param outdir: Path to output directory. Defaults to "phenopackets". Created if not exists.
         :type outdir: str
         """
@@ -268,6 +268,7 @@ class Individual:
         if not os.path.isdir(outdir):
             os.makedirs(outdir)
         written = 0
+        pmid = metadata.get_pmid()
         for individual in individual_list:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
             json_string = MessageToJson(phenopckt)
