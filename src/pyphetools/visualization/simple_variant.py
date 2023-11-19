@@ -1,6 +1,3 @@
-import phenopackets
-from google.protobuf.json_format import MessageToJson
-
 NA_STRING = "n/a"
 
 

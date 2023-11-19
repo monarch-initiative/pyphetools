@@ -1,12 +1,11 @@
-from collections import defaultdict
-import pandas as pd
 import re
-import math
-from .constants import Constants
-from .age_isoformater import AgeIsoFormater
-from typing import Dict
-
+from collections import defaultdict
 from enum import Enum
+
+import pandas as pd
+
+from .age_isoformater import AgeIsoFormater
+from .constants import Constants
 
 AgeEncodingType = Enum('AgeEncodingType', ['YEAR', 'ISO8601', 'YEAR_AND_MONTH', 'MONTH', 'CUSTOM', 'NOT_PROVIDED'])
 ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"

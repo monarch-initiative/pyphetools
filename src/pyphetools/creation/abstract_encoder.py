@@ -20,8 +20,6 @@ class AbstractEncoder(metaclass=abc.ABCMeta):
         else:
             raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
 
-
-
     def output_phenopackets(self, outdir="phenopackets"):
         """Output data about all individuals as GA4GH phenopackets
 
@@ -33,7 +31,6 @@ class AbstractEncoder(metaclass=abc.ABCMeta):
         individual_list = self.get_individuals()
         written = Individual.output_individuals_as_phenopackets(individual_list=individual_list,
                                                                 metadata=self._metadata,
-                                                                pmid=self._pmid,
                                                                 outdir=outdir)
         print(f"Wrote {written} phenopackets to {outdir}")
 

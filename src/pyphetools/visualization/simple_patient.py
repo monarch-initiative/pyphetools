@@ -26,6 +26,7 @@ class SimplePatient:
             ppack = ga4gh_phenopacket
         observed_hpo_terms = defaultdict(HpTerm)
         excluded_hpo_terms = defaultdict(HpTerm)
+        self._by_age_dictionary = defaultdict(list)
         self._phenopacket_id = ppack.id
         if ppack.subject is None:
             raise ValueError("Phenopackets must have a subject message to be used with this package")
@@ -53,6 +54,7 @@ class SimplePatient:
                 excluded_hpo_terms[pf.type.id] = hpterm
             else:
                 observed_hpo_terms[pf.type.id] = hpterm
+            self._by_age_dictionary[hpterm.onset].append(hpterm)
         for k, v in observed_hpo_terms.items():
             if k in excluded_hpo_terms:
                 excluded_hpo_terms.pop(k) # remove observed terms that may have been excluded at other occasion
@@ -88,7 +90,7 @@ class SimplePatient:
         """
         Return a SimplePatient object that corresponds to a phenopacket (JSON) file
         :param phenopacket_file: A phenopacket file (JSON format)
-        :type ppkt_file: string representing a path to a file
+        :type phenopacket_file: string representing a path to a file
         """
         if not os.path.isfile(phenopacket_file):
             raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket_file}'")
@@ -153,4 +155,7 @@ class SimplePatient:
 
     def contains_observed_term_id(self, hpo_term_id):
         return hpo_term_id in self._observed
+
+    def get_term_by_age_dict(self):
+        return self._by_age_dictionary
 

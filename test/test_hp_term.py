@@ -1,6 +1,6 @@
 import unittest
+
 from src.pyphetools.creation import HpTerm
-import phenopackets
 
 
 class TestHpTerm(unittest.TestCase):

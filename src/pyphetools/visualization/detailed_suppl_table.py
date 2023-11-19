@@ -66,7 +66,7 @@ class DetailedSupplTable:
         Get counts of terms without annotation propagation or thresholding
         """
         rows = []
-        N = self._n_patients
+        N = len(self._patient_d)
         for hpid, total_count in counts_d.items():
             total_per = 100*total_count/N
             total_s = f"{total_count}/{N} ({total_per:.1f}%)"

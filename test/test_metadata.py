@@ -1,7 +1,8 @@
 import unittest
+
 import pytest
+
 from src.pyphetools.creation import MetaData
-import phenopackets as PPKt
 
 
 class TestMetaData(unittest.TestCase):

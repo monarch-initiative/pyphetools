@@ -1,9 +1,10 @@
-import pandas as pd
 import os
-from ..creation.hp_term import HpTerm
+import json
+
+from google.protobuf.json_format import Parse
+
 from ..creation.disease import Disease
-
-
+from ..creation.hp_term import HpTerm
 
 EMPTY_CELL = ""
 
@@ -75,8 +76,8 @@ class HpoaTableCreator:
                 raise ValueError(f"indir argument {indir} must be directory!")
             self._indir = indir
             self._phenopackets = []
-            for f in os.listdir(indir):
-                fname = os.path.join(indir, f)
+            for file in os.listdir(indir):
+                fname = os.path.join(indir, file)
                 if fname.endswith(".json") and os.path.isfile(fname):
                     with open(fname) as f:
                         data = f.read()

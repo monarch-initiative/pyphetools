@@ -1,6 +1,7 @@
-import unittest
 import os
-from src.pyphetools.creation import HpoParser, OptionColumnMapper
+import unittest
+
+from src.pyphetools.creation import HpoParser
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 
@@ -45,7 +46,8 @@ class TestOptionMapper(unittest.TestCase):
         morph_d = {
             'bulbous nasal tip': 'Bulbous nose',
             'prominent lobule of ear': 'Large earlobe',
-            'tapering fingers': 'Tapered finger'
+            'tapering fingers': 'Tapered finger',
+            'deeply set eyes': "Deeply set eye" # Note this synonym is not yet in HPO version used for testing
         }
         cell_contents = "Broad forehead, deeply set eyes, ptosis, bulbous nasal tip, micrognathia, prominent lobule of ear, tapering fingers"
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=morph_d)
@@ -101,7 +103,6 @@ class TestOptionMapper(unittest.TestCase):
         cell_contents = "Cryptorchidism, micropenis, bilateral talipes equinovarus"
         results_longest = self.hpo_cr.parse_cell(cell_contents=cell_contents)
         label_set = {result.label for result in results_longest}
-        print(label_set)
         self.assertIn("Cryptorchidism", label_set, "Could not find Cryptorchidism in results")
         self.assertIn("Micropenis", label_set, "Could not find Micropenis in results")
         self.assertEqual(3, len(label_set))
@@ -119,3 +120,24 @@ class TestOptionMapper(unittest.TestCase):
                                                                          observed='yes',
                                                                          excluded='no')
         self.assertEqual(6, len(item_column_mapper_d))
+
+
+    def test_pica_not_at_boundary(self):
+        """
+        We do not want Pica HP:0011856 to match with typical
+        loss of typical trabecular bony architecture
+        """
+        cell_contents = "loss of typical trabecular bony architecture"
+        results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
+        self.assertEquals(0, len(results))
+
+    def test_pica(self):
+        """
+        This should match
+        """
+        cell_contents = "Pica is a condition where a person compulsively swallows non-food items."
+        results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
+        self.assertEquals(1, len(results))
+
+
+

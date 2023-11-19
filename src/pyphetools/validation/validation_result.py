@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+
 from ..creation.hp_term import HpTerm
 
 
@@ -99,8 +99,8 @@ class ValidationResultBuilder:
     This class is intended for internal use only, and makes constructing ValidatioResult objects a little easier.
     """
 
-    def __init__(self, ppkt_id:str):
-        self._phenopacket_id = ppkt_id
+    def __init__(self, phenopacket_id:str):
+        self._phenopacket_id = phenopacket_id
         self._error_level = ErrorLevel.UNKNOWN
         self._category = Category.UNKNOWN
         self._message = ""
@@ -141,10 +141,12 @@ class ValidationResultBuilder:
     def malformed_hpo_id(self, hpo_id):
         self._category = Category.MALFORMED_ID
         self._message = f"Invalid HPO id {hpo_id}"
+        return self
 
     def malformed_hpo_label(self, hpo_label):
         self._category = Category.MALFORMED_LABEL
         self._message = f"Invalid HPO id {hpo_label}"
+        return self
 
     def set_term(self, term:HpTerm):
         self._term = term

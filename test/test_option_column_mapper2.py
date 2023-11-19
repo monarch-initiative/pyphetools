@@ -52,6 +52,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
             'bulbous nasal tip': "Bulbous nose",
             'prominent lobule of ear': "Large earlobe",
             'tapering fingers': "Tapered finger",
+            'deeply set eyes': 'Deeply set eye'
         }
         cell_contents = "Broad forehead, deeply set eyes, ptosis, bulbous nasal tip, micrognathia, prominent lobule of ear, tapering fingers"
         morphMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=morph_d)
@@ -59,9 +60,9 @@ class TestOptionColumnMapper2(unittest.TestCase):
         self.assertEqual(7, len(results))
         results = sorted(results, key=lambda x: x.id, reverse=True)
 
-        def test_hpo_cr_non_null(self):
-            """sanity check"""
-            self.assertIsNotNone(self.hpo_cr)
+    def test_hpo_cr_non_null(self):
+        """sanity check"""
+        self.assertIsNotNone(self.hpo_cr)
 
     def test_hpo_cr_ataxia(self):
         """We should retrieve Ataxia (HP:0001251)"""

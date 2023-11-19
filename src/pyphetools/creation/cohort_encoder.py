@@ -127,10 +127,8 @@ class CohortEncoder(AbstractEncoder):
         """Set the disease diagnosis for all patients in the cohort
 
         If all patients in the cohort have the same disease we can set it with this method
-        :param disease: Disease object
+        :param disease: Disease diagnosis for the individuals in this cohort
         :type disease: Disease
-        :param label: disease name
-        :type label: str
         """
         self._disease = disease
         self._disease_dictionary = None
@@ -194,6 +192,8 @@ class CohortEncoder(AbstractEncoder):
                     genotype_cell_contents = None
                 if self._variant_mapper is not None:
                     interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
+                else:
+                    interpretation_list = []
             else:
                 interpretation_list = []
             if self._disease_dictionary is not None and self._disease is None:

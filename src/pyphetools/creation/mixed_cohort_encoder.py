@@ -1,11 +1,11 @@
-import pandas as pd
 from math import isnan
 from typing import List, Dict
-import os
+
+import pandas as pd
 
 from . import Individual
-from .age_column_mapper import AgeColumnMapper
 from .abstract_encoder import AbstractEncoder
+from .age_column_mapper import AgeColumnMapper
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
 from .sex_column_mapper import SexColumnMapper
@@ -144,14 +144,14 @@ class MixedCohortEncoder(AbstractEncoder):
                     genotype_cell_contents = None
                 if self._variant_mapper is not None:
                     interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
+                else:
+                    interpretation_list = []
             else:
                 interpretation_list = []
             disease_cell_contents = row[disease_column_name]
             if disease_cell_contents is None:
                 raise ValueError(f"Could not extract disease identifier for row {row}")
             disease = self._disease_id_mapper.map_cell(disease_cell_contents)
-            disease_id = disease.id
-            disease_label = disease.label
             indi = Individual(individual_id=individual_id,
                                   sex=sex,
                                   age=age,
@@ -159,7 +159,6 @@ class MixedCohortEncoder(AbstractEncoder):
                                   pmid=pmid,
                                   title=title,
                                   interpretation_list=interpretation_list,
-                                  disease_id=disease_id,
-                                  disease_label=disease_label)
+                                  disease=disease)
             individuals.append(indi)
         return individuals
