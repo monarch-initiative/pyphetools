@@ -102,7 +102,6 @@ class TestOptionMapper(unittest.TestCase):
         cell_contents = "Cryptorchidism, micropenis, bilateral talipes equinovarus"
         results_longest = self.hpo_cr.parse_cell(cell_contents=cell_contents)
         label_set = {result.label for result in results_longest}
-        print(label_set)
         self.assertIn("Cryptorchidism", label_set, "Could not find Cryptorchidism in results")
         self.assertIn("Micropenis", label_set, "Could not find Micropenis in results")
         self.assertEqual(3, len(label_set))
@@ -137,7 +136,6 @@ class TestOptionMapper(unittest.TestCase):
         """
         cell_contents = "Pica is a condition where a person compulsively swallows non-food items."
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
-        print(results)
         self.assertEquals(1, len(results))
 
 

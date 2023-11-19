@@ -3,7 +3,7 @@ from math import isnan
 from typing import List, Dict
 import os
 
-from . import Individual
+from . import Individual, Disease
 from .age_column_mapper import AgeColumnMapper
 from .abstract_encoder import AbstractEncoder
 from .constants import Constants
@@ -150,8 +150,6 @@ class MixedCohortEncoder(AbstractEncoder):
             if disease_cell_contents is None:
                 raise ValueError(f"Could not extract disease identifier for row {row}")
             disease = self._disease_id_mapper.map_cell(disease_cell_contents)
-            disease_id = disease.id
-            disease_label = disease.label
             indi = Individual(individual_id=individual_id,
                                   sex=sex,
                                   age=age,
@@ -159,7 +157,6 @@ class MixedCohortEncoder(AbstractEncoder):
                                   pmid=pmid,
                                   title=title,
                                   interpretation_list=interpretation_list,
-                                  disease_id=disease_id,
-                                  disease_label=disease_label)
+                                  disease=disease)
             individuals.append(indi)
         return individuals

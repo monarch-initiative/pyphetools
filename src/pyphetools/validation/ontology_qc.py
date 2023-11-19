@@ -1,4 +1,5 @@
 import hpotk
+from collections import Counter
 from typing import List, Optional
 from ..creation.hp_term import HpTerm
 from .validation_result import ValidationResult, ValidationResultBuilder
@@ -52,7 +53,7 @@ class OntologyQC:
             for tid in all_excluded_term_ids:
                 if self._ontology.graph.is_ancestor_of(tid, term.id):
                     conflicting_term_id_set.add(tid)
-                    error = ValidationResultBuilder(ppkt_id=self._phenopacket_id).error().conflict().set_term(term=term).build()
+                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).error().conflict().set_term(term=term).build()
                     self._errors.append(error)
         if len(conflicting_term_id_set) > 0:
             excluded_hpo_terms = [term for term in excluded_hpo_terms if term.id not in conflicting_term_id_set]
@@ -72,6 +73,15 @@ class OntologyQC:
         :rtype hpo_terms: List[HpTerm]
         """
         all_terms = set(hpo_terms)
+        # check for duplicates
+        if len(all_terms) != len(hpo_terms):
+            duplicates = [item for item, count in Counter(hpo_terms).items() if count > 1]
+            for dup in duplicates:
+                message = f"<b>{dup.label}</b> is listed multiple times"
+                error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_message(
+                    message).set_term(dup).build()
+                self._errors.append(error)
+        # The following code checks for other kinds of redundancies
         redundant_term_d = {}
         for term in all_terms:
             for term2 in all_terms:

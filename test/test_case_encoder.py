@@ -82,7 +82,6 @@ class TestCaseParse(unittest.TestCase):
         Test that we construct the phenopacket ID to include the PMID and the individual id
         """
         ppkt = self._parser.get_phenopacket()
-        print(ppkt)
         expected_ppkt_id = "PMID_123_A"
         self.assertEqual(expected_ppkt_id, ppkt.id)
 

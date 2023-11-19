@@ -100,6 +100,8 @@ class CaseEncoder:
         :type vignette: str
         :param custom_d: A dictionary of strings that correspond to HPO terms
         :type custom_d: dict
+        :param custom_age: Age for the features in the current vignette
+        :type custom_age: str
         :param false_positive: a set of strings that are omitted from text mining to avoid false positive results
         :type false_positive: set
         :param excluded_terms: similar to custom_d but for terms that are explicitly excluded in the vignette
@@ -142,7 +144,7 @@ class CaseEncoder:
         :param label: Label of the HPO term
         :type label: str
         :param hpo_id: identifier of the term, e.g. HP:0001234
-        :type po_id: str
+        :type hpo_id: str
         :param excluded: True iff the abnormally was explicitly excludeds
         :type excluded: bool
         :param custom_age: an ISO 8601 string representing the age of onset of the abnormality

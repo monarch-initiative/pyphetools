@@ -99,8 +99,8 @@ class ValidationResultBuilder:
     This class is intended for internal use only, and makes constructing ValidatioResult objects a little easier.
     """
 
-    def __init__(self, ppkt_id:str):
-        self._phenopacket_id = ppkt_id
+    def __init__(self, phenopacket_id:str):
+        self._phenopacket_id = phenopacket_id
         self._error_level = ErrorLevel.UNKNOWN
         self._category = Category.UNKNOWN
         self._message = ""

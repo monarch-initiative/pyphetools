@@ -19,8 +19,6 @@ class TestVariantValidator(unittest.TestCase):
     def test_label(self):
         var_inter = self._variant_interpretation
         variant_descriptor = var_inter.variation_descriptor
-        print(type(variant_descriptor))
-        print([field.full_name for field in self._variant_interpretation.DESCRIPTOR.fields])
         label = variant_descriptor.label
         self.assertEqual("46,XY.ish del(7)(p14.1)(RP11-816F16-)", label)
 
