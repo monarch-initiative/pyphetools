@@ -1,5 +1,8 @@
 from collections import defaultdict
+from typing import Dict
 
+from ..creation.constants import Constants
+from ..creation.hp_term import HpTerm
 from .simple_patient import SimplePatient
 
 
@@ -52,13 +55,28 @@ class PhenopacketTable:
                 cell_items.append("<li>" + var.get_display() + "</li>")
             cell_items.append("</ul>")
             row_items.append('<td>' + " ".join(cell_items) + '</td>')
-        # HPO information    
-        hpo_items = []
-        for k, v in spat.get_observed_hpo_d().items():
-            hpo_items.append(f"{v.hpo_term_and_id}")
-        row_items.append('<td class="table-data">' + "; ".join(hpo_items) + '</td>')
+        # HPO information
+        hpo_html = self.get_hpo_cell(spat.get_term_by_age_dict())
+        row_items.append('<td class="table-data">' + hpo_html + '</td>')
         row_items.append('</tr>')
         return "\n".join(row_items)
+
+
+    def get_hpo_cell(self, term_by_age_dict:Dict[str,HpTerm]) -> str:
+        """
+        :param term_by_age_dict: A dictionary with key - ISO8601 string, value - list of HpTerm objects
+        :type term_by_age_dict: Dict[str,HpTerm]
+        :returns: HTML code for the HTML cell
+        :rtype: str
+        """
+        lines = []
+        for onset, hpo_list in term_by_age_dict.items():
+            hpos = "; ".join([hpo.__str__() for hpo in hpo_list])
+            if onset != Constants.NOT_PROVIDED:
+                lines.append(hpos)
+            else:
+                lines.append(f"{onset}: {hpos}")
+        return "<br/>".join(lines)
         
     def to_html(self):
         """create an HTML table with patient ID, age, sex, genotypes, and PhenotypicFeatures

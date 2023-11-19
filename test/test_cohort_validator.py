@@ -54,3 +54,27 @@ class TestCohortValidator(unittest.TestCase):
         self.assertEqual(1, len(validated_individuals))
         vindindividualB = validated_individuals[0]
         self.assertFalse(vindindividualB.has_error())
+
+    def test_redundant_in_hierarchy(self):
+        """
+        0358596_patientA.json,ERROR,HpoAncestryValidator,Violation of the annotation propagation rule,
+        "Phenotypic features of PMID_20358596_patient_A must not contain both an
+        observed term (Bilateral facial palsy, HP:0430025) and an observed ancestor (Facial palsy, HP:0010628)"
+        """
+        individual_C = Individual(individual_id="C")
+        individual_C.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        individual_C.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
+        individual_C.add_hpo_term(HpTerm(hpo_id="HP:0430025", label="Bilateral facial palsy"))
+        individual_C.add_hpo_term(HpTerm(hpo_id="HP:0010628", label="Facial palsy"))
+        cohort = [individual_C]
+        hpo_ontology = self.hpo_cr.get_hpo_ontology()
+        cvalidator = CohortValidator(cohort=cohort, ontology=hpo_ontology, min_hpo=1)
+        validated_individuals = cvalidator.get_validated_individual_list()
+        self.assertEqual(1, len(validated_individuals))
+        individual_C = validated_individuals[0]
+        self.assertTrue(individual_C.has_error())
+        errors = individual_C.get_validation_errors()
+        self.assertEqual(1, len(errors))
+        error = errors[0]
+        self.assertEqual("<b>Facial palsy</b> is redundant because of <b>Bilateral facial palsy</b>", error.message)
+

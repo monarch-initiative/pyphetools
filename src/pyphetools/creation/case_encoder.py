@@ -49,7 +49,7 @@ class CaseEncoder:
                 disease:Disease=None) -> None:
         if not isinstance(hpo_cr, HpoConceptRecognizer):
             raise ValueError(
-                "concept_recognizer argument must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+                f"concept_recognizer argument must be HpoConceptRecognizer but was {type(hpo_cr)}")
         self._hpo_concept_recognizer = hpo_cr
         if not pmid.startswith("PMID:"):
             raise ValueError(f"Malformed pmid argument ({pmid}). Must start with PMID:")
@@ -116,7 +116,7 @@ class CaseEncoder:
         if false_positive is None:
             false_positive = set()
         elif not isinstance(false_positive, set):
-            raise ValueError(f"false_positive v must be a set with HPO labels that have been explicitly excluded; but we got {type(excluded_terms)}")
+            raise ValueError(f"false_positive argument must be a set with HPO labels that have been explicitly excluded; but we got {type(false_positive)}")
         if custom_d is None:
             custom_d = {}
         # replace new lines and multiple consecutive spaces with a single space

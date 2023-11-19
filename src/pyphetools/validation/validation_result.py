@@ -141,10 +141,12 @@ class ValidationResultBuilder:
     def malformed_hpo_id(self, hpo_id):
         self._category = Category.MALFORMED_ID
         self._message = f"Invalid HPO id {hpo_id}"
+        return self
 
     def malformed_hpo_label(self, hpo_label):
         self._category = Category.MALFORMED_LABEL
         self._message = f"Invalid HPO id {hpo_label}"
+        return self
 
     def set_term(self, term:HpTerm):
         self._term = term
