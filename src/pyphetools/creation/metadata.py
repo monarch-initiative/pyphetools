@@ -1,8 +1,8 @@
-from datetime import datetime
+import time
 from collections import defaultdict
+
 import phenopackets as PPKt
 from google import protobuf
-import time
 
 
 class Resource:

@@ -13,10 +13,10 @@ class ConstantColumnMapper(ColumnMapper):
     :type hpo_label: str
     :param term_list: list of lists with [label, hpo_id
     :type term_list: List[lst]
-    :param excluded:symbol used if the feature was excluded (if None, the feature was observed)
-    :type excluded: str
+    :param excluded: if True, then all individuals had this feature explicitly excluded
+    :type excluded: bool
     """
-    def __init__(self, hpo_id=None, hpo_label=None, term_list=None, excluded=False) -> None:
+    def __init__(self, hpo_id=None, hpo_label=None, term_list=None, excluded:bool=False) -> None:
 
         super().__init__()
         self._hpo_id = hpo_id

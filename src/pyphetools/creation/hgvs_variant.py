@@ -29,7 +29,9 @@ class HgvsVariant(Variant):
     :param variant_id: variant identifier
     :type variant_id: str, optional
     """
-    def __init__(self, assembly, vcf_d, symbol=None, hgnc=None, hgvs=None, transcript=None, g_hgvs=None, variant_id=None) -> None:
+    def __init__(self, assembly, vcf_d, symbol=None, hgnc=None, hgvs=None, transcript=None, g_hgvs=None,
+                 variant_id=None) -> None:
+        super().__init__()
         if not assembly in ACCEPTABLE_GENOMES:
             raise ValueError(f"Malformed assembly: \"{assembly}\"")
         self._assembly = assembly

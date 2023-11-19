@@ -1,12 +1,11 @@
-import unittest
 import os
-import pandas as pd
-from src.pyphetools.creation import AllelicRequirement, Individual, HpTerm, HpoParser
+import unittest
+
+from src.pyphetools.creation import Individual, HpTerm, HpoParser
 from src.pyphetools.validation import CohortValidator
 from src.pyphetools.validation.validation_result import ErrorLevel, Category
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
-import phenopackets as PPkt
 
 # The API requires us to pass a column name but the column name will not be used in the tests
 TEST_COLUMN = "test"

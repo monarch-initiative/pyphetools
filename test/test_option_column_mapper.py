@@ -161,7 +161,7 @@ class TestOptionMapper(unittest.TestCase):
                                         option_d=urine_xa_d,
                                         excluded_d=urine_not_xa_d)
         hpo_term_list = urineXAmapper.map_cell('11.7umol/mmolCr')
-        self.assertEqual(1, len((hpo_term_list)))
+        self.assertEqual(1, len(hpo_term_list))
         hpterm = hpo_term_list[0]
         self.assertEqual("Xanthinuria", hpterm.label)
         self.assertEqual("HP:0010934", hpterm.id)

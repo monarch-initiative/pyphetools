@@ -123,8 +123,8 @@ class StructuralVariant(Variant):
         :type gene_symbol: str
         :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
         :type gene_id: str
-        :param variant_id: an identifier for the variant, optional
-        :type variant_id: str
+        :param variant_id: an identifier for the variant
+        :type variant_id: str, optional
         """
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
@@ -147,8 +147,8 @@ class StructuralVariant(Variant):
         :type gene_symbol: str
         :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
         :type gene_id: str
-        :param variant_id: an identifier for the variant, optional
-        :type variant_id: str
+        :param variant_id: an identifier for the variant
+        :type variant_id: str, optional
         """
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,
@@ -172,8 +172,10 @@ class StructuralVariant(Variant):
         :type gene_symbol: str
         :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
         :type gene_id: str
-        :param variant_id: an identifier for the variant, optional
-        :type variant_id: str
+        :param genotype: Genotype (heterozygous, homozygous, hemizygous) of this variant call
+        :type genotype: str
+        :param variant_id: an identifier for the variant
+        :type variant_id: str, optional
         """
         return StructuralVariant(cell_contents=cell_contents,
                                  gene_symbol=gene_symbol,

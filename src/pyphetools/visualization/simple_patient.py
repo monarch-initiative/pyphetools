@@ -88,7 +88,7 @@ class SimplePatient:
         """
         Return a SimplePatient object that corresponds to a phenopacket (JSON) file
         :param phenopacket_file: A phenopacket file (JSON format)
-        :type ppkt_file: string representing a path to a file
+        :type phenopacket_file: string representing a path to a file
         """
         if not os.path.isfile(phenopacket_file):
             raise FileNotFoundError(f"Could not find phenopacket file at '{phenopacket_file}'")

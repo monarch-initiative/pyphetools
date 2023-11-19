@@ -3,7 +3,7 @@ import os
 import pandas as pd
 import phenopackets as PPKt
 import re
-from typing import List
+from typing import Set
 from collections import defaultdict
 from .column_mapper import ColumnMapper
 from .constants import Constants
@@ -88,7 +88,7 @@ class CaseEncoder:
             self._individual.set_pmid(pmid=pmid)
 
 
-    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms=None) -> pd.DataFrame:
+    def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms:Set[str]=None) -> pd.DataFrame:
         """Add a description of a clinical encouter for text mining
 
         This method uses simple text mining to extract terms from the vignette. The optional custom_d argument can be
@@ -105,14 +105,18 @@ class CaseEncoder:
         :param false_positive: a set of strings that are omitted from text mining to avoid false positive results
         :type false_positive: set
         :param excluded_terms: similar to custom_d but for terms that are explicitly excluded in the vignette
-        :type excluded_terms: dict
+        :type excluded_terms: Set[str]
         :returns: dataframe of (unique, alphabetically sorted) HpTerm objects with observed or excluded HPO terms
         :rtype: pd.DataFrame
         """
         if excluded_terms is None:
             excluded_terms = set()
+        elif not isinstance(excluded_terms, set):
+            raise ValueError(f"excluded_terms argument must be a set with HPO labels that have been explicitly excluded; but we got {type(excluded_terms)}")
         if false_positive is None:
-            false_positive = []
+            false_positive = set()
+        elif not isinstance(false_positive, set):
+            raise ValueError(f"false_positive v must be a set with HPO labels that have been explicitly excluded; but we got {type(excluded_terms)}")
         if custom_d is None:
             custom_d = {}
         # replace new lines and multiple consecutive spaces with a single space

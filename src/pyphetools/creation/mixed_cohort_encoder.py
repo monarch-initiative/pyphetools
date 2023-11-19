@@ -1,11 +1,11 @@
-import pandas as pd
 from math import isnan
 from typing import List, Dict
-import os
 
-from . import Individual, Disease
-from .age_column_mapper import AgeColumnMapper
+import pandas as pd
+
+from . import Individual
 from .abstract_encoder import AbstractEncoder
+from .age_column_mapper import AgeColumnMapper
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
 from .sex_column_mapper import SexColumnMapper
@@ -144,6 +144,8 @@ class MixedCohortEncoder(AbstractEncoder):
                     genotype_cell_contents = None
                 if self._variant_mapper is not None:
                     interpretation_list = self._variant_mapper.map_cell(variant_cell_contents, genotype_cell_contents)
+                else:
+                    interpretation_list = []
             else:
                 interpretation_list = []
             disease_cell_contents = row[disease_column_name]

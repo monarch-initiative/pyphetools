@@ -20,8 +20,6 @@ class AbstractEncoder(metaclass=abc.ABCMeta):
         else:
             raise ValueError(F"Malformed metadata argument of type {type(metadata)}")
 
-
-
     def output_phenopackets(self, outdir="phenopackets"):
         """Output data about all individuals as GA4GH phenopackets
 

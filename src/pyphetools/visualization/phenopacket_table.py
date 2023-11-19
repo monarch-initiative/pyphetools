@@ -1,5 +1,5 @@
-import phenopackets
 from collections import defaultdict
+
 from .simple_patient import SimplePatient
 
 

@@ -1,8 +1,9 @@
-from .simple_patient import SimplePatient
-import pandas as pd
-from .hpo_category import HpoCategorySet
-from hpotk.model import TermId
 from collections import defaultdict
+
+import pandas as pd
+from hpotk.model import TermId
+
+from .hpo_category import HpoCategorySet
 
 ALL_ROOT = TermId.from_curie("HP:0000001")
 PHENOTYPIC_ABNORMALITY_ROOT = TermId.from_curie("HP:0000118")

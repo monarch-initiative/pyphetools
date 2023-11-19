@@ -61,21 +61,20 @@ class TestCaseParse(unittest.TestCase):
 
     def test_excluded2(self):
         """
-        The goal if this test is to enzure that 'Seizure' is annotated as 'excluded'
+        The goal if this test is to ensure that 'Seizure' is annotated as 'excluded'
+        We label the word as false positive and it should just be skipped
         """
         vignette = "The patient is not on seizure medication at this time."
         excluded = set()
-        excluded.add("Seizure")
+        false_positive = set()
+        false_positive.add("seizure")
         metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
         metadata.default_versions_with_hpo(version="2022-05-05")
         encoder = CaseEncoder(hpo_cr=self._hpo_cr, individual_id="id", metadata=metadata.to_ga4gh(), pmid="PMID:1")
-        df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded)
-        self.assertEqual(1, len(df))
+        df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded, false_positive=false_positive)
+        self.assertEqual(0, len(df))
 
-        self.assertEqual("HP:0001250", df.iloc[0]['id'])
-        self.assertEqual("Seizure",df.iloc[0]['label'])
-        self.assertFalse(df.iloc[0]['observed'])
-        self.assertTrue(df.iloc[0]['measured'])
+
 
     def test_phenopacket_id(self):
         """

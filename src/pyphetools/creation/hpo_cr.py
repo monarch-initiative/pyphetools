@@ -1,5 +1,6 @@
 import abc
-from typing import List, Dict
+from typing import List
+
 from .hp_term import HpTerm
 
 
@@ -36,8 +37,8 @@ class HpoConceptRecognizer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def get_term_from_label(self, label) -> HpTerm:
         """
-        :param hpo_id: an HPO label, e.g., Arachnodactyly
-        :type hpo_id: str
+        :param label: an HPO label, e.g., Arachnodactyly
+        :type label: str
         :returns: corresponding HPO term
         :rtype: HpTerm
         """

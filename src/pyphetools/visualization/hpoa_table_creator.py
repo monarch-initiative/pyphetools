@@ -1,9 +1,10 @@
-import pandas as pd
 import os
-from ..creation.hp_term import HpTerm
+import json
+
+from google.protobuf.json_format import Parse
+
 from ..creation.disease import Disease
-
-
+from ..creation.hp_term import HpTerm
 
 EMPTY_CELL = ""
 

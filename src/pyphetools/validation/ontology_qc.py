@@ -113,8 +113,6 @@ class OntologyQC:
 
     def _clean_terms(self) -> List[HpTerm]:
         """
-        :param hpo_terms: original term list that might contain redundancies or conflicts
-        :type hpo_terms: List[HpTerm]
         :returns: list of HPO terms without redundancies/conflicts
         :rtype hpo_terms: List[HpTerm]
         """
@@ -155,7 +153,7 @@ class OntologyQC:
         return self._clean_hpo_terms
 
 
-    def get_error_string(self) -> str:
+    def get_error_string(self) -> Optional[str]:
         """
         create and return a string that summarizes the redundancies and conflicts that were corrected
 
