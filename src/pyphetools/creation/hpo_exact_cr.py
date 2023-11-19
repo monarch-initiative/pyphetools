@@ -106,20 +106,25 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             # Note that chunk has been stripped of whitespace and lower-cased already
             for original_text, hpo_label in custom_d.items():
                 lc_original = original_text.lower()
-                posn = lc_chunk.find(lc_original)
-                if posn < 0:
+                startpos = lc_chunk.find(lc_original)
+                if startpos < 0:
                     continue
-                endpos = posn + len(lc_original) - 1
+                endpos = startpos + len(lc_original) - 1
                 hp_term = self.get_term_from_label(hpo_label)
-                hits.append(ConceptMatch(term=hp_term, start=posn, end=endpos))
+                hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
             for lower_case_hp_label, hpo_tid in self._label_to_id.items():
                 key = lower_case_hp_label.lower()
-                posn = chunk.find(key)
-                if posn < 0:
+                startpos = chunk.find(key)
+                endpos = startpos + len(key) - 1
+                if startpos < 0:
                     continue
-                endpos = posn + len(key) - 1
-                hp_term = self.get_term_from_id(hpo_id=hpo_tid)  # Get properly capitalized label
-                hits.append(ConceptMatch(term=hp_term, start=posn, end=endpos))
+                # If we get here, we demand that the match is a complete word
+                # This is because otherwise we get some spurious matches such as Pica HP:0011856 matching to typical
+                # Create a regex to enforce the match is at word boundary
+                BOUNDARY_REGEX = re.compile(r'\b%s\b' % key, re.I)
+                if BOUNDARY_REGEX.search(chunk):
+                    hp_term = self.get_term_from_id(hpo_id=hpo_tid)  # Get properly capitalized label
+                    hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
             # sort hits according to length
             sorted_hits = sorted(hits, key=ConceptMatch.length, reverse=True)
             # Choose longest hits first and skip hits that overlap with previously chosen hits
