@@ -51,6 +51,7 @@ from collections import defaultdict
 import re
 from pyphetools.creation import *
 from pyphetools.visualization import PhenopacketTable
+import pyphetools
 print(f"pyphetools version {pyphetools.__version__}")
 ```
 
