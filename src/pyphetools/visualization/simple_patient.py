@@ -3,7 +3,7 @@ import phenopackets
 from google.protobuf.json_format import Parse
 import json
 from collections import defaultdict
-
+from ..creation.constants import Constants
 from ..creation.hp_term import HpTerm
 from .simple_variant import SimpleVariant
 
@@ -54,7 +54,11 @@ class SimplePatient:
                 excluded_hpo_terms[pf.type.id] = hpterm
             else:
                 observed_hpo_terms[pf.type.id] = hpterm
-            self._by_age_dictionary[hpterm.onset].append(hpterm)
+            if pf.onset is not None and pf.onset.age is not None and pf.onset.age.iso8601duration:
+                term_onset = pf.onset.age.iso8601duration
+            else:
+                term_onset = Constants.NOT_PROVIDED
+            self._by_age_dictionary[term_onset].append(hpterm)
         for k, v in observed_hpo_terms.items():
             if k in excluded_hpo_terms:
                 excluded_hpo_terms.pop(k) # remove observed terms that may have been excluded at other occasion

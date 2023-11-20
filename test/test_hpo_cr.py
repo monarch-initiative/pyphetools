@@ -129,7 +129,7 @@ class TestOptionMapper(unittest.TestCase):
         """
         cell_contents = "loss of typical trabecular bony architecture"
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
-        self.assertEquals(0, len(results))
+        self.assertEqual(0, len(results))
 
     def test_pica(self):
         """
@@ -137,7 +137,7 @@ class TestOptionMapper(unittest.TestCase):
         """
         cell_contents = "Pica is a condition where a person compulsively swallows non-food items."
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents)
-        self.assertEquals(1, len(results))
+        self.assertEqual(1, len(results))
 
 
 

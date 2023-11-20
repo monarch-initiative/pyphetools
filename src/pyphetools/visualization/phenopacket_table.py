@@ -1,9 +1,53 @@
 from collections import defaultdict
-from typing import Dict
+from typing import Dict, List
+from functools import cmp_to_key
+import sys
 
 from ..creation.constants import Constants
 from ..creation.hp_term import HpTerm
 from .simple_patient import SimplePatient
+from .html_table_generator import HtmlTableGenerator
+
+
+#
+
+
+class Age2Day:
+    """
+    Convenience function to help sort ages but converting ISO8601 strings into the number of days
+
+        sorted_age = sorted(l, key=lambda x: x.days)
+
+    following this, retrieve the original string as x.key
+    """
+    def __init__(self, age) -> None:
+        self.key = age
+        if age == Constants.NOT_PROVIDED:
+            self.days = sys.maxsize
+        elif not age.startswith("P"):
+            raise ValueError(f"Invlaid age string: {age}")
+        else:
+            days = 0
+            age = age[1:]
+            N = len(age)
+            y = age.find("Y")
+            if y != -1:
+                days = days + 365*int(age[:y])
+                age = age[y+1:]
+            m = age.find("M")
+            if m != -1:
+                days = days + 30.436875*int(age[:m])
+                age = age[m+1:]
+            d = age.find("D")
+            if d != -1:
+                days = days + int(age)
+            self.days = days
+
+
+
+
+
+
 
 
 class PhenopacketTable:
@@ -25,41 +69,39 @@ class PhenopacketTable:
         if len(phenopacket_list) == 0:
             raise ValueError("phenopacket_list was empty")
         ppkt = phenopacket_list[0]
-        if str(type(ppkt)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":                   
+        if str(type(ppkt)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":
             raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ppkt)}")
         self._phenopacket_list = phenopacket_list
-    
-    def _phenopacket_to_table_row(self, spat):
+
+    def _phenopacket_to_table_row(self, spat) -> List[str]:
         """
         private method intended to create one table row that represents one individual
         :param spat: An object that represents one individual
         :type spat: SimplePatient
         """
         row_items = []
-        row_items.append('<tr>')
         # Patient information
         pat_info = spat.get_subject_id() + " (" + spat.get_sex() + "; " + spat.get_age() + ")"
-        row_items.append('<td>' + pat_info + '</ts>')
-        row_items.append('<td>' + spat.get_disease() + '</ts>')
-        # Variant information    
+        row_items.append( pat_info)
+        row_items.append( spat.get_disease())
+        # Variant information
         var_list = spat.get_variant_list()
         if len(var_list) == 0:
-            row_items.append('<td>' + "n/a" + '</td>')
+            row_items.append("n/a" )
         elif len(var_list) == 1:
             var = var_list[0]
-            row_items.append('<td>' + var.get_display() + '</td>')
+            row_items.append( var.get_display() )
         else:
             cell_items = []
             cell_items.append("<ul>")
             for var in var_list:
                 cell_items.append("<li>" + var.get_display() + "</li>")
             cell_items.append("</ul>")
-            row_items.append('<td>' + " ".join(cell_items) + '</td>')
+            row_items.append( " ".join(cell_items) )
         # HPO information
         hpo_html = self.get_hpo_cell(spat.get_term_by_age_dict())
-        row_items.append('<td class="table-data">' + hpo_html + '</td>')
-        row_items.append('</tr>')
-        return "\n".join(row_items)
+        row_items.append( hpo_html )
+        return row_items
 
 
     def get_hpo_cell(self, term_by_age_dict:Dict[str,HpTerm]) -> str:
@@ -70,14 +112,17 @@ class PhenopacketTable:
         :rtype: str
         """
         lines = []
-        for onset, hpo_list in term_by_age_dict.items():
+        age2day_list = list(Age2Day(x) for x in term_by_age_dict.keys())
+        sorted_age = sorted(age2day_list, key=lambda x: x.days)
+        for onset in sorted_age:
+            hpo_list = term_by_age_dict.get(onset.key)
             hpos = "; ".join([hpo.__str__() for hpo in hpo_list])
-            if onset != Constants.NOT_PROVIDED:
+            if onset.key == Constants.NOT_PROVIDED:
                 lines.append(hpos)
             else:
-                lines.append(f"{onset}: {hpos}")
+                lines.append(f"<b>{onset.key}</b>: {hpos}")
         return "<br/>".join(lines)
-        
+
     def to_html(self):
         """create an HTML table with patient ID, age, sex, genotypes, and PhenotypicFeatures
         """
@@ -103,19 +148,10 @@ class PhenopacketTable:
                 pmid_strings.append(f"{k} (n={v})")
             pmid_str = "; ".join(pmid_strings)
             capt = f"{len(ppack_list)} phenopackets - {pmid_str}"
-        table_items = []
-        table_items.append('<table style="border: 2px solid black;">\n')
-        table_items.append(f'<caption>{capt}</caption>\n')
-        table_items.append("""<tr>
-            <th>Individual</th>
-            <th>Disease</th>
-            <th>Genotype</th>
-            <th>Phenotypic features</th>
-        </tr>
-        """)
+        header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
+        rows = []
         for spat in spat_list:
-            table_items.append(self._phenopacket_to_table_row(spat))
-        table_items.append('</table>\n') # close table content
-        return "\n".join(table_items)
-        
-        
+            rows.append(self._phenopacket_to_table_row(spat))
+        generator = HtmlTableGenerator(caption=capt, header_items=header_items, rows=rows)
+        return generator.get_html()
+
