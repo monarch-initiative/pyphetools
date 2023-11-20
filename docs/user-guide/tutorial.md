@@ -51,6 +51,7 @@ from collections import defaultdict
 import re
 from pyphetools.creation import *
 from pyphetools.visualization import PhenopacketTable
+import pyphetools
 print(f"pyphetools version {pyphetools.__version__}")
 ```
 
@@ -66,7 +67,7 @@ It is useful to import the HPO file and create the MetaData object (which record
 parser = HpoParser()
 hpo_cr = parser.get_hpo_concept_recognizer()
 hpo_version = parser.get_version()
-metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
+metadata = MetaData(created_by="")
 metadata.default_versions_with_hpo(version=hpo_version)
 ```
 
@@ -79,7 +80,7 @@ hpo_cr = parser.get_hpo_concept_recognizer()
 hpo_version = parser.get_version()
 PMID = "PMID:24736735"
 title = "New insights into genotype-phenotype correlation for GLI3 mutations"
-metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", pmid=PMID, pubmed_title=title)
+metadata = MetaData(created_by="", pmid=PMID, pubmed_title=title)
 metadata.default_versions_with_hpo(version=hpo_version)
 ```
 

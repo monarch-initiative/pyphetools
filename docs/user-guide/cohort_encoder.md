@@ -18,7 +18,7 @@ encoder = CohortEncoder(df=dft, hpo_cr=hpo_cr, column_mapper_d=column_mapper_d,
                       pmid=pmid)
 disease_id = "OMIM:618443"
 disease_label = "Neurodevelopmental disorder with or without variable brain abnormalities"
-encoder.set_disease(disease_id=disease_id, label=disease_label)
+encoder.set_disease(Disease(disease_id=disease_id, disease_label=disease_label))
 ```
 
 ### Display a phenopacket
