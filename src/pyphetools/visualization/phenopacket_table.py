@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Set
 from functools import cmp_to_key
 import sys
 
@@ -20,28 +20,9 @@ class Age2Day:
 
     following this, retrieve the original string as x.key
     """
-    def __init__(self, age) -> None:
+    def __init__(self, age, days) -> None:
         self.key = age
-        if age == Constants.NOT_PROVIDED:
-            self.days = sys.maxsize
-        elif not age.startswith("P"):
-            raise ValueError(f"Invlaid age string: {age}")
-        else:
-            days = 0
-            age = age[1:]
-            N = len(age)
-            y = age.find("Y")
-            if y != -1:
-                days = days + 365*int(age[:y])
-                age = age[y+1:]
-            m = age.find("M")
-            if m != -1:
-                days = days + 30.436875*int(age[:m])
-                age = age[m+1:]
-            d = age.find("D")
-            if d != -1:
-                days = days + int(age)
-            self.days = days
+        self.days = days
 
 
 
@@ -112,7 +93,7 @@ class PhenopacketTable:
         :rtype: str
         """
         lines = []
-        age2day_list = list(Age2Day(x) for x in term_by_age_dict.keys())
+        age2day_list = PhenopacketTable.get_sorted_age2data_list(term_by_age_dict.keys())
         sorted_age = sorted(age2day_list, key=lambda x: x.days)
         for onset in sorted_age:
             hpo_list = term_by_age_dict.get(onset.key)
@@ -147,11 +128,64 @@ class PhenopacketTable:
             for k, v in pmid_count_d.items():
                 pmid_strings.append(f"{k} (n={v})")
             pmid_str = "; ".join(pmid_strings)
-            capt = f"{len(ppack_list)} phenopackets - {pmid_str}"
+            n_phenopackets = len(ppack_list)
+            if n_phenopackets == 1:
+                capt = f"{n_phenopackets} phenopacket - {pmid_str}"
+            else:
+                capt = f"{n_phenopackets} phenopackets - {pmid_str}"
         header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
         rows = []
         for spat in spat_list:
             rows.append(self._phenopacket_to_table_row(spat))
         generator = HtmlTableGenerator(caption=capt, header_items=header_items, rows=rows)
         return generator.get_html()
+
+    @staticmethod
+    def iso_to_days(iso_age:str) -> int:
+        """
+        Transform the ISO8601 age strings (e.g., P3Y2M) into the corresponding number of days to facilitate sorting.
+
+        Note that if age is not provided we want to sort it to the end of the list so we transform to a very high number of days.
+
+        :param iso_age: ISO8601 age string (e.g., P3Y2M)
+        :type iso_age: str
+        :returns: number of days
+        :rtype: int
+        """
+        if iso_age == Constants.NOT_PROVIDED:
+            days = sys.maxsize
+        elif not iso_age.startswith("P"):
+            raise ValueError(f"Invlaid age string: {age}")
+        else:
+            days = 0
+            age = iso_age[1:]
+            N = len(age)
+            y = age.find("Y")
+            if y != -1:
+                days = days + int(365.25*int(age[:y]))
+                age = age[y+1:]
+            m = age.find("M")
+            if m != -1:
+                days = days + int(30.436875*int(age[:m]))
+                age = age[m+1:]
+            d = age.find("D")
+            if d != -1:
+                days = days + int(age[:d])
+        return days
+
+    @staticmethod
+    def get_sorted_age2data_list(ages:Set[str]) -> List[Age2Day]:
+        """
+        Create a sorted list of Age2Day objects that we use to display the age in the HTML output.
+
+        :param ages: A set of ISO 8601 age strings
+        :type ages: Set[str]
+        :returns: A list of sorted Age2Day objects
+        :rtype:  List[Age2Day]
+        """
+        age2day_list = list(Age2Day(age, PhenopacketTable.iso_to_days(age)) for age in ages)
+        sorted_list = sorted(age2day_list, key=lambda x: x.days)
+        return sorted_list
+
+
 
