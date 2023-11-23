@@ -81,7 +81,7 @@ class SimpleColumnMapper(ColumnMapper):
             hpterm = value[0]
             dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
         return pd.DataFrame(dlist)
-    
+
 class SimpleColumnMapperGenerator:
     """Convenience tool to provide mappings automatically
 
@@ -108,8 +108,8 @@ class SimpleColumnMapperGenerator:
         self._mapped_columns = []
         self._unmapped_columns = []
         self._error_messages = []
-        
-    
+
+
     def try_mapping_columns(self) -> Dict[str, ColumnMapper]:
         """As a side effect, this class initializes three lists of mapped, unmapped, and error columns
 
@@ -133,11 +133,19 @@ class SimpleColumnMapperGenerator:
 
 
     def get_unmapped_columns(self):
+        """
+        :returns: A list of names of the columns that could not be mapped
+        :rtype: List[str]
+        """
         return self._unmapped_columns
-    
-    def get_mapped_columns(self):
+
+    def get_mapped_columns(self) -> List[str]:
+        """
+        :returns: A list of names of the columns that were mapped
+        :rtype: List[str]
+        """
         return self._mapped_columns
-    
+
     def to_html(self):
         """create an HTML table with names of mapped and unmapped columns
         """
@@ -156,4 +164,3 @@ class SimpleColumnMapperGenerator:
         table_items.append(two_item_table_row("Unmapped", unmapped_str))
         table_items.append('</table>\n') # close table content
         return "\n".join(table_items)
-        

@@ -159,7 +159,7 @@ class OptionColumnMapper(ColumnMapper):
         return pd.DataFrame(dlist)
 
     @staticmethod
-    def autoformat(df: pd.DataFrame, concept_recognizer, delimiter=",", omit_columns=None) -> str:
+    def autoformat(df: pd.DataFrame, concept_recognizer:HpoConceptRecognizer, delimiter:str=",", omit_columns:List[str]=None) -> str:
         """Autoformat code from the columns so that we can easily copy-paste and change it.
 
         This method intends to save time by preformatting code the create OptionMappers. The following commands
@@ -187,7 +187,7 @@ class OptionColumnMapper(ColumnMapper):
         if omit_columns is None:
             omit_columns = set()
         elif isinstance(omit_columns, list):
-            omit_columns = set(list)
+            omit_columns = set(omit_columns)
         elif not isinstance(omit_columns, set):
             raise ValueError(f"If passed, omit_columns argument must be set or list but was {type(omit_columns)}")
         # df.shape[1] gives us the number of columns

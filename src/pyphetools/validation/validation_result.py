@@ -1,14 +1,17 @@
-from enum import Enum
+from enum import IntEnum
+from typing import List, Optional
 
 from ..creation.hp_term import HpTerm
 
 
-class ErrorLevel(Enum):
-    WARNING = "warning"
-    ERROR = "error"
-    UNKNOWN = "unknown"
+class ErrorLevel(IntEnum):
+    WARNING = 1
+    ERROR = 2
+    UNKNOWN = 3
 
-class Category(Enum):
+
+
+class Category(IntEnum):
     """
     These are the five types of error that we can identify.
     - REDUNDANT: A term and an ancestor of the term are both used to annotate the same individual
@@ -50,6 +53,10 @@ class ValidationResult:
         self._term = term
 
     @property
+    def id(self):
+        return self._phenopacket_id
+
+    @property
     def error_level(self):
         if self._error_level == ErrorLevel.ERROR:
             return 'error'
@@ -61,27 +68,47 @@ class ValidationResult:
             raise ValueError(f"Did not recognize error level {self._error_level}")
 
     @property
-    def message(self):
+    def message(self) -> str:
+        """
+        :returns: description of the cause of ValidationResult
+        :rtype: str
+        """
         return self._message
 
     @property
-    def error_level(self):
-        return self._error_level
+    def error_level(self)-> str:
+        """
+        :returns: the name of the ErrorLevel this ValidationResult is about
+        :rtype: str
+        """
+        return self._error_level.name
 
     @property
-    def term(self):
+    def term(self) -> Optional[HpTerm]:
+        """
+        :returns: A string representation of the HPO term this ValidationResult is about, if applicable, or empty string
+        :rtype: Optional[str]
+        """
         return self._term
 
     @property
-    def category(self):
-        return self._category
+    def category(self) -> str:
+        """
+        :returns: the name of the Category this ValidationResult is about
+        :rtype: str
+        """
+        return self._category.name
 
-    def get_items_as_array(self):
-        if self.term is None:
-            term = ""
+    def get_items_as_array(self) -> List[str]:
+        """
+        :returns: A list of items (strings) intended for display
+        :rtype: List[str]
+        """
+        if self._term is None:
+            term = term
         else:
-            term = self.term.hpo_term_and_id
-        return [self._error_level.name, self.category.name, self.message, term]
+            term = term.to_string()
+        return [self.id, self.error_level, self.category, self.message, term]
 
     def __repr__(self):
         return f"{self._error_level}: {self._message}"
@@ -89,7 +116,7 @@ class ValidationResult:
 
     @staticmethod
     def get_header_fields():
-        return ["Level", "Category", "Message", "HPO Term"]
+        return ["ID", "Level", "Category", "Message", "HPO Term"]
 
 
 
@@ -115,22 +142,27 @@ class ValidationResultBuilder:
         return self
 
     def redundant(self):
+        self._error_level = ErrorLevel.WARNING
         self._category = Category.REDUNDANT
         return self
 
     def conflict(self):
+        self._error_level = ErrorLevel.ERROR
         self._category = Category.CONFLICT
         return self
 
     def insufficient_hpos(self):
+        self._error_level = ErrorLevel.ERROR
         self._category = Category.INSUFFICIENT_HPOS
         return self
 
     def incorrect_allele_count(self):
+        self._error_level = ErrorLevel.ERROR
         self._category = Category.INCORRECT_ALLELE_COUNT
         return self
 
     def incorrect_variant_count(self):
+        self._error_level = ErrorLevel.ERROR
         self._category = Category.INCORRECT_VARIANT_COUNT
         return self
 
@@ -139,11 +171,13 @@ class ValidationResultBuilder:
         return self
 
     def malformed_hpo_id(self, hpo_id):
+        self._error_level = ErrorLevel.ERROR
         self._category = Category.MALFORMED_ID
         self._message = f"Invalid HPO id {hpo_id}"
         return self
 
     def malformed_hpo_label(self, hpo_label):
+        self._error_level = ErrorLevel.ERROR
         self._category = Category.MALFORMED_LABEL
         self._message = f"Invalid HPO id {hpo_label}"
         return self
@@ -152,9 +186,9 @@ class ValidationResultBuilder:
         self._term = term
         return self
 
-
     def build(self) -> ValidationResult:
         return ValidationResult(phenopacket_id=self._phenopacket_id, message=self._message, errorlevel=self._error_level, category=self._category, term=self._term)
+
 
 
 

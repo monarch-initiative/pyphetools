@@ -81,6 +81,7 @@ class OntologyQC:
                 error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_message(
                     message).set_term(dup).build()
                 self._errors.append(error)
+                hpo_terms.remove(dup)
         # The following code checks for other kinds of redundancies
         redundant_term_d = {}
         for term in all_terms:
