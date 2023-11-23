@@ -99,15 +99,21 @@ class ValidationResult:
         """
         return self._category.name
 
+    def is_error(self) -> bool:
+        return self._error_level == ErrorLevel.ERROR
+
+    def is_warning(self) -> bool:
+        return self._error_level == ErrorLevel.WARNING
+
     def get_items_as_array(self) -> List[str]:
         """
         :returns: A list of items (strings) intended for display
         :rtype: List[str]
         """
         if self._term is None:
-            term = term
+            term = ""
         else:
-            term = term.to_string()
+            term = self._term.to_string()
         return [self.id, self.error_level, self.category, self.message, term]
 
     def __repr__(self):
