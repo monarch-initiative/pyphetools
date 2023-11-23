@@ -33,3 +33,10 @@ class TestValidationResult(unittest.TestCase):
         self.assertIsNotNone(term)
         self.assertEqual("HP:0000123", term.id)
         self.assertEqual("Fake label", term.label)
+
+    def test_not_measured(self):
+        vresult = ValidationResultBuilder(
+            phenopacket_id="id2"
+        ).not_measured(HpTerm(hpo_id="HP:0012345", label="Something")).build()
+        self.assertEqual("INFORMATION", vresult.error_level)
+        self.assertEqual("NOT_MEASURED", vresult.category)

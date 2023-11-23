@@ -7,7 +7,8 @@ from ..creation.hp_term import HpTerm
 class ErrorLevel(IntEnum):
     WARNING = 1
     ERROR = 2
-    UNKNOWN = 3
+    INFORMATION = 3
+    UNKNOWN = 4
 
 
 
@@ -27,7 +28,8 @@ class Category(IntEnum):
     INCORRECT_VARIANT_COUNT = 5
     MALFORMED_ID = 6
     MALFORMED_LABEL = 7
-    UNKNOWN = 8
+    NOT_MEASURED = 8
+    UNKNOWN = 9
 
 
 class ValidationResult:
@@ -155,6 +157,12 @@ class ValidationResultBuilder:
     def conflict(self):
         self._error_level = ErrorLevel.ERROR
         self._category = Category.CONFLICT
+        return self
+
+    def not_measured(self, term:HpTerm):
+        self._error_level = ErrorLevel.INFORMATION
+        self._category = Category.NOT_MEASURED
+        self._term = term
         return self
 
     def insufficient_hpos(self):

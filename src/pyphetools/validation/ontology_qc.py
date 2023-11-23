@@ -119,7 +119,10 @@ class OntologyQC:
         """
         by_age_dictionary =  defaultdict(list)
         for term in self._individual.hpo_terms:
-            by_age_dictionary[term.onset].append(term)
+            if not term.measured:
+                self._errors.append(ValidationResultBuilder(self._phenopacket_id).not_measured(term=term))
+            else:
+                by_age_dictionary[term.onset].append(term)
         self._check_terms(self._individual.hpo_terms)
         clean_terms = []
         self._errors.clear() # reset

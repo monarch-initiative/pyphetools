@@ -110,8 +110,13 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                 if startpos < 0:
                     continue
                 endpos = startpos + len(lc_original) - 1
-                hp_term = self.get_term_from_label(hpo_label)
-                hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
+                if isinstance(hpo_label, str):
+                    hp_term = self.get_term_from_label(hpo_label)
+                    hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
+                elif isinstance(hpo_label, list):
+                    for h in hpo_label:
+                        hp_term = self.get_term_from_label(h)
+                        hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
             for lower_case_hp_label, hpo_tid in self._label_to_id.items():
                 key = lower_case_hp_label.lower()
                 startpos = chunk.find(key)
