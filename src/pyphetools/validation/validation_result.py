@@ -2,6 +2,7 @@ from enum import IntEnum
 from typing import List, Optional
 
 from ..creation.hp_term import HpTerm
+from ..creation.allelic_requirement import AllelicRequirement
 
 
 class ErrorLevel(IntEnum):
@@ -164,12 +165,26 @@ class ValidationResultBuilder:
         self._category = Category.INSUFFICIENT_HPOS
         return self
 
-    def incorrect_allele_count(self):
+    def incorrect_allele_count(self, allelic_requirement:AllelicRequirement, observed_alleles:int):
+        if allelic_requirement == AllelicRequirement.MONO_ALLELIC:
+            self._message = f"Expected one allele for monoallelic but got {observed_alleles} alleles"
+        elif allelic_requirement == AllelicRequirement.BI_ALLELIC:
+            self._message  = f"Expected two alleles for biallelic but got {observed_alleles} alleles"
+        else:
+            # should never happen
+            raise ValueError("attempt to create incorrect_allele_count Error without defined allelic requirement")
         self._error_level = ErrorLevel.ERROR
         self._category = Category.INCORRECT_ALLELE_COUNT
         return self
 
-    def incorrect_variant_count(self):
+    def incorrect_variant_count(self,allelic_requirement:AllelicRequirement, n_var:int):
+        if allelic_requirement == AllelicRequirement.MONO_ALLELIC:
+            self._message = f"Expected one variant for monoallelic but got {n_var} variants"
+        elif allelic_requirement == AllelicRequirement.BI_ALLELIC:
+            self._message  = f"Expected one or two variants for biallelic but got {n_var} variants"
+        else:
+            # should never happen
+            raise ValueError("attempt to create incorrect_variant_count Error without defined allelic requirement")
         self._error_level = ErrorLevel.ERROR
         self._category = Category.INCORRECT_VARIANT_COUNT
         return self

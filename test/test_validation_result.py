@@ -1,6 +1,6 @@
 import unittest
-from src.pyphetools.creation import HpTerm
-from src.pyphetools.validation import ValidationResult, ValidationResultBuilder
+from src.pyphetools.creation import HpTerm, AllelicRequirement
+from src.pyphetools.validation import ValidationResultBuilder
 
 
 
@@ -40,3 +40,15 @@ class TestValidationResult(unittest.TestCase):
         ).not_measured(HpTerm(hpo_id="HP:0012345", label="Something")).build()
         self.assertEqual("INFORMATION", vresult.error_level)
         self.assertEqual("NOT_MEASURED", vresult.category)
+
+    def test_allele_count_mono_allelic(self):
+        vresult = ValidationResultBuilder("id3").incorrect_allele_count(allelic_requirement=AllelicRequirement.MONO_ALLELIC, observed_alleles=2).build()
+        self.assertEqual("ERROR", vresult.error_level)
+        self.assertEqual("INCORRECT_ALLELE_COUNT", vresult.category)
+        self.assertEqual("Expected one allele for monoallelic but got 2 alleles", vresult.message)
+
+    def test_allele_count_bi_allelic(self):
+        vresult = ValidationResultBuilder("id3").incorrect_allele_count(allelic_requirement=AllelicRequirement.BI_ALLELIC, observed_alleles=1).build()
+        self.assertEqual("ERROR", vresult.error_level)
+        self.assertEqual("INCORRECT_ALLELE_COUNT", vresult.category)
+        self.assertEqual("Expected two alleles for biallelic but got 1 alleles", vresult.message)
