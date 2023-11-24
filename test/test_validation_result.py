@@ -11,7 +11,7 @@ class TestValidationResult(unittest.TestCase):
         term = HpTerm(hpo_id="HP:0000123", label="Fake label")
         cls._validation_result = ValidationResultBuilder(
             phenopacket_id="id1"
-        ).redundant().set_term(term=term).build()
+        ).duplicate_term(redundant_term=term).build()
 
     def test_not_none(self):
         self.assertIsNotNone(self._validation_result)

@@ -5,8 +5,8 @@ from ..creation.hp_term import HpTerm
 
 
 class ErrorLevel(IntEnum):
-    WARNING = 1
-    ERROR = 2
+    ERROR = 1
+    WARNING = 2
     INFORMATION = 3
     UNKNOWN = 4
 
@@ -57,17 +57,6 @@ class ValidationResult:
     @property
     def id(self):
         return self._phenopacket_id
-
-    @property
-    def error_level(self):
-        if self._error_level == ErrorLevel.ERROR:
-            return 'error'
-        elif self._error_level == ErrorLevel.WARNING:
-            return 'warning'
-        elif self._error_level == ErrorLevel.UNKNOWN:
-            return 'unknown'
-        else:
-            raise ValueError(f"Did not recognize error level {self._error_level}")
 
     @property
     def message(self) -> str:
@@ -141,28 +130,33 @@ class ValidationResultBuilder:
         self._message = ""
         self._term = None
 
-    def warning(self):
-        self._error_level = ErrorLevel.WARNING
-        return self
-
-    def error(self):
-        self._error_level = ErrorLevel.ERROR
-        return self
-
-    def redundant(self):
+    def duplicate_term(self, redundant_term:HpTerm):
         self._error_level = ErrorLevel.WARNING
         self._category = Category.REDUNDANT
+        self._message = f"<b>{redundant_term.label}</b> is listed multiple times"
+        self._term = redundant_term
         return self
 
-    def conflict(self):
+    def redundant_term(self, ancestor_term:HpTerm, descendent_term:HpTerm):
+        self._error_level = ErrorLevel.WARNING
+        self._category = Category.REDUNDANT
+        self._message = f"<b>{ancestor_term.label}</b> is redundant because of <b>{descendent_term.label}</b>"
+        self._term = ancestor_term
+        return self
+
+    def conflict(self, term:HpTerm, conflicting_term:HpTerm):
+        message = f"{term.to_string()} conflicts with the excluded term {conflicting_term.to_string()} "
         self._error_level = ErrorLevel.ERROR
         self._category = Category.CONFLICT
+        self._message = message
+        self._term = conflicting_term
         return self
 
     def not_measured(self, term:HpTerm):
         self._error_level = ErrorLevel.INFORMATION
         self._category = Category.NOT_MEASURED
         self._term = term
+        self._message = f"{term.hpo_term_and_id} was listed as not measured and will be omitted"
         return self
 
     def insufficient_hpos(self):
@@ -184,16 +178,17 @@ class ValidationResultBuilder:
         self._message = msg
         return self
 
-    def malformed_hpo_id(self, hpo_id):
+    def malformed_hpo_id(self, malformed_term:HpTerm):
         self._error_level = ErrorLevel.ERROR
         self._category = Category.MALFORMED_ID
-        self._message = f"Invalid HPO id {hpo_id}"
+        self._message = f"Malformed term {malformed_term.label} with invalid HPO id {malformed_term.id}"
         return self
 
-    def malformed_hpo_label(self, hpo_label):
+    def malformed_hpo_label(self, hpo_label, valid_term:HpTerm):
         self._error_level = ErrorLevel.ERROR
         self._category = Category.MALFORMED_LABEL
-        self._message = f"Invalid HPO id {hpo_label}"
+        self._message = f"Invalid label '{hpo_label}' found for {valid_term.to_string()}"
+        self._term = valid_term
         return self
 
     def set_term(self, term:HpTerm):

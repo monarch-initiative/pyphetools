@@ -2,14 +2,26 @@ from typing import List
 import hpotk
 from ..validation.validation_result import ValidationResult
 from ..validation.validated_individual import ValidatedIndividual
+from ..validation.cohort_validator import CohortValidator
+
 from .html_table_generator import HtmlTableGenerator
 
 class QcVisualizer:
-    def __init__(self, ontology:hpotk.MinimalOntology) -> None:
+    def __init__(self, ontology:hpotk.MinimalOntology, cohort_validator:CohortValidator) -> None:
         self._ontology = ontology
+        if not isinstance(cohort_validator, CohortValidator):
+            raise ValueError(f"cohort_validator argument must be CohortValidator object but was {type(cohort_validator)}")
+        self._cohort_validator = cohort_validator
 
 
-    def to_html(self, validated_individual_list:List[ValidatedIndividual]) -> str:
+    def to_html(self) -> str:
+        validated_individual_list = self._cohort_validator.get_validated_individual_list()
+        if not isinstance(validated_individual_list, list):
+            raise ValueError(f"validated_individual_list argument must be a list but was {type(validated_individual_list)}")
+        if len(validated_individual_list) == 0:
+            raise ValueError(f"validated_individual_list argument was empty")
+        if not isinstance(validated_individual_list[0], ValidatedIndividual):
+            raise ValueError(f"validated_individual_list argument must be a list of ValidatedIndividual objects but was {type(validated_individual_list[0])}")
         html_lines = []
         n_individuals = len(validated_individual_list)
         n_individuals_with_errors = sum([1 for i in validated_individual_list if i.has_error()])

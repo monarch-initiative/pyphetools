@@ -11,6 +11,7 @@ from ..creation.allelic_requirement import AllelicRequirement
 from ..creation.individual import Individual
 
 
+
 class ContentValidator(PhenopacketValidator):
     """
     Validate a list of phenopackets as to whether they have a minunum number of phenotypic features and alleles
@@ -150,9 +151,6 @@ class ContentValidator(PhenopacketValidator):
                 val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_allele_count().set_message(msg=msg).build()
                 validation_results.append(val_result)
         return validation_results
-
-
-
 
 
 

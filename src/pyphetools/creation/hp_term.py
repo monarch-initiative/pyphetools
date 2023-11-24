@@ -1,6 +1,7 @@
 import pandas as pd
-import phenopackets 
+import phenopackets
 from .constants import Constants
+import hpotk
 
 class HpTerm:
     """
@@ -42,10 +43,10 @@ class HpTerm:
             return self._id == other._id and self._label == other._label and self._measured == other._measured and self._onset == other._onset and self._resolution == other._resolution
         else:
             return NotImplemented
-        
+
     def __hash__(self):
         return hash((self._id, self._label, self._observed, self._measured, self._onset, self._resolution))
-        
+
     @property
     def id(self):
         """
@@ -53,7 +54,7 @@ class HpTerm:
         :rtype: str
         """
         return self._id
-    
+
     @property
     def label(self):
         """
@@ -61,11 +62,11 @@ class HpTerm:
         :rtype: str
         """
         return self._label
-    
+
     @property
     def observed(self):
         return self._observed
-    
+
     @property
     def measured(self):
         """
@@ -73,7 +74,7 @@ class HpTerm:
         :rtype: bool
         """
         return self._measured
-    
+
     @property
     def onset(self):
         """
@@ -84,7 +85,7 @@ class HpTerm:
 
     def set_onset(self, onset):
         self._onset = onset
-    
+
     @property
     def resolution(self):
         """
@@ -92,7 +93,7 @@ class HpTerm:
         :rtype: str, optional
         """
         return self._resolution
-    
+
     @property
     def display_value(self):
         """
@@ -105,7 +106,7 @@ class HpTerm:
             return "excluded"
         else:
             return "observed"
-    
+
     @property
     def hpo_term_and_id(self):
         """
@@ -113,7 +114,7 @@ class HpTerm:
         :rtype: str
         """
         return f"{self._label} ({self._id})"
-    
+
     def __str__(self) -> str:
         if not self._measured:
             return f"not measured: {self._label} ({self._id})"
@@ -121,7 +122,7 @@ class HpTerm:
             return f"excluded: {self._label} ({self._id})"
         else:
             return f"{self._label} ({self._id})"
-    
+
     def to_string(self):
         return self.__str__()
 
@@ -130,7 +131,7 @@ class HpTerm:
         Sets the current term to excluded (i.e., the abnormality was sought but explicitly ruled out clinically)
         """
         self._observed = False
-        
+
     def to_phenotypic_feature(self):
         """
         :returns: A GA4GH PhenotypcFeature corresponding to this HpTerm
@@ -163,3 +164,17 @@ class HpTerm:
             d = { "id": hp.id, "label": hp.label, "observed":hp.observed, "measured": hp.measured }
             items.append(d)
         return pd.DataFrame(items)
+
+    @staticmethod
+    def from_hpo_tk_term(hpotk_term:hpotk.Term):
+        """Create a pyphetools HpTerm object from an hpo-toolkit Term object
+
+        :param hpotk_term: A term from the HPO toolkit
+        :type hpotk_term: hpotk.Term
+        :returns: The corresponding HpTerm object
+        :rtype: HpTerm
+        """
+        hpo_id = hpotk_term.identifier.value
+        hpo_label = hpotk_term.name
+        return HpTerm(hpo_id=hpo_id, label=hpo_label)
+
