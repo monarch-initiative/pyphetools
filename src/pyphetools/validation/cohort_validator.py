@@ -13,15 +13,33 @@ class CohortValidator:
             vindi = ValidatedIndividual(individual=indi)
             vindi.validate(ontology=ontology, min_hpo=min_hpo, allelic_requirement=allelic_requirement)
             self._validated_individual_list.append(vindi)
+        if len(cohort) != len(self._validated_individual_list):
+            # should never happen
+            raise ValueError(f"Invalid validation: size of cohort ={len(cohort)} but size of validated individual = {len(self._validated_individual_list)}")
+        self._error_free_individuals = [vi.get_individual_with_clean_terms() for vi in self._validated_individual_list if not vi.has_unfixed_error()]
 
     def get_validated_individual_list(self):
+        """
+        :returns: list of all individuals with QC Validation results
+        :rtype: List[ValidatedIndividual]
+        """
         return self._validated_individual_list
 
 
     def get_error_free_individual_list(self) -> List[Individual]:
         """
-        :returns: List of individuals from which the erroneous and reduncant termas have been removed
+        Returns a list of individuals from which the erroneous and redundant termas have been removed and from which individuals with errors (e.g., not enough HPO terms) have been removed.
+        :returns: List of individuals with no errors
         :rtype: List[Individual]
         """
-        validated_individuals = self.get_validated_individual_list()
-        return [vi.get_individual_with_clean_terms() for vi in validated_individuals]
+        return self._error_free_individuals
+
+
+    def n_removed_individuals(self):
+        return len(self._validated_individual_list) - len(self._error_free_individuals)
+
+    def n_individuals(self):
+        return len(self._validated_individual_list)
+
+    def n_error_free_individuals(self):
+        return len(self._error_free_individuals)

@@ -1,10 +1,9 @@
 from collections import defaultdict
 from typing import Dict, List, Set
-from functools import cmp_to_key
 import sys
 
 from ..creation.constants import Constants
-from ..creation.hp_term import HpTerm
+from ..creation import Individual, HpTerm, MetaData
 from .simple_patient import SimplePatient
 from .html_table_generator import HtmlTableGenerator
 
@@ -41,18 +40,20 @@ class PhenopacketTable:
         table = PhenopacketTable(phenopacket_list=phenopackets)
         display(HTML(table.to_html()))
     """
-    def __init__(self, phenopacket_list) -> None:
+    def __init__(self, individual_list:List[Individual], metadata:MetaData) -> None:
         """
         :param phenopacket_list: List of GA4GH phenopackets to be displayed
         """
-        if not isinstance(phenopacket_list, list):
-            raise ValueError(f"Expecting a list but got {type(phenopacket_list)}")
-        if len(phenopacket_list) == 0:
-            raise ValueError("phenopacket_list was empty")
-        ppkt = phenopacket_list[0]
-        if str(type(ppkt)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":
-            raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ppkt)}")
-        self._phenopacket_list = phenopacket_list
+        if not isinstance(individual_list, list):
+            raise ValueError(f"Expecting a list but got {type(individual_list)}")
+        if len(individual_list) == 0:
+            raise ValueError("individual_list was empty")
+        indi = individual_list[0]
+        if not isinstance(indi, Individual):
+            raise ValueError(f"individual_list argument must be list of Individual objects but was {type(indi)}")
+        if not isinstance(metadata, MetaData):
+            raise ValueError(f"metadata argument must be pyphetools MetaData object but was {type(metadata)}")
+        self._phenopacket_list =  [i.to_ga4gh_phenopacket(metadata=metadata.to_ga4gh()) for i in individual_list]
 
     def _phenopacket_to_table_row(self, spat) -> List[str]:
         """

@@ -23,47 +23,28 @@ In some datasets we have seen, a patient is annotated with a specific term in an
 
 
 ## QC with pyphetools.
-We recommned checking all generated phenopackets with the following steps.
+We recommned checking all generated phenopackets with the following steps. First obtain the list of [Individual](../api/creation/individual.md){:target="_blank"} objects.
+Pass this list together with a reference to the HPO to a [CohortValidator](../api/validation/content_validator.md){:target="_blank"} object.
+To display the results of validation, use a [QcVisualizer](../api/visualization/qc_visualizer.md){:target="_blank"}.
 
-### Input
-
-After creating phenopackets with pyphetools, we will have access to a collection of phenopacket objects in the Jupyter notebook environment. They can be generated as follows.
-
-```python title="Generating GA4GH phenopackets from a pyphetools individual list"
-ppacket_list = [i.to_ga4gh_phenopacket(metadata=metadata.to_ga4gh()) for i in individuals]
-```
-
-Alternatively, to ingest a set of phenopackets from files, use the code shown in the documentation
-for the [content validator](../api/validation/content_validator.md).
-
-### ContentValidator
-
-Create a [ContentValidator](../api/validation/content_validator.md) for the phenopackets. This object
-checks that the generated phenopackets have a minimum number of HPO terms, alleles, and variants.
+The QcVisualizer can show either a list of all issues with the *to_html* method or a summary of issues with the *to_summary_html* method.
 
 ```python title="Generating GA4GH phenopackets from a pyphetools individual list"
-cohort = [individual1, individual2, individual3]
-validator = ContentValidator(cohort=cohort, ontology=hpo_ontology, min_hpo=1, allelic_requirement=AllelicRequirement.MONO_ALLELIC)
-validated_individuals = cvalidator.get_validated_individual_list()
-qc = QcVisualizer(ontology=hpo_ontology)
-display(HTML(qc.to_html(validated_individuals)))
+individuals = encoder.get_individuals()
+cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1)
+qc = QcVisualizer(ontology=hpo_ontology, cohort_validator=cvalidator)
+display(HTML(qc.to_html()))
+# alternatively: display(HTML(qc.to_summary_html()))
 ```
 
-This will either print a message that no errors were found or show a table with a summary of the errors. If errors were found
-with incorrect HPO ids or labels, they need to be corrected in the previous part of the script. If redundancies or ontology conflicts are found, these can be corrected automatically by the following command
-
-
-```python title="Getting an individual list with corrected ontology errors (clean terms)"
-cl_individuals = [vi.get_individual_with_clean_terms() for vi in validated_individuals]
-```
+There are some kinds of error that need to be corrected in the notebook, such as malformed HPO ids or labels. Others can be corrected automatically, such as
+redudant terms. Once you are satisfied, use the following method to get a list of individuals with valid phenopackets that will pass testing by the
+phenopacket-tools library
 
 Them the above analysis can be repeated to check the results.
 
-```python title="Note the 'cohort' argument is pointing to the corrected individual objects"
-cvalidator = CohortValidator(cohort=cl_individuals, ontology=hpo_ontology, min_allele=1, min_hpo=1, min_var=1)
-qc = QcVisualizer(ontology=hpo_ontology)
-display(HTML(qc.to_html(cvalidator.get_validated_individual_list())))
+```python title="Getting individual objects with no syntax or ontology errors"
+individuals = cvalidator.get_error_free_individual_list()
 ```
 
-
-If this analysis shows no error, then the script can proceed to [visualize](visualization.md) and output the phenopackets.
+If desired, it is possible to double-check that these individuals have no errors by doing another round of checks with the CohortValidator.
