@@ -128,8 +128,7 @@ class ContentValidator(PhenopacketValidator):
         """
         validation_results = []
         if n_hpo < self._min_hpo:
-            msg = f"Minimum HPO terms required {self._min_hpo} but only {n_hpo} found"
-            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
+            validation_results.append(ValidationResultBuilder(phenopacket_id=pp_id).insufficient_hpos(min_hpo=self._min_hpo, n_hpo=n_hpo).build())
         if self._allelic_requirement is None:
             return validation_results
         if self._allelic_requirement == AllelicRequirement.MONO_ALLELIC:

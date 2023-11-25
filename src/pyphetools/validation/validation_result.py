@@ -160,7 +160,8 @@ class ValidationResultBuilder:
         self._message = f"{term.hpo_term_and_id} was listed as not measured and will be omitted"
         return self
 
-    def insufficient_hpos(self):
+    def insufficient_hpos(self, min_hpo:int, n_hpo:int):
+        self._message = f"Minimum HPO terms required {min_hpo} but only {n_hpo} found"
         self._error_level = ErrorLevel.ERROR
         self._category = Category.INSUFFICIENT_HPOS
         return self

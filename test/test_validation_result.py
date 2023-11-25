@@ -52,3 +52,10 @@ class TestValidationResult(unittest.TestCase):
         self.assertEqual("ERROR", vresult.error_level)
         self.assertEqual("INCORRECT_ALLELE_COUNT", vresult.category)
         self.assertEqual("Expected two alleles for biallelic but got 1 alleles", vresult.message)
+
+    def test_insufficient_hpo(self):
+        vresult = ValidationResultBuilder("id7").insufficient_hpos(min_hpo=2, n_hpo=1).build()
+        self.assertEqual("ERROR", vresult.error_level)
+        self.assertEqual("INSUFFICIENT_HPOS", vresult.category)
+        self.assertEqual("Minimum HPO terms required 2 but only 1 found", vresult.message)
+
