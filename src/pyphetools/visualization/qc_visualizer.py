@@ -86,11 +86,13 @@ class QcVisualizer:
         qc_element_list = QcElement.get_qc_element_list()
         error_count = defaultdict(int)
         total_validation_issues = 0
+        distinct_item_d = defaultdict(set)
         for vi in validated_individual_list:
             verrors = vi.get_validation_errors()
             total_validation_issues += vi.n_errors()
             for ve in verrors:
                 error_count[ve.category] += 1
+                distinct_item_d[ve.category].add(ve.term)
         html_lines = []
         n_individuals = len(validated_individual_list)
         n_individuals_with_errors = sum([1 for i in validated_individual_list if i.has_error()])
@@ -113,10 +115,44 @@ class QcVisualizer:
             n_removed = self._cohort_validator.n_removed_individuals()
             n_error_free_i = self._cohort_validator.n_error_free_individuals()
             if n_removed == 0:
-                para = f"<p>A total of {total_validation_issues} were fixed and no individual was removed from the cohort.</p>"
+                para = f"<p>A total of {total_validation_issues} issues were fixed and no individual was removed from the cohort.</p>"
+                html_lines.append(para)
             else:
                 para = f"<p>A total of {total_validation_issues} issues were fixed and {n_removed} individuals were removed from the cohort because of irreparable errors. The cohort validator will return {n_error_free_i} individual objects without errors.</p>"
-            html_lines.append(para)
+                html_lines.append(para)
+                if "MALFORMED_LABEL" in distinct_item_d:
+                    malformed_label_set = distinct_item_d.get("MALFORMED_LABEL")
+                    if len(malformed_label_set) > 0:
+                        malformed = "; ".join([t.hpo_term_and_id for t in malformed_label_set])
+                        para = f"<p>The following malformed labels were found: {malformed}. These need to be corrected before continuing.</p>"
+                        html_lines.append(para)
+                if "REDUNDANT" in distinct_item_d:
+                    redundant_label_set = distinct_item_d.get("REDUNDANT")
+                    redundant = "; ".join([t.hpo_term_and_id for t in redundant_label_set])
+                    para = f"<p>The following redundant terms were found: {redundant}. Redundant terms will be removed, keeping only one instance of the most specific term.</p>"
+                    html_lines.append(para)
+                if "CONFLICT" in distinct_item_d:
+                    conflict_label_set = distinct_item_d.get("CONFLICT")
+                    conflict = "; ".join([t.hpo_term_and_id for t in conflict_label_set])
+                    para = f"<p>The following excluded terms were found to have a conflict with an observed descendent term: {conflict}. The ancestor terms will be removed.</p>"
+                    html_lines.append(para)
+                html_lines.append(self._get_unfixable_error_table())
+        return "\n".join(html_lines)
+
+
+    def _get_unfixable_error_table(self):
+        v_individuals_with_unfixable = self._cohort_validator.get_validated_individuals_with_unfixable_errors()
+        html_lines = []
+        html_lines.append("<h2>Individuals with unfixable errors</h2>")
+        errors = []
+        for vi in v_individuals_with_unfixable:
+            if vi.has_error():
+                errors.extend(vi.get_validation_errors())
+        errors = sorted(errors, key=lambda x : (x._error_level, x._category, x._message))
+        header_fields = ValidationResult.get_header_fields()
+        rows = [row.get_items_as_array() for row in errors]
+        generator = HtmlTableGenerator(header_items=header_fields, rows=rows, caption="Error analysis")
+        html_lines.append(generator.get_html())
         return "\n".join(html_lines)
 
 

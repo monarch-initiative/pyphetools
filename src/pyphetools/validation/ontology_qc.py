@@ -81,7 +81,8 @@ class OntologyQC:
             for dup in duplicates:
                 error = ValidationResultBuilder(self._phenopacket_id).duplicate_term(redundant_term=dup).build()
                 self._errors.append(error)
-                hpo_terms.remove(dup)
+            # The following removes duplicates under the assumption that all components of the HpTerm are equal
+            hpo_terms = set(hpo_terms)
         # The following code checks for other kinds of redundancies
         redundant_term_d = {}
         for term in all_terms:

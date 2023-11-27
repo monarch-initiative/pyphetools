@@ -1,7 +1,7 @@
 import unittest
 import os
 import pandas as pd
-from src.pyphetools.creation import HpoParser, CaseEncoder, MetaData
+from src.pyphetools.creation import HpoParser, CaseEncoder, MetaData, Citation
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 import phenopackets as PPkt
 
@@ -19,9 +19,10 @@ class TestCaseParse(unittest.TestCase):
         metadata.default_versions_with_hpo(version="2022-05-05")
         age_of_last_examination = "P4Y11M"
         sex = "female"
+        citation = Citation(pmid="PMID:123", title="example title")
         cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr,
                                 individual_id="A",
-                                pmid="PMID:123",
+                                citation=citation,
                                 age_at_last_exam=age_of_last_examination,
                                 sex=sex,
                                 metadata=metadata.to_ga4gh())
@@ -70,7 +71,8 @@ class TestCaseParse(unittest.TestCase):
         false_positive.add("seizure")
         metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
         metadata.default_versions_with_hpo(version="2022-05-05")
-        encoder = CaseEncoder(hpo_cr=self._hpo_cr, individual_id="id", metadata=metadata.to_ga4gh(), pmid="PMID:1")
+        citation = Citation(pmid="PMID:1", title="excluded")
+        encoder = CaseEncoder(hpo_cr=self._hpo_cr, individual_id="id", metadata=metadata.to_ga4gh(), citation=citation)
         df = encoder.add_vignette(vignette=vignette, excluded_terms=excluded, false_positive=false_positive)
         self.assertEqual(0, len(df))
 

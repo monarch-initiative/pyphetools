@@ -17,6 +17,7 @@ class CohortValidator:
             # should never happen
             raise ValueError(f"Invalid validation: size of cohort ={len(cohort)} but size of validated individual = {len(self._validated_individual_list)}")
         self._error_free_individuals = [vi.get_individual_with_clean_terms() for vi in self._validated_individual_list if not vi.has_unfixed_error()]
+        self._v_individuals_with_unfixable_errors = [vi for vi in self._validated_individual_list if vi.has_unfixed_error()]
 
     def get_validated_individual_list(self):
         """
@@ -33,6 +34,14 @@ class CohortValidator:
         :rtype: List[Individual]
         """
         return self._error_free_individuals
+
+    def get_validated_individuals_with_unfixable_errors(self):
+        """
+        Returns a list of individuals with errors that cannot be automatically fixed.
+        :returns: List of individuals with unfixable errors
+        :rtype: List[ValidatedIndivudal]
+        """
+        return self._v_individuals_with_unfixable_errors
 
 
     def n_removed_individuals(self):

@@ -3,6 +3,7 @@ import re
 import os
 from typing import List, Union
 from google.protobuf.json_format import MessageToJson
+from .citation import Citation
 from .constants import Constants
 from .disease import Disease
 from .hp_term import HpTerm
@@ -31,8 +32,7 @@ class Individual:
     def __init__(self,
                 individual_id:str,
                 hpo_terms:List[HpTerm]=None,
-                pmid:str=None,
-                title:str=None,
+                citation:Citation=None,
                 sex:str=Constants.NOT_PROVIDED,
                 age:str=Constants.NOT_PROVIDED,
                 interpretation_list:List[PPKt.VariantInterpretation]=None,
@@ -59,8 +59,7 @@ class Individual:
         else:
             self._interpretation_list = interpretation_list
         self._disease = disease
-        self._pmid = pmid
-        self._title = title
+        self._citation = citation
 
     @property
     def id(self):
@@ -155,14 +154,14 @@ class Individual:
 
     @property
     def pmid(self):
-        return self._pmid
+        return self._citation.pmid
 
-    def set_pmid(self, pmid:str):
+    def set_citation(self, citation:Citation):
         """
-        :param pmid: The PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
-        :type pmid: str
+        :param citation: Object with the title and PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
+        :type citation: Citation
         """
-        self._pmid = pmid
+        self._citation = citation
 
     def get_phenopacket_id(self, phenopacket_id=None) -> str:
         """
@@ -171,8 +170,8 @@ class Individual:
         """
         if phenopacket_id is None:
             indi_id = self._individual_id.replace(" ", "_")
-            if self._pmid is not None:
-                pmid = self._pmid.replace(":", "_")
+            if self._citation is not None:
+                pmid = self._citation.pmid.replace(":", "_")
                 ppkt_id = f"{pmid}_{indi_id}"
             else:
                 ppkt_id = indi_id
@@ -238,14 +237,14 @@ class Individual:
                 genomic_interpretation.variant_interpretation.CopyFrom(var)
                 interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
             php.interpretations.append(interpretation)
-        if self._pmid is not None and self._title is not None:
+        if self._citation is not None:
             # overrides the "general" setting of the external reference for the entire cohort
             metadata.external_references.clear()
             extref = PPKt.ExternalReference()
-            extref.id = self._pmid
-            pm = self._pmid.replace("PMID:", "")
+            extref.id = self._citation.pmid
+            pm = self._citation.pmid.replace("PMID:", "")
             extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
-            extref.description = self._title
+            extref.description = self._citation.title
             metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php

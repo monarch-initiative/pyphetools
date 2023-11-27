@@ -136,7 +136,7 @@ class ContentValidator(PhenopacketValidator):
                 val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_variant_count(self._allelic_requirement, n_var).build()
                 validation_results.append(val_result)
             if n_alleles != 1:
-                val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_allele_count(self._allelic_requirement, n_alleles).set_message(msg=msg).build()
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_allele_count(self._allelic_requirement, n_alleles).build()
                 validation_results.append(val_result)
         elif self._allelic_requirement == AllelicRequirement.BI_ALLELIC:
             if n_var < 1 or n_var > 2:

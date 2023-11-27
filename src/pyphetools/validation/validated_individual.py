@@ -36,6 +36,7 @@ class ValidatedIndividual:
         self._unfixed_errors = validation_results
         qc = OntologyQC(individual=self._individual, ontology=ontology)
         qc_validation_results = qc.get_error_list()
+        qc_validation_results = [e  for e in qc_validation_results if e.is_error()]
         self._unfixed_errors.extend(qc_validation_results)
 
     def get_individual_with_clean_terms(self) -> Individual:

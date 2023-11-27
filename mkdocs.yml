@@ -51,6 +51,7 @@ nav:
       - "overview": "api/creation.md"
       - "AgeColumnMapper": "api/creation/age_column_mapper.md"
       - "CaseEncoder": "api/creation/case_encoder.md"
+      - Citation:  "api/creation/citation.md"
       - "CohortEncoder": "api/creation/cohort_encoder.md"
       - "ColumnMapper": "api/creation/column_mapper.md"
       - "ConstantColumnMapper": "api/creation/constant_column_mapper.md"

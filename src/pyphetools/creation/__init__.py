@@ -2,6 +2,7 @@ from .age_column_mapper import AgeColumnMapper
 from .age_isoformater import AgeIsoFormater
 from .allelic_requirement import AllelicRequirement
 from .case_encoder import CaseEncoder
+from .citation import Citation
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
 from .constant_column_mapper import ConstantColumnMapper
@@ -29,7 +30,8 @@ __all__ = [
     "AgeColumnMapper",
     "AgeIsoFormater",
     "AllelicRequirement",
-    "CaseEncoder" ,
+    "CaseEncoder",
+    "Citation",
     "CohortEncoder",
     "ColumnMapper",
     "ConstantColumnMapper",

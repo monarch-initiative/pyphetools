@@ -73,62 +73,6 @@ class OptionColumnMapper(ColumnMapper):
                     results.append(v)
         return results
 
-    def map_cellOLD(self, cell_contents) -> List[HpTerm]:
-        """Map cell contents using the option dictionary
-
-        :param cell_contents: contents of one table cell
-        :type cell_contents: str
-        :returns: list of (unique, alphabetically sorted) HpTerm objects with observed or excluded HPO terms
-        :rtype: List[HpTerm]
-        """
-        results = []
-        contents = cell_contents.strip()
-        # First check for negated terms
-        if contents in self._excluded_d:
-            if isinstance(contents, list):
-                for itm in contents:
-                    excluded_hpo_label = self._excluded_d.get(itm)
-                    term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
-                    term.excluded()
-                    results.append(term)
-            else:
-                excluded_hpo_label = self._excluded_d.get(contents)
-                term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
-                term.excluded()
-                results.append(term)
-            return results
-        # Now collect HPO labels corresponding to the cell concents
-        hpo_labels = set()
-
-        # first check if there is an exact match with the entire string
-        if cell_contents in self._option_d:
-            hpo_lbl = self._option_d.get(cell_contents)
-            if isinstance(hpo_lbl, list):
-                for hp in hpo_lbl:
-                    hpo_labels.add(hp)
-            else:
-                hpo_labels.add(hpo_lbl)
-        else:
-            # check if a portion of the cell contents (separated by delimiters) is a match
-            delimiters = ',;|/'
-            regex_pattern = '|'.join(map(re.escape, delimiters))
-            chunks = re.split(regex_pattern, contents)
-            chunks = [chunk.strip() for chunk in chunks]
-            for c in chunks:
-                for my_key, my_label in self._option_d.items():
-                    if my_key in c:
-                        if isinstance(my_label, list):
-                            for itm in my_label:
-                                hpo_labels.add(itm)
-                        else:
-                            hpo_labels.add(my_label)
-        # Now create HpTerm objects for each match
-        for label in hpo_labels:
-            term = self._hpo_cr.get_term_from_label(label=label)
-            results.append(term)
-            results.sort(key=lambda term: term.label)
-        return results
-
     def preview_column(self, column) -> pd.DataFrame:
         """
         Generate a pandas dataframe with a summary of parsing of the entire column
@@ -183,7 +127,7 @@ class OptionColumnMapper(ColumnMapper):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"argument \"df\" must be a pandas DataFrame but was {type(df)}")
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
-            raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+            raise ValueError(f"concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         if omit_columns is None:
             omit_columns = set()
         elif isinstance(omit_columns, list):

@@ -4,6 +4,8 @@ from collections import defaultdict
 import phenopackets as PPKt
 from google import protobuf
 
+from .citation import Citation
+
 
 class Resource:
     def __init__(self, resource_id, name, namespace_prefix, iriprefix, url, version) -> None:
@@ -64,24 +66,22 @@ class MetaData:
 
     :param created_by: identifier (such as ORCID id) of the person who created this Phenopacket
     :type created_by: str
-    :param pmid: PubMed identifier of the article from which the data for the phenopacket was taken, optional
-    :type pmid: str
-    :param pubmed_title: title of the article (if any), for use in the Resource section
-    :type pubmed_title: str
+    :param citation: PubMed identifier of the article from which the data for the phenopacket was taken, optional
+    :type citation: Citation
     """
 
-    def __init__(self, created_by, pmid=None, pubmed_title=None) -> None:
+    def __init__(self, created_by, citation=None) -> None:
         """
         Constructor
         """
         self._created_by = created_by
         self._schema_version = "2.0"
         self._extref = None
-        if pmid is not None and pubmed_title is not None:
-            self.set_external_reference(pmid=pmid, pubmed_title=pubmed_title)
+        if citation is not None:
+            self.set_external_reference(pmid=citation.pmid, pubmed_title=citation.title)
         self._resource_d = defaultdict(Resource)
 
-    def default_versions_with_hpo(self, version, pmid=None, pubmed_title=None):
+    def default_versions_with_hpo(self, version):
         """
         Add resources for HPO (with specified version), GENO, HGNC, and OMIM (with default versions)
         The HPO version can be easily obtained from the HpoParser using the get_version() function

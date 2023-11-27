@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 
-from src.pyphetools.creation import MetaData
+from src.pyphetools.creation import MetaData, Citation
 
 
 class TestMetaData(unittest.TestCase):
@@ -12,7 +12,8 @@ class TestMetaData(unittest.TestCase):
         hpo_version = "fake.version"
         pmid = "PMID:30945334"
         title = "Recurrent de novo MAPK8IP3 variants cause neurological phenotypes"
-        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", pmid=pmid, pubmed_title=title)
+        citation = Citation(pmid=pmid, title=title)
+        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", citation=citation)
         metadata.default_versions_with_hpo(version=hpo_version)
         cls._metadata = metadata.to_ga4gh()
 
@@ -52,7 +53,8 @@ class TestMetaData(unittest.TestCase):
         hpo_version = "fake.version"
         pmid = "PMID:30945334"
         title = "Recurrent de novo MAPK8IP3 variants cause neurological phenotypes"
-        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", pmid=pmid, pubmed_title=title)
+        citation = Citation(pmid=pmid, title=title)
+        metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", citation=citation)
         self.assertEqual("PMID:30945334", metadata.get_pmid())
 
 
