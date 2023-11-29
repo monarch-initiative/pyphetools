@@ -51,7 +51,13 @@ class OntologyQC:
         conflicting_term_id_set = set()
         for term in observed_hpo_terms:
             for tid in all_excluded_term_ids:
-                if self._ontology.graph.is_ancestor_of(tid, term.id):
+                if term.id == tid:
+                    # same term observed and excluded
+                    # we cannot automatically fix this error
+                    # this will be reported and the user will need to check the input data
+                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).observed_and_included(term=term).build()
+                    self._errors.append(error)
+                elif self._ontology.graph.is_ancestor_of(tid, term.id):
                     conflicting_term_id_set.add(tid)
                     conflicting_term = self._ontology.get_term(term_id=tid)
                     cterm = HpTerm.from_hpo_tk_term(conflicting_term)

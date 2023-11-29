@@ -15,12 +15,25 @@ class HpoConceptRecognizer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def parse_cell(self, cell_contents, custom_d=None) -> List[HpTerm]:
         """
-        parse HPO Terms form the contents of a cell of the original table
+        parse HPO Terms from the contents of a cell of the original table
 
         :param cell_contents: a cell of the original table
         :type cell_contents: str
         :param custom_d: a dictionary with keys for strings in the original table and their mappings to HPO labels
         :type custom_d: Dict[str,str], optional
+        """
+        pass
+
+
+    @abc.abstractmethod
+    def parse_cell_for_exact_matches(self, cell_contents, custom_d) -> List[HpTerm]:
+        """
+        Identify HPO Terms from the contents of a cell whose label exactly matches a string in the custom dictionary
+
+        :param cell_contents: a cell of the original table
+        :type cell_contents: str
+        :param custom_d: a dictionary with keys for strings in the original table and their mappings to HPO labels
+        :type custom_d: Dict[str,str]
         """
         pass
 

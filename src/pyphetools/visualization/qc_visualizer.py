@@ -136,6 +136,11 @@ class QcVisualizer:
                     conflict = "; ".join([t.hpo_term_and_id for t in conflict_label_set])
                     para = f"<p>The following excluded terms were found to have a conflict with an observed descendent term: {conflict}. The ancestor terms will be removed.</p>"
                     html_lines.append(para)
+                if "OBSERVED_AND_EXCLUDED" in distinct_item_d:
+                    o_and_e_set = distinct_item_d.get("OBSERVED_AND_EXCLUDED")
+                    o_and_e = "; ".join([t.hpo_term_and_id for t in o_and_e_set])
+                    para = f"<p>The following terms were annotated as being both observed and excluded: {o_and_e}. This needs to be fixed manually.</p>"
+                    html_lines.append(para)
                 html_lines.append(self._get_unfixable_error_table())
         return "\n".join(html_lines)
 

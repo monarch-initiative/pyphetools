@@ -40,6 +40,8 @@ class OptionColumnMapper(ColumnMapper):
         self._excluded_d = excluded_d
         if omitSet is None:
             omitSet = set()
+        elif not isinstance(omitSet, set):
+            raise ValueError(f"argument 'omitSet' must be a Python set but was {type(omitSet)}")
         self._omit_set = omitSet
         self._assumeExcluded = assumeExcluded
         if assumeExcluded:
@@ -54,18 +56,27 @@ class OptionColumnMapper(ColumnMapper):
 
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
+        """parse a single table cell
+
+        :param cell_contents: contents of a cell of the original file
+        :type cell_contents: str
+        :returns: list of HPO matches
+        :rtype: List[HpTerm]
+        """
         for excl in self._omit_set:
             cell_contents = cell_contents.replace(excl, " ")
         # results is a list of HpTerm objects
-        results = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
-        if results is None:
-            results = []
+        results = []
         if self._excluded_d is not None and len(self._excluded_d) > 0:
-            excluded_results = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._excluded_d)
+            excluded_results = self._hpo_cr.parse_cell_for_exact_matches(cell_text=cell_contents, custom_d=self._excluded_d)
             if excluded_results is not None and len(excluded_results) > 0:
                 for er in excluded_results:
                     er.excluded()
                     results.append(er)
+                    # remove excluded terms from contents
+                    cell_contents = cell_contents.replace(er.label.lower(), " ")
+        results_obs = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
+        results.extend(results_obs)
         if self._assumeExcluded:
             current_labels = { hpo_term.label for hpo_term in results}
             for k, v in self._assume_excluded_d.items():
@@ -89,17 +100,19 @@ class OptionColumnMapper(ColumnMapper):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         dlist = []
         for _, value in column.items():
+            d = {"original text": value}
             column_val = []
             results  = self.map_cell(str(value))
             if results is None:
                 print(f"Got None results for {str(value)}")
-                dlist.append({"terms": "n/a"})
+                d["terms"] = "n/a"
             elif len(results) > 0:
                 for hpterm in results:
                     column_val.append(f"{hpterm.id} ({hpterm.label}/{hpterm.display_value})")
-                dlist.append({"terms": "; ".join(column_val)})
+                d["terms"] = "; ".join(column_val)
             else:
-                dlist.append({"terms": "n/a"})
+                d["terms"] = "n/a"
+            dlist.append(d)
         return pd.DataFrame(dlist)
 
     @staticmethod

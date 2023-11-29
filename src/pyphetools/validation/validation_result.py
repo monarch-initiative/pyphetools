@@ -30,7 +30,8 @@ class Category(IntEnum):
     MALFORMED_ID = 6
     MALFORMED_LABEL = 7
     NOT_MEASURED = 8
-    UNKNOWN = 9
+    OBSERVED_AND_EXCLUDED = 9
+    UNKNOWN = 10
 
 
 class ValidationResult:
@@ -205,6 +206,13 @@ class ValidationResultBuilder:
         self._category = Category.MALFORMED_LABEL
         self._message = f"Invalid label '{hpo_label}' found for {valid_term.to_string()}"
         self._term = valid_term
+        return self
+
+    def observed_and_included(self, term:HpTerm):
+        self._error_level = ErrorLevel.ERROR
+        self._category = Category.OBSERVED_AND_EXCLUDED
+        self._message = f"Term {term.label} ({term.id}) was annotated to be both observed and excluded."
+        self._term = term
         return self
 
     def set_term(self, term:HpTerm):

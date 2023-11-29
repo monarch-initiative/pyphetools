@@ -4,6 +4,7 @@ from typing import Dict, List
 
 from .abstract_encoder import AbstractEncoder
 from .age_column_mapper import AgeColumnMapper
+from .citation import Citation
 from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
@@ -39,24 +40,24 @@ class CohortEncoder(AbstractEncoder):
     :type agemapper: pyphetools.creation.AgeColumnMapper
     :param sexmapper: Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
     :type sexmapper: pyphetools.creation.SexColumnMapper
-    :param variant_mapper: column mapper for HGVS-encoded variant column. Defaults to None.
+    :param variant_mapper: column mapper for HGVS-encoded variant column.
     :type variant_mapper: pyphetools.creation.VariantColumnMapper
-    :param pmid: PubMed identifier for the cohort. Defaults to None.
-    :type pmid: str
+    :param citation: object with PubMed identifier/title for the cohort.
+    :type citation: Citation
     :raises: ValueError - several of the input arguments are checked.
     """
 
     def __init__(self,
-                 df,
-                 hpo_cr,
-                 column_mapper_d,
-                 individual_column_name,
-                 metadata,
-                 agemapper=AgeColumnMapper.not_provided(),
-                 sexmapper=SexColumnMapper.not_provided(),
-                 variant_mapper=None,
-                 pmid=None,
-                 delimiter=None):
+                df,
+                hpo_cr,
+                column_mapper_d,
+                individual_column_name,
+                metadata,
+                agemapper=AgeColumnMapper.not_provided(),
+                sexmapper=SexColumnMapper.not_provided(),
+                variant_mapper=None,
+                citation=None,
+                delimiter=None):
         """Constructor
         """
         super().__init__(metadata=metadata)
@@ -79,7 +80,7 @@ class CohortEncoder(AbstractEncoder):
         self._sex_mapper = sexmapper
         self._disease = None
         self._variant_mapper = variant_mapper
-        self._pmid = pmid
+        self._citation = citation
         self._disease_dictionary = None
         self._delimiter = delimiter
         ontology = hpo_cr.get_hpo_ontology()
@@ -116,9 +117,9 @@ class CohortEncoder(AbstractEncoder):
                 hpo_terms.extend(terms)
             hpo_string = "\n".join([h.to_string() for h in hpo_terms])
             d = {'id': individual_id,
-                 'sex': sex,
-                 'age': age,
-                 'phenotypic features': hpo_string}
+                'sex': sex,
+                'age': age,
+                'phenotypic features': hpo_string}
             individuals.append(d)
         df = pd.DataFrame(individuals)
         return df.set_index('id')
@@ -201,20 +202,20 @@ class CohortEncoder(AbstractEncoder):
                     raise ValueError(f"Could not find disease link for {individual_id}")
                 disease = self._disease_dictionary.get(individual_id)
                 indi = Individual(individual_id=individual_id,
-                                  sex=sex,
-                                  age=age,
-                                  hpo_terms=hpo_terms,
-                                  pmid=self._pmid,
-                                  interpretation_list=interpretation_list,
-                                  disease=disease)
+                                sex=sex,
+                                age=age,
+                                hpo_terms=hpo_terms,
+                                citation=self._citation,
+                                interpretation_list=interpretation_list,
+                                disease=disease)
             elif self._disease_dictionary is None and self._disease is not None:
                 indi = Individual(individual_id=individual_id,
-                                  sex=sex,
-                                  age=age,
-                                  hpo_terms=hpo_terms,
-                                  pmid=self._pmid,
-                                  interpretation_list=interpretation_list,
-                                  disease=self._disease)
+                                sex=sex,
+                                age=age,
+                                hpo_terms=hpo_terms,
+                                citation=self._citation,
+                                interpretation_list=interpretation_list,
+                                disease=self._disease)
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
             individuals.append(indi)

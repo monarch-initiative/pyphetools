@@ -74,3 +74,21 @@ class TestOntologyQC(unittest.TestCase):
         qc_hpo_terms = qc._clean_terms()
         self.assertEqual(2, len(qc_hpo_terms))
 
+
+    def test_same_term_observed_and_excluded(self):
+        arachTermObserved = HpTerm(hpo_id="HP:0001166", label="Arachnodactyly", observed=True)
+        arachTermExcluded = HpTerm(hpo_id="HP:0001166", label="Arachnodactyly", observed=False)
+        hipDislocation = HpTerm(hpo_id="HP:0002827", label="Hip dislocation", observed=True)
+        hpo_terms = [arachTermObserved, hipDislocation, arachTermExcluded]
+        individual = Individual(individual_id="id", hpo_terms=hpo_terms)
+        qc = OntologyQC(ontology=self._ontology, individual=individual)
+        error_list = qc.get_error_list()
+        self.assertEqual(1, len(error_list))
+        error = error_list[0]
+        self.assertEqual("ERROR", error.error_level)
+        self.assertEqual("OBSERVED_AND_EXCLUDED", error.category)
+        self.assertEqual("Term Arachnodactyly (HP:0001166) was annotated to be both observed and excluded.", error.message)
+
+
+
+

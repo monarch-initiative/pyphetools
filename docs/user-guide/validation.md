@@ -37,14 +37,39 @@ display(HTML(qc.to_html()))
 # alternatively: display(HTML(qc.to_summary_html()))
 ```
 
-There are some kinds of error that need to be corrected in the notebook, such as malformed HPO ids or labels. Others can be corrected automatically, such as
-redudant terms. Once you are satisfied, use the following method to get a list of individuals with valid phenopackets that will pass testing by the
-phenopacket-tools library
+This will either display a message that no errors were found, or will show a table as in the following figure.
 
-Them the above analysis can be repeated to check the results.
+<figure markdown>
+![Validation results](../img/validation_results.png){ width="1000" }
+<figcaption>Validation Results.
+</figcaption>
+</figure>
+
+There are some kinds of error that need to be corrected in the notebook, such as malformed HPO ids or labels. Others can be corrected automatically, such as
+redudant terms.
+
+| Category | Explanation | Autocorrect? |
+|:---------|:------------|:-------------|
+| REDUNDANT| HPO term and ancestor term both reported as observed | Yes (redundant ancestor term removed) |
+|CONFLICT| HPO term observed and ancestor term excluded |Yes (conflicting  ancestor term removed) |
+|INSUFFICIENT_HPOS | Individual does not have at least threshold number of HPOs | Yes, individual removed from cohort |
+|  INCORRECT_ALLELE_COUNT | number of alleles unexpected given mode of inheritance | No |
+| INCORRECT_VARIANT_COUNT | number of variants unexpected given mode of inheritance | No |
+|   MALFORMED_ID | HPO id (e.g., HP:0001234) obsolete or incorrect | No |
+|   MALFORMED_LABEL | Label obsolete or incorrect | No |
+|    NOT_MEASURED | HPO term reported as not measure | Yes, not measured term removed |
+|   OBSERVED_AND_EXCLUDED | Same HPO term reported as observed and excluded | No |
+
+
+The issues that are shown as Autocorrect = Yes will be fixed automatically with the following command.
+
 
 ```python title="Getting individual objects with no syntax or ontology errors"
 individuals = cvalidator.get_error_free_individual_list()
 ```
+
+Issues that cannot be fixed with Autocorrect will lead to the individual being removed from the cohort and usually should be fixed in the notebook before proceeding.
+
+
 
 If desired, it is possible to double-check that these individuals have no errors by doing another round of checks with the CohortValidator.

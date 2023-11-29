@@ -80,9 +80,9 @@ class TestOptionMapper(unittest.TestCase):
 
     def test_pair_of_custom_concepts(self):
         seizure_d = {'Absence': 'Typical absence seizure',
-                     'Infantile spasms': 'Infantile spasms',
-                     'GTC': 'Bilateral tonic-clonic seizure',
-                     'ESES': 'Status epilepticus'}
+                    'Infantile spasms': 'Infantile spasms',
+                    'GTC': 'Bilateral tonic-clonic seizure',
+                    'ESES': 'Status epilepticus'}
         cell_contents = "Absence and GTC"
         results = self.hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=seizure_d)
         ## Expect
@@ -117,8 +117,8 @@ class TestOptionMapper(unittest.TestCase):
             'seizures': ['Seizure', 'HP:0001250']
         }
         item_column_mapper_d = self.hpo_cr.initialize_simple_column_maps(column_name_to_hpo_label_map=items,
-                                                                         observed='yes',
-                                                                         excluded='no')
+                                                                        observed='yes',
+                                                                        excluded='no')
         self.assertEqual(6, len(item_column_mapper_d))
 
 
