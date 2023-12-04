@@ -70,7 +70,7 @@ class MetaData:
     :type citation: Citation
     """
 
-    def __init__(self, created_by, citation=None) -> None:
+    def __init__(self, created_by, citation:Citation=None) -> None:
         """
         Constructor
         """
@@ -79,6 +79,7 @@ class MetaData:
         self._extref = None
         if citation is not None:
             self.set_external_reference(pmid=citation.pmid, pubmed_title=citation.title)
+        self._citation = citation
         self._resource_d = defaultdict(Resource)
 
     def default_versions_with_hpo(self, version):
@@ -164,6 +165,10 @@ class MetaData:
                                             url="http://purl.obolibrary.org/obo/so.obo",
                                             version=version)
 
+    def add_reference(self, resource:Resource) -> None:
+        resource_id = resource.id
+        self._resource_d[resource_id] = resource
+
     def set_external_reference(self, pmid, pubmed_title) -> None:
         """
         Set the external reference for this phenopacket/individual to be the PubMed identifier and title of an article
@@ -178,6 +183,9 @@ class MetaData:
         pm = pmid.replace("PMID:", "")
         self._extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
         self._extref.description = pubmed_title
+
+    def get_citation(self):
+        return self._citation
 
     def get_pmid(self)->str:
         """

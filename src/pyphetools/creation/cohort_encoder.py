@@ -42,8 +42,6 @@ class CohortEncoder(AbstractEncoder):
     :type sexmapper: pyphetools.creation.SexColumnMapper
     :param variant_mapper: column mapper for HGVS-encoded variant column.
     :type variant_mapper: pyphetools.creation.VariantColumnMapper
-    :param citation: object with PubMed identifier/title for the cohort.
-    :type citation: Citation
     :raises: ValueError - several of the input arguments are checked.
     """
 
@@ -56,7 +54,6 @@ class CohortEncoder(AbstractEncoder):
                 agemapper=AgeColumnMapper.not_provided(),
                 sexmapper=SexColumnMapper.not_provided(),
                 variant_mapper=None,
-                citation=None,
                 delimiter=None):
         """Constructor
         """
@@ -80,7 +77,6 @@ class CohortEncoder(AbstractEncoder):
         self._sex_mapper = sexmapper
         self._disease = None
         self._variant_mapper = variant_mapper
-        self._citation = citation
         self._disease_dictionary = None
         self._delimiter = delimiter
         ontology = hpo_cr.get_hpo_ontology()
@@ -205,7 +201,7 @@ class CohortEncoder(AbstractEncoder):
                                 sex=sex,
                                 age=age,
                                 hpo_terms=hpo_terms,
-                                citation=self._citation,
+                                citation=self._metadata.get_citation(),
                                 interpretation_list=interpretation_list,
                                 disease=disease)
             elif self._disease_dictionary is None and self._disease is not None:
@@ -213,7 +209,7 @@ class CohortEncoder(AbstractEncoder):
                                 sex=sex,
                                 age=age,
                                 hpo_terms=hpo_terms,
-                                citation=self._citation,
+                                citation=self._metadata.get_citation(),
                                 interpretation_list=interpretation_list,
                                 disease=self._disease)
             else:

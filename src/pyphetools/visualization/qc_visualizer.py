@@ -52,8 +52,8 @@ class QcVisualizer:
     :param cohort_validator: Validator object that checks all individuals in a cohort
     :type cohort_validator: CohortValidator
     """
-    def __init__(self, ontology:hpotk.MinimalOntology, cohort_validator:CohortValidator) -> None:
-        self._ontology = ontology
+    def __init__(self, cohort_validator:CohortValidator) -> None:
+        self._ontology = cohort_validator.get_ontology()
         if not isinstance(cohort_validator, CohortValidator):
             raise ValueError(f"cohort_validator argument must be CohortValidator object but was {type(cohort_validator)}")
         self._cohort_validator = cohort_validator

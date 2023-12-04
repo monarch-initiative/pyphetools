@@ -8,6 +8,7 @@ class CohortValidator:
 
     def __init__(self, cohort:List[Individual], ontology:hpotk.MinimalOntology, min_hpo:int,  allelic_requirement:AllelicRequirement=None) -> None:
         self._cohort = cohort
+        self._ontology = ontology
         self._validated_individual_list = []
         for indi in cohort:
             vindi = ValidatedIndividual(individual=indi)
@@ -52,3 +53,6 @@ class CohortValidator:
 
     def n_error_free_individuals(self):
         return len(self._error_free_individuals)
+
+    def get_ontology(self):
+        return self._ontology

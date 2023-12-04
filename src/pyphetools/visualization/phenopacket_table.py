@@ -1,4 +1,5 @@
 from collections import defaultdict
+import phenopackets as PPKt
 from typing import Dict, List, Set
 import sys
 
@@ -25,11 +26,6 @@ class Age2Day:
 
 
 
-
-
-
-
-
 class PhenopacketTable:
     """
     This class creates a table with a summary of all phenopackets in a cohort of individuals
@@ -37,12 +33,60 @@ class PhenopacketTable:
 
         from IPython.display import HTML, display
         phenopackets = [i.to_ga4gh_phenopacket(metadata=metadata) for i in individuals]
-        table = PhenopacketTable(phenopacket_list=phenopackets)
+        table = PhenopacketTable.from_phenopackets(phenopacket_list=phenopackets)
+        display(HTML(table.to_html()))
+
+    Alternatively,
+
+        table = PhenopacketTable.from_individuals(individual_list=individuals, metadata=metadata)
         display(HTML(table.to_html()))
     """
-    def __init__(self, individual_list:List[Individual], metadata:MetaData) -> None:
+    def __init__(self, phenopacket_list:List[PPKt.Phenopacket]=None,
+                        individual_list:List[Individual]=None,
+                        metadata:MetaData=None) -> None:
         """
         :param phenopacket_list: List of GA4GH phenopackets to be displayed
+        :type phenopacket_list: List[PPKt.Phenopacket]
+        :param individual_list: List of Indidivual objects to be displayed
+        :type individual_list: List[Individual]
+        :param metadata: metadata about the individuals
+        :type metadata: MetaData
+        """
+        if phenopacket_list is None and individual_list is not None and metadata is not None:
+            self._phenopacket_list =  [i.to_ga4gh_phenopacket(metadata=metadata.to_ga4gh()) for i in individual_list]
+        elif phenopacket_list is not None and individual_list is None:
+            if metadata is not None:
+                raise ValueError("metadata argument not needed for phenopacket list")
+            self._phenopacket_list = phenopacket_list
+
+    @staticmethod
+    def from_phenopackets(phenopacket_list:List[PPKt.Phenopacket]):
+        """Initialize PhenopacketTable from list of GA4GH Phenopackets
+
+        :param phenopacket_list: list of GA4GH Phenopackets
+        :type phenopacket_list: List[PPKt.Phenopacket]
+
+        :returns: PhenopacketTable for displaying information about a cohort
+        :rtype: PhenopacketTable
+        """
+        if not isinstance(phenopacket_list, list):
+            raise ValueError(f"Expecting a list but got {type(phenopacket_list)}")
+        if len(phenopacket_list) == 0:
+            raise ValueError("phenopacket_list was empty")
+        ppkt = phenopacket_list[0]
+        if not isinstance(ppkt, PPKt.Phenopacket):
+            raise ValueError(f"phenopacket_list argument must be list of Phenopacket objects but was {type(ppkt)}")
+        return PhenopacketTable(phenopacket_list=phenopacket_list)
+
+    @staticmethod
+    def from_individuals(individual_list:List[Individual], metadata:MetaData):
+        """Initialize PhenopacketTable from list of GA4GH Phenopackets
+
+        :param phenopacket_list: list of GA4GH Phenopackets
+        :type phenopacket_list: List[PPKt.Phenopacket]
+
+        :returns: PhenopacketTable for displaying information about a cohort
+        :rtype: PhenopacketTable
         """
         if not isinstance(individual_list, list):
             raise ValueError(f"Expecting a list but got {type(individual_list)}")
@@ -53,9 +97,9 @@ class PhenopacketTable:
             raise ValueError(f"individual_list argument must be list of Individual objects but was {type(indi)}")
         if not isinstance(metadata, MetaData):
             raise ValueError(f"metadata argument must be pyphetools MetaData object but was {type(metadata)}")
-        self._phenopacket_list =  [i.to_ga4gh_phenopacket(metadata=metadata.to_ga4gh()) for i in individual_list]
+        return PhenopacketTable(individual_list=individual_list, metadata=MetaData)
 
-    def _phenopacket_to_table_row(self, spat) -> List[str]:
+    def _simple_patient_to_table_row(self, spat:SimplePatient) -> List[str]:
         """
         private method intended to create one table row that represents one individual
         :param spat: An object that represents one individual
@@ -137,7 +181,7 @@ class PhenopacketTable:
         header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
         rows = []
         for spat in spat_list:
-            rows.append(self._phenopacket_to_table_row(spat))
+            rows.append(self._simple_patient_to_table_row(spat))
         generator = HtmlTableGenerator(caption=capt, header_items=header_items, rows=rows)
         return generator.get_html()
 
