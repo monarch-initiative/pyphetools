@@ -41,7 +41,7 @@ class TestCohortValidator(unittest.TestCase):
         self.assertEqual(1, len(errors))
         error = errors[0]
         self.assertEqual("WARNING", error.error_level)
-        self.assertEqual("REDUNDANT", error.category)
+        self.assertEqual("DUPLICATE", error.category)
         self.assertEqual("<b>Deeply set eye</b> is listed multiple times", error.message)
         self.assertEqual("HP:0000490", error.term.id)
         self.assertEqual("Deeply set eye", error.term.label)

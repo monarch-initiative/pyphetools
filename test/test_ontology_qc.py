@@ -28,7 +28,7 @@ class TestOntologyQC(unittest.TestCase):
         hpo_terms = [arachTerm, slenderTerm]
         individual = Individual(individual_id="id", hpo_terms=hpo_terms)
         qc = OntologyQC(ontology=self._ontology, individual=individual)
-        qc_hpo_terms = qc._clean_terms()
+        qc_hpo_terms = qc.get_clean_terms()
         self.assertEqual(1, len(qc_hpo_terms))
 
     def test_do_not_detect_conflict_if_there_is_no_conflict(self):
@@ -41,7 +41,7 @@ class TestOntologyQC(unittest.TestCase):
         hpo_terms = [arachTerm, hipDislocation]
         individual = Individual(individual_id="id", hpo_terms=hpo_terms)
         qc = OntologyQC(ontology=self._ontology, individual=individual)
-        qc_hpo_terms = qc._clean_terms()
+        qc_hpo_terms = qc.get_clean_terms()
         self.assertEqual(2, len(qc_hpo_terms))
 
     def test_do_not_detect_conflict_if_there_is_no_conflict_2(self):
@@ -53,7 +53,7 @@ class TestOntologyQC(unittest.TestCase):
         hpo_terms = [arachTerm, slenderTerm]
         individual = Individual(individual_id="id", hpo_terms=hpo_terms)
         qc = OntologyQC(ontology=self._ontology, individual=individual)
-        qc_hpo_terms = qc._clean_terms()
+        qc_hpo_terms = qc.get_clean_terms()
         self.assertEqual(2, len(qc_hpo_terms))
 
     def test_redundancy(self):
@@ -62,7 +62,7 @@ class TestOntologyQC(unittest.TestCase):
         hpo_terms = [arachTerm, slenderTerm]
         individual = Individual(individual_id="id", hpo_terms=hpo_terms)
         qc = OntologyQC(ontology=self._ontology, individual=individual)
-        qc_hpo_terms = qc._clean_terms()
+        qc_hpo_terms = qc.get_clean_terms()
         self.assertEqual(1, len(qc_hpo_terms))
 
     def test_do_not_remove_if_not_redundant(self):
@@ -71,8 +71,24 @@ class TestOntologyQC(unittest.TestCase):
         hpo_terms = [arachTerm, hipDislocation]
         individual = Individual(individual_id="id", hpo_terms=hpo_terms)
         qc = OntologyQC(ontology=self._ontology, individual=individual)
-        qc_hpo_terms = qc._clean_terms()
+        qc_hpo_terms = qc.get_clean_terms()
         self.assertEqual(2, len(qc_hpo_terms))
+
+
+    def test_redundancy(self):
+        arachTerm = HpTerm(hpo_id="HP:0001166", label="Arachnodactyly", observed=True)
+        arachTerm2 = HpTerm(hpo_id="HP:0001166", label="Arachnodactyly", observed=True)
+        hipDislocation = HpTerm(hpo_id="HP:0002827", label="Hip dislocation", observed=False)
+        hpo_terms = [arachTerm, arachTerm2, hipDislocation]
+        individual = Individual(individual_id="id", hpo_terms=hpo_terms)
+        qc = OntologyQC(ontology=self._ontology, individual=individual)
+        qc_hpo_terms = qc.get_clean_terms()
+        self.assertEqual(2, len(qc_hpo_terms))
+        error_list = qc.get_error_list()
+        self.assertEqual(1, len(error_list))
+        error = error_list[0]
+        self.assertEqual("WARNING", error.error_level)
+        self.assertEqual("DUPLICATE", error.category)
 
 
     def test_same_term_observed_and_excluded(self):

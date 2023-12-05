@@ -6,33 +6,22 @@ from src.pyphetools.validation import ValidationResultBuilder
 
 class TestValidationResult(unittest.TestCase):
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        term = HpTerm(hpo_id="HP:0000123", label="Fake label")
-        cls._validation_result = ValidationResultBuilder(
-            phenopacket_id="id1"
-        ).duplicate_term(redundant_term=term).build()
-
-    def test_not_none(self):
-        self.assertIsNotNone(self._validation_result)
-
-    def test_phenopacket_id(self):
-        self.assertEqual("id1", self._validation_result.id)
-
-    def test_warning(self):
+    def test_redundant(self):
         """
         The function "redundant" in the builder should set the ErrorLevel to "WARNING"
         """
-        self.assertTrue(self._validation_result.is_warning())
-
-    def test_is_redundant(self):
-        self.assertEqual("REDUNDANT", self._validation_result.category)
-
-    def test_term(self):
-        term = self._validation_result.term
+        term = HpTerm(hpo_id="HP:0000123", label="Fake label")
+        term2 = HpTerm(hpo_id="HP:000987", label="Ancestor")
+        validation_result = ValidationResultBuilder(
+            phenopacket_id="id1"
+        ).redundant_term(ancestor_term=term2, descendent_term=term).build()
+        self.assertEqual("id1", validation_result.id)
+        self.assertTrue(validation_result.is_warning())
+        self.assertEqual("REDUNDANT", validation_result.category)
+        term = validation_result.term
         self.assertIsNotNone(term)
-        self.assertEqual("HP:0000123", term.id)
-        self.assertEqual("Fake label", term.label)
+        self.assertEqual("HP:000987", term.id)
+        self.assertEqual("Ancestor", term.label)
 
     def test_not_measured(self):
         vresult = ValidationResultBuilder(

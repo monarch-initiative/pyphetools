@@ -10,9 +10,10 @@ from ..creation.individual import Individual
 
 class OntologyQC:
     """
-    This class performs two kind of checks/cleansing of ontology data
+    This class performs three kind of checks/cleansing of ontology data
     1. negated superclass and observed subclass (this is an error in the original data)
     2. observed superclass and observed subclass (this is a redundancy but arguably not an error)
+    3. Same term is excluded and observed (this is an unfixable error in the original data)
 
     """
 
@@ -55,7 +56,7 @@ class OntologyQC:
                     # same term observed and excluded
                     # we cannot automatically fix this error
                     # this will be reported and the user will need to check the input data
-                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).observed_and_included(term=term).build()
+                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).observed_and_excluded_term(term=term).build()
                     self._errors.append(error)
                 elif self._ontology.graph.is_ancestor_of(tid, term.id):
                     conflicting_term_id_set.add(tid)

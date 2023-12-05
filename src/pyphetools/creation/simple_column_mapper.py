@@ -9,13 +9,13 @@ def get_separate_hpos_from_df(df, hpo_cr):
     """Loop through all the cells in a dataframe or series and try to parse each cell as HPO term.
     Useful when the separate HPO terms are in the cells themselves.
 
-      Args:
-         df (dataframe): dataframe with phenotypic data
-         hpo_cr (HpoConceptRecognizer): instance of HpoConceptRecognizer to match HPO term and get label/id
-
-      Returns:
-          additional_hpos: list of lists with the additional HPO terms per individual
-      """
+    :param df: dataframe with phenotypic data
+    :type df: pd.DataFrame
+    :param hpo_cr: instance of HpoConceptRecognizer to match HPO term and get label/id
+    :type hpo_cr: HpoConceptRecognizer
+    :returns: list of lists with the additional HPO terms per individual
+    :rtype: List[List[HpTerm]]
+    """
     additional_hpos = []
 
     for i in range(len(df)):
@@ -26,10 +26,6 @@ def get_separate_hpos_from_df(df, hpo_cr):
                 temp_hpos.extend(hpo_term)
         additional_hpos.append(list(set(temp_hpos)))
     return additional_hpos
-
-
-
-
 
 
 class SimpleColumnMapper(ColumnMapper):

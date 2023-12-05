@@ -3,7 +3,7 @@ from . import creation
 from . import visualization
 from . import validation
 
-__version__ = "0.9.4"
+__version__ = "0.9.6"
 
 __all__ = [
     "creation",

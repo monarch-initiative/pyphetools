@@ -31,7 +31,8 @@ class Category(IntEnum):
     MALFORMED_LABEL = 7
     NOT_MEASURED = 8
     OBSERVED_AND_EXCLUDED = 9
-    UNKNOWN = 10
+    DUPLICATE = 10
+    UNKNOWN = 11
 
 
 class ValidationResult:
@@ -133,13 +134,43 @@ class ValidationResultBuilder:
         self._term = None
 
     def duplicate_term(self, redundant_term:HpTerm):
+        """The HPO term is annotated as observed and excluded in the same individual. This is an unfixable error.
+
+        :param redundant_term: HPO term that is annotated as observed and excluded
+        :type redundant_term: HpTerm
+        :returns: a reference to self so this command can be used as part of a builder.
+        :rtype: ValidationResultBuilder
+        """
         self._error_level = ErrorLevel.WARNING
-        self._category = Category.REDUNDANT
+        self._category = Category.DUPLICATE
         self._message = f"<b>{redundant_term.label}</b> is listed multiple times"
         self._term = redundant_term
         return self
 
+    def observed_and_excluded_term(self, term:HpTerm):
+        """The HPO term is annotated as observed and excluded in the same individual. This is an unfixable error.
+
+        :param redundant_term: HPO term that is annotated as observed and excluded
+        :type redundant_term: HpTerm
+        :returns: a reference to self so this command can be used as part of a builder.
+        :rtype: ValidationResultBuilder
+        """
+        self._error_level = ErrorLevel.ERROR
+        self._category = Category.OBSERVED_AND_EXCLUDED
+        self._message = f"Term {term.label} ({term.id}) was annotated to be both observed and excluded."
+        self._term = term
+        return self
+
     def redundant_term(self, ancestor_term:HpTerm, descendent_term:HpTerm):
+        """The HPO term and one of its ancestors are both annotated as observed in the same individual.
+
+        :param ancestor_term: Ancestor HPO term that is annotated as observed
+        :type ancestor_term: HpTerm
+        :param descendent_term: Descendent HPO term that is annotated as observed
+        :type descendent_term: HpTerm
+        :returns: a reference to self so this command can be used as part of a builder.
+        :rtype: ValidationResultBuilder
+        """
         self._error_level = ErrorLevel.WARNING
         self._category = Category.REDUNDANT
         self._message = f"<b>{ancestor_term.label}</b> is redundant because of <b>{descendent_term.label}</b>"
@@ -206,13 +237,6 @@ class ValidationResultBuilder:
         self._category = Category.MALFORMED_LABEL
         self._message = f"Invalid label '{hpo_label}' found for {valid_term.to_string()}"
         self._term = valid_term
-        return self
-
-    def observed_and_included(self, term:HpTerm):
-        self._error_level = ErrorLevel.ERROR
-        self._category = Category.OBSERVED_AND_EXCLUDED
-        self._message = f"Term {term.label} ({term.id}) was annotated to be both observed and excluded."
-        self._term = term
         return self
 
     def set_term(self, term:HpTerm):
