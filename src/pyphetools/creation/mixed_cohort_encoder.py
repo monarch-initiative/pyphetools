@@ -6,6 +6,7 @@ import pandas as pd
 from . import Individual
 from .abstract_encoder import AbstractEncoder
 from .age_column_mapper import AgeColumnMapper
+from .citation import Citation
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
 from .sex_column_mapper import SexColumnMapper
@@ -152,12 +153,12 @@ class MixedCohortEncoder(AbstractEncoder):
             if disease_cell_contents is None:
                 raise ValueError(f"Could not extract disease identifier for row {row}")
             disease = self._disease_id_mapper.map_cell(disease_cell_contents)
+            cite = Citation(pmid=pmid, title=title)
             indi = Individual(individual_id=individual_id,
                                   sex=sex,
                                   age=age,
                                   hpo_terms=hpo_terms,
-                                  pmid=pmid,
-                                  title=title,
+                                  citation=cite,
                                   interpretation_list=interpretation_list,
                                   disease=disease)
             individuals.append(indi)

@@ -12,7 +12,7 @@ from .hgvs_variant import HgvsVariant
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_exact_cr import HpoExactConceptRecognizer
 from .hpo_parser import HpoParser
-from .hp_term import HpTerm
+from .hp_term import HpTerm, HpTermBuilder
 from .individual import Individual
 from .metadata import MetaData
 from .mixed_cohort_encoder import MixedCohortEncoder
@@ -43,6 +43,7 @@ __all__ = [
     "HpoExactConceptRecognizer",
     "HpoParser",
     "HpTerm",
+    "HpTermBuilder",
     "Individual",
     "MetaData",
     "MixedCohortEncoder",

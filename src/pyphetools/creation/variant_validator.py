@@ -19,7 +19,7 @@ class VariantValidator:
     :param transcript: An mRNA transcript that is the reference for the HGVS string, opt
     :type transcript: str
     """
-    
+
     def __init__(self, genome_build, transcript=None):
         """
         Constructor
@@ -28,7 +28,7 @@ class VariantValidator:
             raise ValueError(f"genome_build \"{genome_build}\" not recognized")
         self._genome_assembly = genome_build
         self._transcript = transcript
-        
+
     def encode_hgvs(self, hgvs, custom_transcript=None):
         """
         Encode an HGVS string as a pyphetools Variant object
@@ -53,7 +53,7 @@ class VariantValidator:
         response = requests.get(api_url)
         # We expect to get a dictionary with three keys. The first is the name of the variant, e.g., ACC:HGVS, then we
         # get flag and metadata
-        vv_dict = response.json() 
+        vv_dict = response.json()
         if 'flag' in vv_dict:
             if vv_dict['flag'] != 'gene_variant':
                 flag = vv_dict['flag']
@@ -80,12 +80,10 @@ class VariantValidator:
                 transcript = transcript[37:]
         else:
             transcript = None
-       
         # 'vcf': {'alt': 'C', 'chr': '16', 'pos': '1756403', 'ref': 'CG'}},
         if not 'vcf' in assembly:
             raise ValueError(f"Could not identify vcf element in Variant Validator genome assembly response")
-        return HgvsVariant(assembly=self._genome_assembly, vcf_d=assembly['vcf'], symbol=symbol, 
-                       hgnc=hgnc, transcript=transcript, hgvs=hgvs_transcript_var, g_hgvs=genomic_hgvs)
-  
+        return HgvsVariant(assembly=self._genome_assembly, vcf_d=assembly['vcf'], symbol=symbol,
+                        hgnc=hgnc, transcript=transcript, hgvs=hgvs_transcript_var, g_hgvs=genomic_hgvs)
 
-        
+

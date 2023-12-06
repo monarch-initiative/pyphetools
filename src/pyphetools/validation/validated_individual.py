@@ -33,11 +33,8 @@ class ValidatedIndividual:
         validation_results = cvalidator.validate_individual(individual=self._individual)
         self._validation_errors.extend(validation_results)
         # The following checks for remaining errors that would force us to remove the patient from the cohort
-        self._unfixed_errors = validation_results
-        qc = OntologyQC(individual=self._individual, ontology=ontology)
-        qc_validation_results = qc.get_error_list()
-        qc_validation_results = [e  for e in qc_validation_results if e.is_error()]
-        self._unfixed_errors.extend(qc_validation_results)
+        self._unfixed_errors = [e  for e in self._validation_errors if e.is_unfixable_error()]
+
 
     def get_individual_with_clean_terms(self) -> Individual:
         """

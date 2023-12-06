@@ -99,6 +99,20 @@ class ValidationResult:
     def is_warning(self) -> bool:
         return self._error_level == ErrorLevel.WARNING
 
+    def is_unfixable_error(self) -> bool:
+        """Some errors cannot be fixed automatically and require manual attention.
+
+        :returns: True iff this ValidationResult cannot be fixed automatically.
+        :rtype: bool
+        """
+        return self._category in {Category.INSUFFICIENT_HPOS,
+                                Category.INCORRECT_ALLELE_COUNT,
+                                Category.INCORRECT_VARIANT_COUNT,
+                                Category.MALFORMED_ID,
+                                Category.MALFORMED_LABEL,
+                                Category.OBSERVED_AND_EXCLUDED
+                                }
+
     def get_items_as_array(self) -> List[str]:
         """
         :returns: A list of items (strings) intended for display

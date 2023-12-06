@@ -48,3 +48,16 @@ class TestValidationResult(unittest.TestCase):
         self.assertEqual("INSUFFICIENT_HPOS", vresult.category)
         self.assertEqual("Minimum HPO terms required 2 but only 1 found", vresult.message)
 
+    def test_observed_and_excluded_is_unfixable(self):
+        vresult = ValidationResultBuilder("id3").observed_and_excluded_term(term=HpTerm(hpo_id="HP:0012345", label="Something")).build()
+        self.assertEqual("ERROR", vresult.error_level)
+        self.assertEqual("OBSERVED_AND_EXCLUDED", vresult.category)
+        self.assertTrue(vresult.is_unfixable_error())
+
+    def test_conflict_is_not_unfixable(self):
+        vresult = ValidationResultBuilder("id3").conflict(conflicting_term=HpTerm(hpo_id="HP:0012345", label="Something"),term=HpTerm(hpo_id="HP:0072345", label="Something else")).build()
+        self.assertEqual("ERROR", vresult.error_level)
+        self.assertEqual("CONFLICT", vresult.category)
+        self.assertFalse(vresult.is_unfixable_error())
+
+

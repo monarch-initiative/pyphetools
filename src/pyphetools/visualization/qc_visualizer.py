@@ -39,6 +39,7 @@ class QcElement:
         elements.append(QcElement(level="ERROR", category="INCORRECT_VARIANT_COUNT"))
         elements.append(QcElement(level="ERROR", category="MALFORMED_ID"))
         elements.append(QcElement(level="ERROR", category="MALFORMED_LABEL"))
+        elements.append(QcElement(level="ERROR", category="OBSERVED_AND_EXCLUDED"))
         elements.append(QcElement(level="WARNING", category="REDUNDANT"))
         elements.append(QcElement(level="INFORMATION", category="NOT_MEASURED"))
         return elements
@@ -140,6 +141,11 @@ class QcVisualizer:
                     o_and_e_set = distinct_item_d.get("OBSERVED_AND_EXCLUDED")
                     o_and_e = "; ".join([t.hpo_term_and_id for t in o_and_e_set])
                     para = f"<p>The following terms were annotated as being both observed and excluded: {o_and_e}. This needs to be fixed manually.</p>"
+                    html_lines.append(para)
+                if "DUPLICATE" in distinct_item_d:
+                    dup_set = distinct_item_d.get("DUPLICATE")
+                    dup = "; ".join([t.to_string() for t in dup_set])
+                    para = f"<p>The following terms were annotated as duplicates: {dup}. This will be fixed automatically.</p>"
                     html_lines.append(para)
                 html_lines.append(self._get_unfixable_error_table())
         return "\n".join(html_lines)

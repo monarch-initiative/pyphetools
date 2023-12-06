@@ -208,7 +208,7 @@ class Individual:
             for hp in self._hpo_terms:
                 if not hp.measured:
                     continue
-                pf = hp.to_phenotypic_feature()
+                pf = hp.to_ga4gh_phenotypic_feature()
                 if pf.onset.age.iso8601duration is None and self._age != Constants.NOT_PROVIDED:
                     pf.onset.age.iso8601duration = self._age
                 php.phenotypic_features.append(pf)
@@ -248,6 +248,11 @@ class Individual:
             metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php
+
+    def __str__(self):
+        hpo_list = [t.to_string() for t in self._hpo_terms]
+        hpo_str = "\n" + "\n".join(hpo_list)
+        return f"{self._individual_id}: {self._age}, {self._sex}: {self._disease} {hpo_str}"
 
     @staticmethod
     def output_individuals_as_phenopackets(individual_list, metadata:MetaData, outdir="phenopackets"):
@@ -371,13 +376,13 @@ class Individual:
             else:
                 onset_age = None
             hpo_terms.append(HpTerm(hpo_id=hpo_id, label=hpo_label, observed=observed, onset=onset_age))
-            disease, var_list = Individual.get_variants_and_disease(ppkt)
-            indi = Individual(individual_id=subject_id,
-                                hpo_terms=hpo_terms,
-                                citation=None,
-                                sex=sex,
-                                age=age,
-                                interpretation_list=var_list)
-            if disease is not None:
-                indi.set_disease(disease=disease)
-            return indi
+        disease, var_list = Individual.get_variants_and_disease(ppkt)
+        indi = Individual(individual_id=subject_id,
+                            hpo_terms=hpo_terms,
+                            citation=None,
+                            sex=sex,
+                            age=age,
+                            interpretation_list=var_list)
+        if disease is not None:
+            indi.set_disease(disease=disease)
+        return indi
