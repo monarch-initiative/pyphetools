@@ -1,18 +1,27 @@
 from math import isnan
 from typing import List, Dict
-
+import os
+import re
+from google.protobuf.json_format import MessageToJson
+import phenopackets as PPKt
 import pandas as pd
 
 from . import Individual
 from .abstract_encoder import AbstractEncoder
 from .age_column_mapper import AgeColumnMapper
+from .age_of_death_mapper import AgeOfDeathColumnMapper
 from .citation import Citation
 from .constants import Constants
 from .hpo_cr import HpoConceptRecognizer
+from .metadata import MetaData
 from .sex_column_mapper import SexColumnMapper
+from .variant_column_mapper import VariantColumnMapper
 
 
 class MixedCohortEncoder(AbstractEncoder):
+
+    HPO_VERSION = None
+
     """Map a table of data to Individual/GA4GH Phenopacket Schema objects. This class should be used instead of CohortMapper
        if the table has different diseases or different pubmed references for each row.
 
@@ -49,18 +58,19 @@ class MixedCohortEncoder(AbstractEncoder):
         :raises: ValueError - several of the input arguments are checked.
         """
     def __init__(self,
-                 df,
-                 hpo_cr,
-                 column_mapper_d,
-                 individual_column_name,
-                 disease_id_mapper,
-                 metadata,
-                 pmid_column,
-                 title_column=None,
-                 variant_mapper=None,
-                 agemapper=AgeColumnMapper.not_provided(),
-                 sexmapper=SexColumnMapper.not_provided(),
-                 delimiter=None):
+                df,
+                hpo_cr,
+                column_mapper_d,
+                individual_column_name,
+                disease_id_mapper,
+                metadata,
+                pmid_column:str,
+                title_column:str=None,
+                variant_mapper:VariantColumnMapper=None,
+                agemapper=AgeColumnMapper.not_provided(),
+                sexmapper=SexColumnMapper.not_provided(),
+                age_of_death_mapper:AgeOfDeathColumnMapper=None,
+                delimiter=None):
         """Constructor
         """
         super().__init__(metadata=metadata)
@@ -79,14 +89,13 @@ class MixedCohortEncoder(AbstractEncoder):
         self._id_column_name = individual_column_name
         self._age_mapper = agemapper
         self._sex_mapper = sexmapper
+        self._age_of_death_mapper = age_of_death_mapper
         self._disease_id_mapper = disease_id_mapper
         self._pmid_column = pmid_column
         self._title_column = title_column
         self._variant_mapper = variant_mapper
         self._delimiter = delimiter
-        ontology = hpo_cr.get_hpo_ontology()
-        if ontology is None:
-            raise ValueError("ontology cannot be None")
+        MixedCohortEncoder.HPO_VERSION = hpo_cr.get_hpo_ontology().version
 
 
     def get_individuals(self) -> List[Individual]:
@@ -99,6 +108,10 @@ class MixedCohortEncoder(AbstractEncoder):
         individuals = []
         age_column_name = self._age_mapper.get_column_name()
         sex_column_name = self._sex_mapper.get_column_name()
+        if self._age_of_death_mapper is not None:
+            age_of_death_column_name = self._age_of_death_mapper.column_name
+        else:
+            age_of_death_column_name = None
         disease_column_name = self._disease_id_mapper.get_column_name()
         if self._variant_mapper is None:
             variant_colname = None
@@ -122,11 +135,20 @@ class MixedCohortEncoder(AbstractEncoder):
             else:
                 sex_cell_contents = row[sex_column_name]
                 sex = self._sex_mapper.map_cell(sex_cell_contents)
+            if age_of_death_column_name is not None:
+                age_of_death_contents = row[age_of_death_column_name]
+                vstatus = self._age_of_death_mapper.map_cell_to_vital_status(age_of_death_contents)
+            else:
+                vstatus = None
             pmid = row[self._pmid_column]
             if self._title_column is not None:
                 title = row[self._title_column]
             else:
                 title = None
+            if pmid is None:
+                raise ValueError(f"Could not get PMID (required) for individual {individual_id}")
+            if title is None:
+                raise ValueError(f"Could not get title (required) for individual {individual_id}")
             hpo_terms = []
             for column_name, column_mapper in self._column_mapper_d.items():
                 if column_name not in df.columns:
@@ -155,11 +177,49 @@ class MixedCohortEncoder(AbstractEncoder):
             disease = self._disease_id_mapper.map_cell(disease_cell_contents)
             cite = Citation(pmid=pmid, title=title)
             indi = Individual(individual_id=individual_id,
-                                  sex=sex,
-                                  age=age,
-                                  hpo_terms=hpo_terms,
-                                  citation=cite,
-                                  interpretation_list=interpretation_list,
-                                  disease=disease)
+                                sex=sex,
+                                age=age,
+                                hpo_terms=hpo_terms,
+                                citation=cite,
+                                interpretation_list=interpretation_list,
+                                disease=disease)
+            if vstatus is not None:
+                indi.set_vital_status(vstatus)
             individuals.append(indi)
         return individuals
+
+    @staticmethod
+    def output_individuals_as_phenopackets(individual_list:List[Individual], created_by=None, outdir="phenopackets"):
+        """write a list of Individual objects to file in GA4GH Phenopacket format
+
+
+        :param outdir: Path to output directory. Defaults to "phenopackets". Created if not exists.
+        :type outdir: str
+        """
+        if os.path.isfile(outdir):
+            raise ValueError(f"Attempt to create directory with name of existing file {outdir}")
+        if not os.path.isdir(outdir):
+            os.makedirs(outdir)
+        written = 0
+
+        if created_by is None:
+            created_by = 'pyphetools'
+        for individual in individual_list:
+            cite = individual._citation
+            metadata = MetaData(created_by=created_by, citation=cite)
+            metadata.default_versions_with_hpo(MixedCohortEncoder.HPO_VERSION)
+            phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
+            json_string = MessageToJson(phenopckt)
+            pmid = cite.pmid
+            if pmid is None:
+                fname = "phenopacket_" + individual.id
+            else:
+                pmid = pmid.replace(" ", "").replace(":", "_")
+                fname = pmid + "_" + individual.id
+            fname = re.sub('[^A-Za-z0-9_-]', '', fname)  # remove any illegal characters from filename
+            fname = fname.replace(" ", "_") + ".json"
+            outpth = os.path.join(outdir, fname)
+            with open(outpth, "wt") as fh:
+                fh.write(json_string)
+                written += 1
+        print(f"We output {written} GA4GH phenopackets to the directory {outdir}")

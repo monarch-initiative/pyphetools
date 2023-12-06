@@ -60,6 +60,7 @@ class Individual:
             self._interpretation_list = interpretation_list
         self._disease = disease
         self._citation = citation
+        self._vital_status = None
 
     @property
     def id(self):
@@ -163,6 +164,9 @@ class Individual:
         """
         self._citation = citation
 
+    def set_vital_status(self, vstatus:PPKt.VitalStatus):
+        self._vital_status = vstatus
+
     def get_phenopacket_id(self, phenopacket_id=None) -> str:
         """
         :returns: the Phenopacket identifier for this individual
@@ -204,6 +208,8 @@ class Individual:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
         if self._age is not None and self._age != Constants.NOT_PROVIDED:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
+        if self._vital_status is not None:
+            php.subject.vital_status.CopyFrom(self._vital_status)
         if isinstance(self._hpo_terms, list):
             for hp in self._hpo_terms:
                 if not hp.measured:

@@ -1,5 +1,6 @@
 from .age_column_mapper import AgeColumnMapper
 from .age_isoformater import AgeIsoFormater
+from .age_of_death_mapper import AgeOfDeathColumnMapper
 from .allelic_requirement import AllelicRequirement
 from .case_encoder import CaseEncoder
 from .citation import Citation
@@ -29,6 +30,7 @@ from .variant import Variant
 __all__ = [
     "AgeColumnMapper",
     "AgeIsoFormater",
+    "AgeOfDeathColumnMapper",
     "AllelicRequirement",
     "CaseEncoder",
     "Citation",
