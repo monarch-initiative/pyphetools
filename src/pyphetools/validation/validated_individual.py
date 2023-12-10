@@ -48,6 +48,9 @@ class ValidatedIndividual:
     def get_validation_errors(self) -> List[ValidationResult]:
         return self._validation_errors
 
+    def get_unfixed_errors(self)-> List[ValidationResult]:
+        return self._unfixed_errors
+
     def n_errors(self) -> int:
         return len(self._validation_errors)
 

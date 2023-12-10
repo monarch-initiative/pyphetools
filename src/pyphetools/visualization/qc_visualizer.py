@@ -157,8 +157,8 @@ class QcVisualizer:
         html_lines.append("<h2>Individuals with unfixable errors</h2>")
         errors = []
         for vi in v_individuals_with_unfixable:
-            if vi.has_error():
-                errors.extend(vi.get_validation_errors())
+            if vi.has_unfixed_error():
+                errors.extend(vi.get_unfixed_errors())
         errors = sorted(errors, key=lambda x : (x._error_level, x._category, x._message))
         header_fields = ValidationResult.get_header_fields()
         rows = [row.get_items_as_array() for row in errors]

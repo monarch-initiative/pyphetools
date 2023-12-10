@@ -145,7 +145,9 @@ class CohortEncoder(AbstractEncoder):
         :returns: a list of all Individual objects in the cohort
         :rtype: List[Individual]
         """
-        df = self._df.reset_index()  # make sure indexes pair with number of rows
+        # make sure indexes pair with number of rows, if needed
+        if not self._df.index.name in self._df.columns:
+            df = self._df.reset_index()
         individuals = []
         age_column_name = self._age_mapper.get_column_name()
         sex_column_name = self._sex_mapper.get_column_name()
@@ -215,4 +217,8 @@ class CohortEncoder(AbstractEncoder):
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
             individuals.append(indi)
+        if self._age_mapper.has_error():
+            print(self._age_mapper.error_summary())
+        if self._sex_mapper.has_error():
+            print(self._sex_mapper.error_summary())
         return individuals

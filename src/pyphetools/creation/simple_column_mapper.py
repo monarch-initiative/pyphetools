@@ -71,11 +71,17 @@ class SimpleColumnMapper(ColumnMapper):
     def preview_column(self, column) -> pd.DataFrame:
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
-        dlist = []
+        mapping_counter = defaultdict(int)
         for _, value in column.items():
-            value = self.map_cell(str(value))
+            cell_contents = str(value)
+            value = self.map_cell(cell_contents)
             hpterm = value[0]
-            dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
+            mapped = f"original value: \"{cell_contents}\" -> HP: {hpterm.hpo_term_and_id} ({hpterm.display_value})"
+            mapping_counter[mapped] += 1
+        dlist = []
+        for k, v in mapping_counter.items():
+            d = {"mapping": k, "count": str(v)}
+            dlist.append(d)
         return pd.DataFrame(dlist)
 
 class SimpleColumnMapperGenerator:
