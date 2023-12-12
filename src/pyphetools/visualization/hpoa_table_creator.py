@@ -192,11 +192,11 @@ class HpoaTableCreator:
         for oterm in self._onset_term_list:
             hpterm = HpTerm(hpo_id=oterm.id, label=oterm.label)
             if oterm.has_frequency():
-                row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=self._pmid, biocurator=self._biocurator, freq_num=oterm.num, freq_denom=oterm.denom)
+                row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=self._pmid, biocurator=self._biocurator, freq_num=oterm.numerator, freq_denom=oterm.denominator)
             else:
                 row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=self._pmid, biocurator=self._biocurator)
             rows.append(row.get_dict())
-        df = pd.DataFrame.from_records(data=rows, columns=column_names, index=False)
+        df = pd.DataFrame.from_records(data=rows, columns=column_names)
         return df
 
     def write_data_frame(self):
@@ -307,6 +307,13 @@ class HpoaTableBuilder:
         """Onset of signs or symptoms of disease between the age of 5 and 15 years.
         """
         oterm = OnsetTerm(onset_term_id="HP:0003621", onset_term_label="Juvenile onset", numerator=num, denominator=denom)
+        self._onset_terms.append(oterm)
+        return self
+
+    def adult_onset(self, num:int=None, denom:int=None):
+        """Onset of disease after 16 years  .
+        """
+        oterm = OnsetTerm(onset_term_id="HP:0003581", onset_term_label="Adult onset", numerator=num, denominator=denom)
         self._onset_terms.append(oterm)
         return self
 
