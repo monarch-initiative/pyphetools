@@ -6,6 +6,7 @@ import pandas as pd
 import re
 from collections import defaultdict
 
+
 class OptionColumnMapper(ColumnMapper):
     """Class to map the contents of a table cell to one or more options (HPO terms)
 
@@ -133,6 +134,8 @@ class OptionColumnMapper(ColumnMapper):
         :type delimiter: str
         :param omit_columns: names of columns to omit from this search
         :type omit_columns: List[str]
+        :param df_name: name of the variable that corresponds to the dataframe
+        :type df_name: str
         :returns: a string that should be displayed using a print() command in the notebook - has info about automatically mapped columns
         :rtype: str
         """
@@ -177,7 +180,7 @@ class OptionColumnMapper(ColumnMapper):
             items_d_string = str(temp_dict).replace(',', ',\n')
             lines.append(f"{items_d_name} = {items_d_string}")
             lines.append(f"{col_name}Mapper = OptionColumnMapper(concept_recognizer=hpo_cr, option_d={items_d_name})")
-            lines.append(f"{col_name}Mapper.preview_column(df['" + str(df.columns[y]) + "'])")
+            lines.append(f"{col_name}Mapper.preview_column({df_name}['" + str(df.columns[y]) + "'])")
             lines.append(f"column_mapper_d['{str(df.columns[y])}'] = {col_name}Mapper")
             lines.append("")
         return "\n".join(lines)
