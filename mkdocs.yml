@@ -51,6 +51,7 @@ nav:
       - "overview": "api/creation.md"
       - "AgeColumnMapper": "api/creation/age_column_mapper.md"
       - "CaseEncoder": "api/creation/case_encoder.md"
+      - Citation:  "api/creation/citation.md"
       - "CohortEncoder": "api/creation/cohort_encoder.md"
       - "ColumnMapper": "api/creation/column_mapper.md"
       - "ConstantColumnMapper": "api/creation/constant_column_mapper.md"
@@ -75,6 +76,7 @@ nav:
       - "VariantValidator": "api/creation/variant_validator.md"
     - "validation":
       - "overview": "api/validation.md"
+      - "CohortValidator": "api/validation/cohort_validator.md"
       - "ContentValidator": "api/validation/content_validator.md"
       - "OntologyQC": "api/validation/ontology_qc.md"
       - "ValidationResult": "api/validation/validation_result.md"
@@ -83,6 +85,7 @@ nav:
       - "DetailedSupplTable":  "api/visualization/detailed_suppl_table.md"
       - "PhenopacketIngestor": "api/visualization/phenopacket_ingestor.md"
       - "PhenopacketTable": "api/visualization/phenopacket_table.md"
+      - "QcVisualizer": "api/visualization/qc_visualizer.md"
 
 plugins:
   - social

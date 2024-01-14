@@ -127,3 +127,55 @@ class TestOptionColumnMapper2(unittest.TestCase):
         self.assertEqual(1, len(results))
         res = results[0]
         self.assertEqual(res.label, "Severe global developmental delay")
+
+
+    def test_list(self):
+        agressivenes_d = {'yes': 'Aggressive behavior',
+                        'auto and heteroagressivity': ['Self-injurious behavior', 'Aggressive behavior']
+                        }
+        excluded_D = {"no":'Aggressive behavior' }
+        mapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=agressivenes_d, excluded_d=excluded_D)
+        results = mapper.map_cell("yes")
+        self.assertEqual(1, len(results))
+        res = results[0]
+        self.assertEqual(res.label, "Aggressive behavior")
+        self.assertEqual(res.id, "HP:0000718")
+        results = mapper.map_cell("auto and heteroagressivity")
+        self.assertEqual(2, len(results))
+        results = sorted(results, key=lambda x: x.id, reverse=True)
+        # Self-injurious behavior HP:0100716
+        res0 = results[0]
+        self.assertEqual("HP:0100716", res0.id)
+        res1 = results[1]
+        self.assertEqual("HP:0000718", res1.id)
+
+    def test_obs_exc(self):
+        """
+        The text "muscular hypotonia in the first years" was being recorded as both observed and excluded "Hypotonia"
+        """
+        hypotonia_d = {'yes hyper elastic': 'Hypotonia',
+                        'yes': 'Hypotonia',
+                        'axial tone more affected than  appendicular': 'Axial hypotonia',
+                        'muscular hypotonia in the first years': 'Hypotonia'}
+        hypotoniaMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=hypotonia_d,
+                                    excluded_d={'no': 'Hypotonia'})
+        results = hypotoniaMapper.map_cell("muscular hypotonia in the first years")
+        self.assertEqual(1, len(results))
+
+    def test_obs_excluded_ventriculomegaly(self):
+        """
+        The text "no ventriculomegaly" was being recorded as both observed and excluded "Ventriculomegaly"
+        """
+        ventricles_d = {
+            'moderate enlargement of the lateral ventricles': 'Lateral ventricle dilatation',
+            'left greater than right': 'Lateral ventricle dilatation',
+        }
+        ventriclesMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=ventricles_d,
+                                    excluded_d={"normal": "Ventriculomegaly", 'no ventriculomegaly': 'Ventriculomegaly'})
+        results = ventriclesMapper.map_cell("no ventriculomegaly")
+        self.assertEqual(1, len(results))
+        result = results[0]
+        self.assertEqual("Ventriculomegaly", result.label)
+        self.assertEqual("HP:0002119", result.id)
+        self.assertFalse(result.observed)
+

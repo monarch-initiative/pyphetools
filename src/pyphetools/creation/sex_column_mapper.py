@@ -1,5 +1,7 @@
 import pandas as pd
+from collections import defaultdict
 from .constants import Constants
+
 
 
 class SexColumnMapper:
@@ -33,6 +35,8 @@ class SexColumnMapper:
             raise ValueError("Must provide non-null column_name argument")
         self._column_name = column_name
         self._not_provided = not_provided
+        self._erroneous_input_counter = defaultdict(int)
+
 
     def map_cell(self, cell_contents) -> str:
         if self._not_provided:
@@ -47,7 +51,7 @@ class SexColumnMapper:
         elif contents == self._unknown_symbol:
             return Constants.UNKOWN_SEX_SYMBOL
         else:
-            print(f"Could not map sex symbol {contents}")
+            self._erroneous_input_counter[contents] += 1
             return Constants.UNKOWN_SEX_SYMBOL
 
     def preview_column(self, column):
@@ -64,13 +68,22 @@ class SexColumnMapper:
 
     def get_column_name(self):
         return self._column_name
-    
+
+    def has_error(self):
+        return len(self._erroneous_input_counter) > 0
+
+    def error_summary(self):
+        items = []
+        for k, v in self._erroneous_input_counter.items():
+            items.append(f"{k} (n={v})")
+        return f"Could not parse the following as sex descriptors: {', '.join(items)}"
+
     @staticmethod
     def not_provided():
         """Create an object for cases where sex is not indicated.
         """
-        return SexColumnMapper(male_symbol=Constants.NOT_PROVIDED, 
-                               female_symbol=Constants.NOT_PROVIDED, 
-                               not_provided=True, 
-                               column_name=Constants.NOT_PROVIDED)
+        return SexColumnMapper(male_symbol=Constants.NOT_PROVIDED,
+                            female_symbol=Constants.NOT_PROVIDED,
+                            not_provided=True,
+                            column_name=Constants.NOT_PROVIDED)
 

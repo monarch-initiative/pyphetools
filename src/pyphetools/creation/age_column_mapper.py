@@ -21,14 +21,13 @@ class AgeColumnMapper:
 
     Tables with information about genotype phenotype correlations typically
     contain a column with information about age. The columns often have formats
-    such as 34 (integer with number of years or months) or 3Y2M (for three years 
+    such as 34 (integer with number of years or months) or 3Y2M (for three years
     and two months). This mapper ingests data from such columns and transforms the
     contents into ISO 8601 strings (e.g., P4Y2M1D for 4 years, 2 months, and 1 day).
-    
+
     """
-    
+
     def __init__(self, ageEncodingType, column_name, string_to_iso_d=None) -> None:
-       
         """
         :param ageEncodingType: Formatting convention used to represent the age
         :type ageEncodingType: one of Year (e.g. 42), ISO 8601 (e.g. P42Y2M), year/month (e.g. 42y2m)
@@ -45,6 +44,7 @@ class AgeColumnMapper:
             raise ValueError("Must provide non-null column_name argument")
         self._column_name = column_name
         self._string_to_iso_d = string_to_iso_d
+        self._erroneous_input_counter = defaultdict(int)
 
     def map_cell(self, cell_contents) -> str:
 
@@ -54,7 +54,7 @@ class AgeColumnMapper:
         :param cell_contents: The text contained in a single cell of the table
         :type cell_contents: can be a string or numerical type
         """
-        
+
         contents = str(cell_contents)
         contents = contents.strip()
         if self._age_econding == AgeEncodingType.YEAR:
@@ -88,7 +88,7 @@ class AgeColumnMapper:
             if match:
                 return contents
             else:
-                print(f"Could not parse {contents} as ISO8601 period")
+                self._erroneous_input_counter[contents] += 1
                 return Constants.NOT_PROVIDED
         elif self._age_econding == AgeEncodingType.CUSTOM:
             return self._string_to_iso_d.get(cell_contents, Constants.NOT_PROVIDED)
@@ -96,13 +96,13 @@ class AgeColumnMapper:
             return Constants.NOT_PROVIDED
 
     def get_iso8601_from_int_or_float_year(self, age) -> str:
-        
+
         """
         Extract an iso8601 string for age recorded as a year (either an int such as 4 or a float such as 4.25 for P4Y3M)
         :param age: an int representing years or a float such as 2.5 for two and a half years
         :return: an ISO 8601 string such as P2Y6M
         """
-        
+
         if isinstance(age, int):
             return f"P{age}Y"
         elif isinstance(age, float):
@@ -141,6 +141,16 @@ class AgeColumnMapper:
     def get_column_name(self):
         return self._column_name
 
+    def has_error(self):
+        return len(self._erroneous_input_counter) > 0
+
+    def error_summary(self):
+        items = []
+        for k, v in self._erroneous_input_counter.items():
+            items.append(f"{k} (n={v})")
+        return f"Could not parse the following as ISO8601 ages: {', '.join(items)}"
+
+
     @staticmethod
     def not_provided():
         """Create an object for cases where Age is not provided.
@@ -173,5 +183,5 @@ class AgeColumnMapper:
         :type string_to_iso_d: Dict[str,str)
         """
         return AgeColumnMapper(ageEncodingType=AgeEncodingType.CUSTOM,
-                               column_name=column_name,
-                               string_to_iso_d=string_to_iso_d)
+                            column_name=column_name,
+                            string_to_iso_d=string_to_iso_d)

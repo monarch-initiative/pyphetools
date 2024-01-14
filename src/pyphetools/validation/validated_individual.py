@@ -13,6 +13,7 @@ class ValidatedIndividual:
         self._clean_terms = []
         self._validation_errors = []
 
+
     def validate(self, ontology:hpotk.MinimalOntology, min_hpo:int, allelic_requirement:AllelicRequirement=None) -> None:
         """validate an Individual object for errors in the Ontology or the minimum number of HPO terms/alleles/variants
 
@@ -23,13 +24,17 @@ class ValidatedIndividual:
         :param allelic_requirement: used to check number of alleles and variants
         :type allelic_requirement: AllelicRequirement
         """
-        cvalidator = ContentValidator(min_hpo=min_hpo, allelic_requirement=allelic_requirement)
-        validation_results = cvalidator.validate_individual(individual=self._individual)
-        self._validation_errors.extend(validation_results)
         qc = OntologyQC(individual=self._individual, ontology=ontology)
         qc_validation_results = qc.get_error_list()
         self._validation_errors.extend(qc_validation_results)
         self._clean_terms = qc.get_clean_terms()
+        self._individual.set_hpo_terms(self._clean_terms)
+        cvalidator = ContentValidator(min_hpo=min_hpo, allelic_requirement=allelic_requirement)
+        validation_results = cvalidator.validate_individual(individual=self._individual)
+        self._validation_errors.extend(validation_results)
+        # The following checks for remaining errors that would force us to remove the patient from the cohort
+        self._unfixed_errors = [e  for e in self._validation_errors if e.is_unfixable_error()]
+
 
     def get_individual_with_clean_terms(self) -> Individual:
         """
@@ -43,9 +48,22 @@ class ValidatedIndividual:
     def get_validation_errors(self) -> List[ValidationResult]:
         return self._validation_errors
 
+    def get_unfixed_errors(self)-> List[ValidationResult]:
+        return self._unfixed_errors
+
+    def n_errors(self) -> int:
+        return len(self._validation_errors)
+
     def has_error(self) -> bool:
         """
         :returns: True iff this Individual had oneor more errors
         :rtype: bool
         """
         return len(self._validation_errors) > 0
+
+    def has_unfixed_error(self) -> bool:
+        """
+        :returns: True iff this Individual had an error that we could not fix
+        :rtype: bool
+        """
+        return len(self._unfixed_errors) > 0

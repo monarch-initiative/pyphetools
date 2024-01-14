@@ -31,7 +31,7 @@ class SimpleVariant:
         if vdescript.expressions is not None and len(vdescript.expressions) > 0:
             for exprsn in vdescript.expressions:
                 if exprsn.syntax == "hgvs.c":
-                    self._hgvs = exprsn.value       
+                    self._hgvs = exprsn.value
         if vdescript.vcf_record is not None and len(vdescript.vcf_record.chrom) > 0:
             vcf = vdescript.vcf_record
             self._genome_ass = vcf.genome_assembly
@@ -82,7 +82,7 @@ class SimpleVariant:
         :rtype: str
         """
         return self._gene_symbol
-    
+
     @property
     def hgvs(self):
         """
@@ -98,7 +98,7 @@ class SimpleVariant:
         :rtype: str
         """
         return self._genome_ass
-    
+
     @property
     def chrom(self):
         """
@@ -134,17 +134,17 @@ class SimpleVariant:
     @property
     def genotype_id(self):
         """
-       :returns: the Sequence Ontology id for the genotype of this variant, optional
-       :rtype: str
-       """
+        :returns: the Sequence Ontology id for the genotype of this variant, optional
+        :rtype: str
+        """
         return self._genotype_id
 
     @property
     def genotype_label(self):
         """
-       :returns: the Sequence Ontology label for the genotype of this variant, optional
-       :rtype: str
-       """
+        :returns: the Sequence Ontology label for the genotype of this variant, optional
+        :rtype: str
+        """
         return self._genotype_label
 
     def has_vcf(self):
@@ -160,8 +160,8 @@ class SimpleVariant:
         :rtype: bool
         """
         return self._genotype_id != NA_STRING
-    
-    
+
+
     def get_display(self):
         """
         :returns: a string representing a human-readable representation of the variant

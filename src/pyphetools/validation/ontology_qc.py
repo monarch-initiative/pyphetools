@@ -10,9 +10,10 @@ from ..creation.individual import Individual
 
 class OntologyQC:
     """
-    This class performs two kind of checks/cleansing of ontology data
+    This class performs three kind of checks/cleansing of ontology data
     1. negated superclass and observed subclass (this is an error in the original data)
     2. observed superclass and observed subclass (this is a redundancy but arguably not an error)
+    3. Same term is excluded and observed (this is an unfixable error in the original data)
 
     """
 
@@ -51,9 +52,17 @@ class OntologyQC:
         conflicting_term_id_set = set()
         for term in observed_hpo_terms:
             for tid in all_excluded_term_ids:
-                if self._ontology.graph.is_ancestor_of(tid, term.id):
+                if term.id == tid:
+                    # same term observed and excluded
+                    # we cannot automatically fix this error
+                    # this will be reported and the user will need to check the input data
+                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).observed_and_excluded_term(term=term).build()
+                    self._errors.append(error)
+                elif self._ontology.graph.is_ancestor_of(tid, term.id):
                     conflicting_term_id_set.add(tid)
-                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).error().conflict().set_term(term=term).build()
+                    conflicting_term = self._ontology.get_term(term_id=tid)
+                    cterm = HpTerm.from_hpo_tk_term(conflicting_term)
+                    error = ValidationResultBuilder(phenopacket_id=self._phenopacket_id).conflict(term=term, conflicting_term=cterm).build()
                     self._errors.append(error)
         if len(conflicting_term_id_set) > 0:
             excluded_hpo_terms = [term for term in excluded_hpo_terms if term.id not in conflicting_term_id_set]
@@ -77,10 +86,10 @@ class OntologyQC:
         if len(all_terms) != len(hpo_terms):
             duplicates = [item for item, count in Counter(hpo_terms).items() if count > 1]
             for dup in duplicates:
-                message = f"<b>{dup.label}</b> is listed multiple times"
-                error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_message(
-                    message).set_term(dup).build()
+                error = ValidationResultBuilder(self._phenopacket_id).duplicate_term(redundant_term=dup).build()
                 self._errors.append(error)
+            # The following removes duplicates under the assumption that all components of the HpTerm are equal
+            hpo_terms = set(hpo_terms)
         # The following code checks for other kinds of redundancies
         redundant_term_d = {}
         for term in all_terms:
@@ -93,8 +102,7 @@ class OntologyQC:
         non_redundant_terms = [ term for term in hpo_terms if term not in redundant_term_d]
         if len(redundant_term_d) > 0:
             for term, descendant in redundant_term_d.items():
-                message = f"<b>{term.label}</b> is redundant because of <b>{descendant.label}</b>"
-                error = ValidationResultBuilder(self._phenopacket_id).warning().redundant().set_message(message).set_term(term).build()
+                error = ValidationResultBuilder(self._phenopacket_id).redundant_term(ancestor_term=term, descendent_term=descendant).build()
                 self._errors.append(error)
         return non_redundant_terms
 
@@ -103,12 +111,13 @@ class OntologyQC:
         for term in hpo_terms:
             hpo_id = term.id
             if not hpo_id in self._ontology:
-                error = ValidationResultBuilder(self._phenopacket_id).error().malformed_hpo_id(hpo_id).build()
+                error = ValidationResultBuilder(self._phenopacket_id).malformed_hpo_id(malformed_term=term).build()
                 self._errors.append(error)
             else:
                 hpo_term = self._ontology.get_term(term_id=hpo_id)
                 if hpo_term.name != term.label:
-                    error = ValidationResultBuilder(self._phenopacket_id).error().malformed_hpo_label(term.label).build()
+                    valid_term = HpTerm.from_hpo_tk_term(hpo_term)
+                    error = ValidationResultBuilder(self._phenopacket_id).malformed_hpo_label(term.label, valid_term=valid_term).build()
                     self._errors.append(error)
 
     def _clean_terms(self) -> List[HpTerm]:
@@ -118,10 +127,12 @@ class OntologyQC:
         """
         by_age_dictionary =  defaultdict(list)
         for term in self._individual.hpo_terms:
-            by_age_dictionary[term.onset].append(term)
+            if not term.measured:
+                self._errors.append(ValidationResultBuilder(self._phenopacket_id).not_measured(term=term).build())
+            else:
+                by_age_dictionary[term.onset].append(term)
         self._check_terms(self._individual.hpo_terms)
         clean_terms = []
-        self._errors.clear() # reset
         for onset, term_list in by_age_dictionary.items():
             observed_hpo_terms = [term for term in term_list if term.observed]
             excluded_hpo_terms = [term for term in term_list if not term.observed]

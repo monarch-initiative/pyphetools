@@ -6,7 +6,7 @@ from .column_mapper import ColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
 
 import re
-from typing import List
+from typing import List, Union
 from collections import defaultdict
 
 
@@ -80,41 +80,60 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             custom_d = defaultdict()
         return self._parse_contents(cell_text=cell_text, custom_d=custom_d)
 
-    def _parse_contents(self, cell_text, custom_d) -> List[HpTerm]:
-        """Parse the contents of a cell for HPO terms
-        Args:
-            cell_text (str): THe text of a table cell
-            custom_d (dict): key - text in original table value-corresponding HPO label
+
+    def _get_exact_match_in_custom_d(self, cell_text, custom_d) -> List[HpTerm]:
+        """This method is called by _parse_contents if cell_text was present in custom_d
+
+        If the match does not result in at least one HpTerm match, it is an error and the custom_d probably has an incorrect string
+
+        :param cell_text: The text of a table cell
+        :type cell_text: str
+        :param custom_d: key - text in original table value-corresponding HPO label
+        :type custom_d: Dict[str, Union[str,List[str]]]
+        :returns: list of HPO terms
+        :rtype: List[HpTerm]
         """
-        if cell_text in custom_d:
-            label = custom_d.get(cell_text)
-            results = []
-            if isinstance(label, list):
-                for lab in label:
-                    hp_term = self.get_term_from_label(label=lab)
-                    if hp_term is not None:
-                        results.append(hp_term)
-            else:
-                hp_term = self.get_term_from_label(label=label)
-                results.append(hp_term)
-            return results
-        chunks = self._split_line_into_chunks(cell_text)
+        label = custom_d.get(cell_text)
         results = []
-        for chunk in chunks:
-            lc_chunk = chunk.lower()
-            hits = []
-            # Note that chunk has been stripped of whitespace and lower-cased already
-            for original_text, hpo_label in custom_d.items():
-                lc_original = original_text.lower()
-                startpos = lc_chunk.find(lc_original)
-                if startpos < 0:
-                    continue
-                endpos = startpos + len(lc_original) - 1
+        if isinstance(label, list):
+            for lab in label:
+                hp_term = self.get_term_from_label(label=lab)
+                if hp_term is None:
+                    raise ValueError(f"Could not get HpTerm from {lab}")
+                else:
+                    results.append(hp_term)
+        else:
+            hp_term = self.get_term_from_label(label=label)
+            if hp_term is None:
+                    raise ValueError(f"Could not get HpTerm from {label}")
+            else:
+                results.append(hp_term)
+        return results
+
+
+    def _find_text_within_custom_items(self, lc_chunk, custom_d) -> List[HpTerm]:
+        hits = []
+        # Note that chunk has been stripped of whitespace and lower-cased already
+        for original_text, hpo_label in custom_d.items():
+            lc_original = original_text.lower()
+            startpos = lc_chunk.find(lc_original)
+            if startpos < 0:
+                continue
+            endpos = startpos + len(lc_original) - 1
+            if isinstance(hpo_label, str):
                 hp_term = self.get_term_from_label(hpo_label)
                 hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
-            for lower_case_hp_label, hpo_tid in self._label_to_id.items():
+            elif isinstance(hpo_label, list):
+                for h in hpo_label:
+                    hp_term = self.get_term_from_label(h)
+                    hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
+        return hits
+
+    def _find_hpo_term_in_lc_chunk(self, lc_chunk) -> List[HpTerm]:
+        hits = []
+        for lower_case_hp_label, hpo_tid in self._label_to_id.items():
                 key = lower_case_hp_label.lower()
-                startpos = chunk.find(key)
+                startpos = lc_chunk.find(key)
                 endpos = startpos + len(key) - 1
                 if startpos < 0:
                     continue
@@ -122,23 +141,72 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                 # This is because otherwise we get some spurious matches such as Pica HP:0011856 matching to typical
                 # Create a regex to enforce the match is at word boundary
                 BOUNDARY_REGEX = re.compile(r'\b%s\b' % key, re.I)
-                if BOUNDARY_REGEX.search(chunk):
+                if BOUNDARY_REGEX.search(lc_chunk):
                     hp_term = self.get_term_from_id(hpo_id=hpo_tid)  # Get properly capitalized label
                     hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
-            # sort hits according to length
-            sorted_hits = sorted(hits, key=ConceptMatch.length, reverse=True)
-            # Choose longest hits first and skip hits that overlap with previously chosen hits
-            chosen_hits = set()
-            for hit in sorted_hits:
-                keeper = True
-                for ch in chosen_hits:
-                    if ch.overlaps(hit):
-                        keeper = False
-                        break
-                if keeper:
-                    chosen_hits.add(hit)
+        return hits
+
+    def _parse_contents(self, cell_text, custom_d) -> List[HpTerm]:
+        """Parse the contents of a cell for HPO terms
+        Args:
+            cell_text (str): The text of a table cell
+            custom_d (dict): key - text in original table value-corresponding HPO label
+        """
+        if cell_text in custom_d:
+            return self._get_exact_match_in_custom_d(cell_text=cell_text, custom_d=custom_d)
+        chunks = self._split_line_into_chunks(cell_text)
+        results = []
+        for chunk in chunks:
+            lc_chunk = chunk.lower()
+            hits_1 = self._find_text_within_custom_items(lc_chunk=lc_chunk, custom_d=custom_d)
+            hits_2 = self._find_hpo_term_in_lc_chunk(lc_chunk=lc_chunk)
+            hits_1.extend(hits_2)
+            results.extend(self._get_non_overlapping_matches(hits=hits_1))
+        return results
+
+    def parse_cell_for_exact_matches(self, cell_text, custom_d) -> List[HpTerm]:
+        """
+        Identify HPO Terms from the contents of a cell whose label exactly matches a string in the custom dictionary
+
+        :param cell_contents: a cell of the original table
+        :type cell_contents: str
+        :param custom_d: a dictionary with keys for strings in the original table and their mappings to HPO labels
+        :type custom_d: Dict[str,str]
+        """
+        if cell_text in custom_d:
+            return self._get_exact_match_in_custom_d(cell_text=cell_text, custom_d=custom_d)
+        chunks = self._split_line_into_chunks(cell_text)
+        results = []
+        for chunk in chunks:
+            lc_chunk = chunk.lower()
+            hits = self._find_text_within_custom_items(lc_chunk=lc_chunk, custom_d=custom_d)
+            results.extend(self._get_non_overlapping_matches(hits=hits))
+        return
+
+    def _get_non_overlapping_matches(self, hits:[List[ConceptMatch]]) -> List[HpTerm]:
+        """The prupose of this method is to choose a list of non-overlapping matches
+
+        Sometimes, we get multiple matches that partially overlap. We will greedily take the longest matches and discard overlaps.
+
+        :param hits: list of ConceptMatch objects that encode HpTerm matches and their positions
+        :type hits: List[ConceptMatch]
+        :returns: a list of non-overlapping HtTerm objects (matches)
+        :rtype: List[HpTerm]
+        """
+        sorted_hits = sorted(hits, key=ConceptMatch.length, reverse=True)
+        # Choose longest hits first and skip hits that overlap with previously chosen hits
+        chosen_hits = set()
+        for hit in sorted_hits:
+            keeper = True
             for ch in chosen_hits:
-                results.append(ch.term)
+                if ch.overlaps(hit):
+                    keeper = False
+                    break
+            if keeper:
+                chosen_hits.add(hit)
+        results = []
+        for ch in chosen_hits:
+            results.append(ch.term)
         return results
 
     def _split_line_into_chunks(self, line):
@@ -175,7 +243,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         """
         return hpo_label.lower() in self._label_to_id
 
-    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
+    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded):
         if observed is None or excluded is None:
             raise ValueError("Symbols for observed (e.g., +, Y, yes) and excluded (e.g., -, N, no) required")
         if not isinstance(column_name_to_hpo_label_map, dict):

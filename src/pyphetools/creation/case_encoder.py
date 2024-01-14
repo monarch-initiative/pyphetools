@@ -5,6 +5,7 @@ import phenopackets as PPKt
 import re
 from typing import Set
 from collections import defaultdict
+from .citation import Citation
 from .column_mapper import ColumnMapper
 from .constants import Constants
 from .disease import Disease
@@ -25,8 +26,8 @@ class CaseEncoder:
 
     :param hpo_cr: HpoConceptRecognizer for text mining
     :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
-    :param pmid: PubMed identifier of this case report
-    :type pmid: str
+    :param citation: PubMed identifierand title of this case report
+    :type citation: Citation
     :param individual_id: Application specific individual identifier
     :type individual_id: str
     :param metadata: GA4GH MetaData object
@@ -41,7 +42,7 @@ class CaseEncoder:
 
     def __init__(self,
                 hpo_cr: HpoConceptRecognizer,
-                pmid: str,
+                citation: Citation,
                 individual_id:str,
                 metadata:PPKt.MetaData,
                 age_at_last_exam:str=None,
@@ -51,6 +52,7 @@ class CaseEncoder:
             raise ValueError(
                 f"concept_recognizer argument must be HpoConceptRecognizer but was {type(hpo_cr)}")
         self._hpo_concept_recognizer = hpo_cr
+        pmid = citation.pmid
         if not pmid.startswith("PMID:"):
             raise ValueError(f"Malformed pmid argument ({pmid}). Must start with PMID:")
         if age_at_last_exam is not None:
@@ -84,8 +86,8 @@ class CaseEncoder:
             self._individual.set_age(age_at_last_exam)
         if disease is not None:
             self._individual.set_disease(disease=disease)
-        if pmid is not None:
-            self._individual.set_pmid(pmid=pmid)
+        if citation is not None:
+            self._individual.set_citation(citation=citation)
 
 
     def add_vignette(self, vignette, custom_d=None, custom_age=None, false_positive=None, excluded_terms:Set[str]=None) -> pd.DataFrame:

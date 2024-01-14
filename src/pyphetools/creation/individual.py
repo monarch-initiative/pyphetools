@@ -3,11 +3,12 @@ import re
 import os
 from typing import List, Union
 from google.protobuf.json_format import MessageToJson
+from .citation import Citation
 from .constants import Constants
 from .disease import Disease
 from .hp_term import HpTerm
 from .hgvs_variant import Variant
-from .metadata import MetaData
+from .metadata import MetaData, Resource
 
 
 class Individual:
@@ -31,8 +32,7 @@ class Individual:
     def __init__(self,
                 individual_id:str,
                 hpo_terms:List[HpTerm]=None,
-                pmid:str=None,
-                title:str=None,
+                citation:Citation=None,
                 sex:str=Constants.NOT_PROVIDED,
                 age:str=Constants.NOT_PROVIDED,
                 interpretation_list:List[PPKt.VariantInterpretation]=None,
@@ -59,8 +59,8 @@ class Individual:
         else:
             self._interpretation_list = interpretation_list
         self._disease = disease
-        self._pmid = pmid
-        self._title = title
+        self._citation = citation
+        self._vital_status = None
 
     @property
     def id(self):
@@ -155,14 +155,17 @@ class Individual:
 
     @property
     def pmid(self):
-        return self._pmid
+        return self._citation.pmid
 
-    def set_pmid(self, pmid:str):
+    def set_citation(self, citation:Citation):
         """
-        :param pmid: The PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
-        :type pmid: str
+        :param citation: Object with the title and PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
+        :type citation: Citation
         """
-        self._pmid = pmid
+        self._citation = citation
+
+    def set_vital_status(self, vstatus:PPKt.VitalStatus):
+        self._vital_status = vstatus
 
     def get_phenopacket_id(self, phenopacket_id=None) -> str:
         """
@@ -171,8 +174,8 @@ class Individual:
         """
         if phenopacket_id is None:
             indi_id = self._individual_id.replace(" ", "_")
-            if self._pmid is not None:
-                pmid = self._pmid.replace(":", "_")
+            if self._citation is not None:
+                pmid = self._citation.pmid.replace(":", "_")
                 ppkt_id = f"{pmid}_{indi_id}"
             else:
                 ppkt_id = indi_id
@@ -182,11 +185,11 @@ class Individual:
         return ppkt_id
 
 
-    def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None):
+    def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None) -> PPKt.Phenopacket:
         """
         Transform the data into GA4GH Phenopacket format
         :returns:  a GA4GH Phenopacket representing this individual
-        :rtype: phenopackets.Phenopacket
+        :rtype: PPKt.Phenopacket
         """
         if isinstance(metadata, MetaData):
             metadata = metadata.to_ga4gh()
@@ -205,11 +208,13 @@ class Individual:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
         if self._age is not None and self._age != Constants.NOT_PROVIDED:
             php.subject.time_at_last_encounter.age.iso8601duration = self._age
+        if self._vital_status is not None:
+            php.subject.vital_status.CopyFrom(self._vital_status)
         if isinstance(self._hpo_terms, list):
             for hp in self._hpo_terms:
                 if not hp.measured:
                     continue
-                pf = hp.to_phenotypic_feature()
+                pf = hp.to_ga4gh_phenotypic_feature()
                 if pf.onset.age.iso8601duration is None and self._age != Constants.NOT_PROVIDED:
                     pf.onset.age.iso8601duration = self._age
                 php.phenotypic_features.append(pf)
@@ -238,17 +243,22 @@ class Individual:
                 genomic_interpretation.variant_interpretation.CopyFrom(var)
                 interpretation.diagnosis.genomic_interpretations.append(genomic_interpretation)
             php.interpretations.append(interpretation)
-        if self._pmid is not None and self._title is not None:
+        if self._citation is not None:
             # overrides the "general" setting of the external reference for the entire cohort
             metadata.external_references.clear()
             extref = PPKt.ExternalReference()
-            extref.id = self._pmid
-            pm = self._pmid.replace("PMID:", "")
+            extref.id = self._citation.pmid
+            pm = self._citation.pmid.replace("PMID:", "")
             extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
-            extref.description = self._title
+            extref.description = self._citation.title
             metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php
+
+    def __str__(self):
+        hpo_list = [t.to_string() for t in self._hpo_terms]
+        hpo_str = "\n" + "\n".join(hpo_list)
+        return f"{self._individual_id}: {self._age}, {self._sex}: {self._disease} {hpo_str}"
 
     @staticmethod
     def output_individuals_as_phenopackets(individual_list, metadata:MetaData, outdir="phenopackets"):
@@ -284,3 +294,101 @@ class Individual:
                 fh.write(json_string)
                 written += 1
         print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
+
+
+
+    @staticmethod
+    def from_ga4gh_metadata(mdata:PPKt.MetaData) -> MetaData:
+        created_by = mdata.created_by
+        created_time = str(mdata.created)
+        if len (mdata.external_references) > 1:
+            raise ValueError("multiple external references not supported")
+        elif len(mdata.external_references) == 0:
+            id = None
+            reference = None
+            description = None
+        else:
+            eref = mdata.external_references[0]
+            id = eref.id
+            reference = eref.reference
+            description = eref.description
+        resource_list = []
+        for resource in mdata.resources:
+            resource_id=resource.id
+            name = resource.name
+            namespace_prefix = resource.namespace_prefix
+            iri_prefix = resource.iri_prefix
+            url = resource.url
+            version = resource.version
+            r = Resource(resource_id=resource_id,name=name, namespace_prefix=namespace_prefix, iriprefix=iri_prefix, url=url, version=version)
+            resource_list.append(r)
+        cite = Citation(pmid=id, title=description)
+        metadata = MetaData(created_by=created_by, citation=cite)
+        for r in resource_list:
+            metadata.add_reference(r)
+        return metadata
+
+    @staticmethod
+    def get_variants_and_disease(ppkt:PPKt.Phenopacket):
+        """extract the pyphetools Disease object and the VariantInterpretation objects that can be used to construct an Individual
+
+        :param ppkt: a GA4GH phenopacket
+        :type ppkt: PPKT.Phenopacket
+        :returns: tjhe corresponding Individual object
+        :rtype: Individual, List[PPKt.VariantInterpretation]
+        """
+        if len(ppkt.interpretations) == 0:
+            print(f"No interpretation found for {ppkt.id}")
+            return None, []
+        if len(ppkt.interpretations) > 1:
+            raise ValueError(f"pyphetools dpoes not currently support multiple Interpretation messages in one phenopacket but we found {len(ppkt.interpretations)}")
+        interpretation = ppkt.interpretations[0]
+        if interpretation.diagnosis is not None and interpretation.diagnosis.disease is not None:
+            d = interpretation.diagnosis.disease
+            disease = Disease(disease_id=d.id, disease_label=d.label)
+        else:
+            disease = None
+        if len(interpretation.diagnosis.genomic_interpretations) == 0:
+            return disease, []
+        else :
+            variant_list = []
+            for gen_interpretation in interpretation.diagnosis.genomic_interpretations:
+                variant_list.append(gen_interpretation.variant_interpretation)
+            return disease, variant_list
+
+
+    @staticmethod
+    def from_ga4gh_phenopacket(ppkt:PPKt.Phenopacket):
+        """
+        Transform a GA4GH Phenopacket into an Individual obect -- useful for testing
+        :returns:  an individual object corresponding to the GA4GH Phenopacket
+        :rtype: Individual
+        """
+        if not isinstance(ppkt, PPKt.Phenopacket):
+            raise ValueError(f"argument must be a GA4GH Phenopacket Message but was {type(ppkt)}")
+        #metadata = ppkt.meta_data
+        #pypt_metadata = Individual.from_ga4gh_metadata(mdata=metadata)
+        subject_id =  ppkt.subject.id
+        sex = ppkt.subject.sex
+        age = ppkt.subject.time_at_last_encounter.age.iso8601duration
+        variant_interpretations = []
+        hpo_terms = []
+        for pf in ppkt.phenotypic_features:
+            hpo_id = pf.type.id
+            hpo_label = pf.type.label
+            observed = not pf.excluded
+            if pf.onset.age.iso8601duration is not None and pf.onset.age.iso8601duration.startswith("P"):
+                onset_age = pf.onset.age.iso8601duration
+            else:
+                onset_age = None
+            hpo_terms.append(HpTerm(hpo_id=hpo_id, label=hpo_label, observed=observed, onset=onset_age))
+        disease, var_list = Individual.get_variants_and_disease(ppkt)
+        indi = Individual(individual_id=subject_id,
+                            hpo_terms=hpo_terms,
+                            citation=None,
+                            sex=sex,
+                            age=age,
+                            interpretation_list=var_list)
+        if disease is not None:
+            indi.set_disease(disease=disease)
+        return indi

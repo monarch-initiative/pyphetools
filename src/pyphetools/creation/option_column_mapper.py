@@ -41,6 +41,8 @@ class OptionColumnMapper(ColumnMapper):
         self._excluded_d = excluded_d
         if omitSet is None:
             omitSet = set()
+        elif not isinstance(omitSet, set):
+            raise ValueError(f"argument 'omitSet' must be a Python set but was {type(omitSet)}")
         self._omit_set = omitSet
         self._assumeExcluded = assumeExcluded
         if assumeExcluded:
@@ -55,79 +57,32 @@ class OptionColumnMapper(ColumnMapper):
 
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
+        """parse a single table cell
+
+        :param cell_contents: contents of a cell of the original file
+        :type cell_contents: str
+        :returns: list of HPO matches
+        :rtype: List[HpTerm]
+        """
         for excl in self._omit_set:
             cell_contents = cell_contents.replace(excl, " ")
         # results is a list of HpTerm objects
-        results = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
-        if results is None:
-            results = []
+        results = []
         if self._excluded_d is not None and len(self._excluded_d) > 0:
-            excluded_results = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._excluded_d)
+            excluded_results = self._hpo_cr.parse_cell_for_exact_matches(cell_text=cell_contents, custom_d=self._excluded_d)
             if excluded_results is not None and len(excluded_results) > 0:
                 for er in excluded_results:
                     er.excluded()
                     results.append(er)
+                    # remove excluded terms from contents
+                    cell_contents = cell_contents.replace(er.label.lower(), " ")
+        results_obs = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
+        results.extend(results_obs)
         if self._assumeExcluded:
             current_labels = { hpo_term.label for hpo_term in results}
             for k, v in self._assume_excluded_d.items():
                 if v.label not in current_labels:
                     results.append(v)
-        return results
-
-    def map_cellOLD(self, cell_contents) -> List[HpTerm]:
-        """Map cell contents using the option dictionary
-
-        :param cell_contents: contents of one table cell
-        :type cell_contents: str
-        :returns: list of (unique, alphabetically sorted) HpTerm objects with observed or excluded HPO terms
-        :rtype: List[HpTerm]
-        """
-        results = []
-        contents = cell_contents.strip()
-        # First check for negated terms
-        if contents in self._excluded_d:
-            if isinstance(contents, list):
-                for itm in contents:
-                    excluded_hpo_label = self._excluded_d.get(itm)
-                    term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
-                    term.excluded()
-                    results.append(term)
-            else:
-                excluded_hpo_label = self._excluded_d.get(contents)
-                term = self._hpo_cr.get_term_from_label(label=excluded_hpo_label)
-                term.excluded()
-                results.append(term)
-            return results
-        # Now collect HPO labels corresponding to the cell concents
-        hpo_labels = set()
-
-        # first check if there is an exact match with the entire string
-        if cell_contents in self._option_d:
-            hpo_lbl = self._option_d.get(cell_contents)
-            if isinstance(hpo_lbl, list):
-                for hp in hpo_lbl:
-                    hpo_labels.add(hp)
-            else:
-                hpo_labels.add(hpo_lbl)
-        else:
-            # check if a portion of the cell contents (separated by delimiters) is a match
-            delimiters = ',;|/'
-            regex_pattern = '|'.join(map(re.escape, delimiters))
-            chunks = re.split(regex_pattern, contents)
-            chunks = [chunk.strip() for chunk in chunks]
-            for c in chunks:
-                for my_key, my_label in self._option_d.items():
-                    if my_key in c:
-                        if isinstance(my_label, list):
-                            for itm in my_label:
-                                hpo_labels.add(itm)
-                        else:
-                            hpo_labels.add(my_label)
-        # Now create HpTerm objects for each match
-        for label in hpo_labels:
-            term = self._hpo_cr.get_term_from_label(label=label)
-            results.append(term)
-            results.sort(key=lambda term: term.label)
         return results
 
     def preview_column(self, column) -> pd.DataFrame:
@@ -146,21 +101,23 @@ class OptionColumnMapper(ColumnMapper):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
         dlist = []
         for _, value in column.items():
+            d = {"original text": value}
             column_val = []
             results  = self.map_cell(str(value))
             if results is None:
                 print(f"Got None results for {str(value)}")
-                dlist.append({"terms": "n/a"})
+                d["terms"] = "n/a"
             elif len(results) > 0:
                 for hpterm in results:
                     column_val.append(f"{hpterm.id} ({hpterm.label}/{hpterm.display_value})")
-                dlist.append({"terms": "; ".join(column_val)})
+                d["terms"] = "; ".join(column_val)
             else:
-                dlist.append({"terms": "n/a"})
+                d["terms"] = "n/a"
+            dlist.append(d)
         return pd.DataFrame(dlist)
 
     @staticmethod
-    def autoformat(df: pd.DataFrame, concept_recognizer, delimiter=",", omit_columns=None, df_name='df') -> str:
+    def autoformat(df: pd.DataFrame, concept_recognizer:HpoConceptRecognizer, delimiter:str=",", omit_columns:List[str]=None) -> str:
         """Autoformat code from the columns so that we can easily copy-paste and change it.
 
         This method intends to save time by preformatting code the create OptionMappers. The following commands
@@ -186,11 +143,11 @@ class OptionColumnMapper(ColumnMapper):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"argument \"df\" must be a pandas DataFrame but was {type(df)}")
         if not isinstance(concept_recognizer, HpoConceptRecognizer):
-            raise ValueError("concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+            raise ValueError(f"concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
         if omit_columns is None:
             omit_columns = set()
         elif isinstance(omit_columns, list):
-            omit_columns = set(list)
+            omit_columns = set(omit_columns)
         elif not isinstance(omit_columns, set):
             raise ValueError(f"If passed, omit_columns argument must be set or list but was {type(omit_columns)}")
         # df.shape[1] gives us the number of columns

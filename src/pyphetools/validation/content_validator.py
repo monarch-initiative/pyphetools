@@ -11,6 +11,7 @@ from ..creation.allelic_requirement import AllelicRequirement
 from ..creation.individual import Individual
 
 
+
 class ContentValidator(PhenopacketValidator):
     """
     Validate a list of phenopackets as to whether they have a minunum number of phenotypic features and alleles
@@ -127,32 +128,25 @@ class ContentValidator(PhenopacketValidator):
         """
         validation_results = []
         if n_hpo < self._min_hpo:
-            msg = f"Minimum HPO terms required {self._min_hpo} but only {n_hpo} found"
-            validation_results.append(ValidationResult.error(phenopacket_id=pp_id, message=msg))
+            validation_results.append(ValidationResultBuilder(phenopacket_id=pp_id).insufficient_hpos(min_hpo=self._min_hpo, n_hpo=n_hpo).build())
         if self._allelic_requirement is None:
             return validation_results
         if self._allelic_requirement == AllelicRequirement.MONO_ALLELIC:
             if n_var != 1:
-                msg = f"Expected one variant for monoallelic but got {n_var} variants"
-                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_variant_count().set_message(msg=msg).build()
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_variant_count(self._allelic_requirement, n_var).build()
                 validation_results.append(val_result)
             if n_alleles != 1:
-                msg = f"Expected one allele for monoallelic but got {n_alleles} alleles"
-                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_allele_count().set_message(msg=msg).build()
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_allele_count(self._allelic_requirement, n_alleles).build()
                 validation_results.append(val_result)
         elif self._allelic_requirement == AllelicRequirement.BI_ALLELIC:
             if n_var < 1 or n_var > 2:
                 msg = f"Expected one or two variant for biallelic but got {n_var} variants"
-                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_variant_count().set_message(msg=msg).build()
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_variant_count(self._allelic_requirement, n_var).build()
                 validation_results.append(val_result)
             if n_alleles != 2:
-                msg = f"Expected two alleles for biallelic but got {n_alleles} alleles"
-                val_result = ValidationResultBuilder(phenopacket_id=pp_id).error().incorrect_allele_count().set_message(msg=msg).build()
+                val_result = ValidationResultBuilder(phenopacket_id=pp_id).incorrect_allele_count(self._allelic_requirement, n_alleles).build()
                 validation_results.append(val_result)
         return validation_results
-
-
-
 
 
 
