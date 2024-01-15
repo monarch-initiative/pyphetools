@@ -2,6 +2,7 @@ from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from typing import List
 import pandas as pd
+from collections import defaultdict
 import math
 
 
@@ -35,7 +36,7 @@ class ThresholdedColumnMapper(ColumnMapper):
             raise ValueError(
                 f"Malformed cell contents for ThresholdedColumnMapper: {cell_contents}, type={type(cell_contents)}")
         try:
-            
+
             value = float(contents)
             if self._call_if_above:
                 if value > self._threshold:
@@ -53,10 +54,15 @@ class ThresholdedColumnMapper(ColumnMapper):
     def preview_column(self, column):
         if not isinstance(column, pd.Series):
             raise ValueError("column argument must be pandas Series, but was {type(column)}")
-        dlist = []
+        mapping_counter = defaultdict(int)
         for _, value in column.items():
             results = self.map_cell(str(value))
             if len(results) > 0:
                 hpterm = results[0]
-                dlist.append({"term": hpterm.hpo_term_and_id, "status": hpterm.display_value})
+                mapped = f"{hpterm.hpo_term_and_id}: {hpterm.display_value}"
+                mapping_counter[mapped] += 1
+        dlist = []
+        for k, v in mapping_counter.items():
+            d = {"mapping": k, "count": str(v)}
+            dlist.append(d)
         return pd.DataFrame(dlist)

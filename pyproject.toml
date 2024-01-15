@@ -17,7 +17,7 @@ description = "Generate and work with GA4GH phenopackets"
 readme = "README.md"
 authors = [
     {name = "Peter Robinson", email="peter.robinson@jax.org"},
-     ]
+]
 license = { file = "LICENSE" }
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -33,6 +33,7 @@ keywords = [
     "HPO"]
 dependencies = [
     "hpo-toolkit>=0.3.0",
+    "matplotlib",
     "openpyxl",
     "pandas",
     "phenopackets",

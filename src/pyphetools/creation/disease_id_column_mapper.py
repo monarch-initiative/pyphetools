@@ -26,8 +26,9 @@ class DiseaseIdColumnMapper:
         :rtype: Disease
         :raises: ValueError if the cell contents cannot be mapped
         """
-        if cell_contents not in self._disease_id_dict:
-            raise ValueError(f"Could not map disease {cell_contents}")
+        disease_id = str(cell_contents) # sometime pandas give us an int or an object
+        if disease_id not in self._disease_id_dict:
+            raise ValueError(f"Could not map disease \"{cell_contents}\"")
         return self._disease_id_dict.get(cell_contents)
 
     def get_column_name(self):
