@@ -9,9 +9,6 @@ from .simple_patient import SimplePatient
 from .html_table_generator import HtmlTableGenerator
 
 
-#
-
-
 class Age2Day:
     """
     Convenience function to help sort ages but converting ISO8601 strings into the number of days
@@ -25,10 +22,10 @@ class Age2Day:
         self.days = days
 
 
-#@DeprecationWarning("This class will be replaced by IndividualTable and will be deleted in a future version")
-class PhenopacketTable:
+class IndividualTable:
+
     """
-    This class creates a table with a summary of all phenopackets in a cohort of individuals
+    This class creates a table with a summary of  data in a cohort of individuals
     Create Individual objects and transform them into phenopackets, or import GA4GH phenopackets and display them.
 
         from IPython.display import HTML, display
@@ -41,8 +38,7 @@ class PhenopacketTable:
         table = PhenopacketTable.from_individuals(individual_list=individuals, metadata=metadata)
         display(HTML(table.to_html()))
     """
-    def __init__(self, phenopacket_list:List[PPKt.Phenopacket]=None,
-                        individual_list:List[Individual]=None,
+    def __init__(self,  individual_list:List[Individual],
                         metadata:MetaData=None) -> None:
         """
         :param phenopacket_list: List of GA4GH phenopackets to be displayed
@@ -52,52 +48,77 @@ class PhenopacketTable:
         :param metadata: metadata about the individuals
         :type metadata: MetaData
         """
-        if phenopacket_list is None and individual_list is not None and metadata is not None:
-            self._phenopacket_list =  [i.to_ga4gh_phenopacket(metadata=metadata.to_ga4gh()) for i in individual_list]
-        elif phenopacket_list is not None and individual_list is None:
-            if metadata is not None:
-                raise ValueError("metadata argument not needed for phenopacket list")
-            self._phenopacket_list = phenopacket_list
+        self._spat_list = []
+        pmid_count_d = defaultdict(int)
+        no_pmid_found = 0
+        pmid_found = 0
+        for individual in individual_list:
+            pp = self._individual_to_phenopacket(individual, metadata)
+            spat = SimplePatient(ga4gh_phenopacket=pp)
+            if spat.has_pmid():
+                pmid_count_d[spat.get_pmid()] += 1
+                pmid_found += 1
+            else:
+                no_pmid_found += 1
+            self._spat_list.append(spat)
+        # Create caption
+        if pmid_found == 0:
+            self._caption = f"{len(individual_list)} individuals with no PMIDs (consider adding this information to the MetaData)"
+        else:
+            pmid_strings = []
+            for k, v in pmid_count_d.items():
+                pmid_strings.append(f"{k} (n={v})")
+            pmid_str = "; ".join(pmid_strings)
+            n_phenopackets = len(individual_list)
+            if n_phenopackets == 1:
+                self._caption = f"{n_phenopackets} phenopacket - {pmid_str}"
+            else:
+                self._caption = f"{n_phenopackets} phenopackets - {pmid_str}"
 
-    @staticmethod
-    def from_phenopackets(phenopacket_list:List[PPKt.Phenopacket]):
-        """Initialize PhenopacketTable from list of GA4GH Phenopackets
 
-        :param phenopacket_list: list of GA4GH Phenopackets
-        :type phenopacket_list: List[PPKt.Phenopacket]
+    def to_html(self):
+        header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
+        rows = []
+        for spat in self._spat_list:
+            rows.append(self._simple_patient_to_table_row(spat))
+        generator = HtmlTableGenerator(caption=self._caption, header_items=header_items, rows=rows)
+        return generator.get_html()
 
-        :returns: PhenopacketTable for displaying information about a cohort
-        :rtype: PhenopacketTable
+
+    def _individual_to_phenopacket(self, individual, metadata):
+        """Create a phenopacket with the information from this individual
+
+        We try to get information about the publication from the Individual object first. If this is not
+        available, we look for citation information in the metadata
+
+        Args:
+            individual (_type_): _description_
+            metadata (_type_): _description_
+
+        Raises:
+            ValueError: _description_
         """
-        if not isinstance(phenopacket_list, list):
-            raise ValueError(f"Expecting a list but got {type(phenopacket_list)}")
-        if len(phenopacket_list) == 0:
-            raise ValueError("phenopacket_list was empty")
-        ppkt = phenopacket_list[0]
-        if not isinstance(ppkt, PPKt.Phenopacket):
-            raise ValueError(f"phenopacket_list argument must be list of Phenopacket objects but was {type(ppkt)}")
-        return PhenopacketTable(phenopacket_list=phenopacket_list)
-
-    @staticmethod
-    def from_individuals(individual_list:List[Individual], metadata:MetaData):
-        """Initialize PhenopacketTable from list of GA4GH Phenopackets
-
-        :param phenopacket_list: list of GA4GH Phenopackets
-        :type phenopacket_list: List[PPKt.Phenopacket]
-
-        :returns: PhenopacketTable for displaying information about a cohort
-        :rtype: PhenopacketTable
-        """
-        if not isinstance(individual_list, list):
-            raise ValueError(f"Expecting a list but got {type(individual_list)}")
-        if len(individual_list) == 0:
-            raise ValueError("individual_list was empty")
-        indi = individual_list[0]
-        if not isinstance(indi, Individual):
-            raise ValueError(f"individual_list argument must be list of Individual objects but was {type(indi)}")
-        if not isinstance(metadata, MetaData):
-            raise ValueError(f"metadata argument must be pyphetools MetaData object but was {type(metadata)}")
-        return PhenopacketTable(individual_list=individual_list, metadata=MetaData)
+        citation = individual.get_citation()
+        if citation is None:
+            if  metadata is None:
+                raise ValueError("No citation information available in individual and metadata is None")
+            else:
+                citation = metadata.get_citation()
+        created_by = "pyphetools" # Note that this is only used to create a table showing variants, diagnoses, and HPOs
+        # the actual created by is not needed for this, and it is user to provide this constant here rather than demand the user enter it.
+        # similarly, we do not need to have the version of the HPO here.
+        # Note that this does not affect the code that outputs phenopackets, which need to have the correct version of this
+        mdata = MetaData(created_by=created_by)
+        mdata.default_versions_with_hpo(version="n/a")
+        metadata = mdata.to_ga4gh()
+        #  the external reference is use to show counts of PMIDs
+        extref = PPKt.ExternalReference()
+        extref.id = citation.pmid
+        pm = citation.pmid.replace("PMID:", "")
+        extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
+        extref.description = citation.title
+        metadata.external_references.append(extref)
+        return individual.to_ga4gh_phenopacket(metadata=metadata)
 
     def _simple_patient_to_table_row(self, spat:SimplePatient) -> List[str]:
         """
@@ -138,7 +159,7 @@ class PhenopacketTable:
         :rtype: str
         """
         lines = []
-        age2day_list = PhenopacketTable.get_sorted_age2data_list(term_by_age_dict.keys())
+        age2day_list = IndividualTable.get_sorted_age2data_list(term_by_age_dict.keys())
         sorted_age = sorted(age2day_list, key=lambda x: x.days)
         for onset in sorted_age:
             hpo_list = term_by_age_dict.get(onset.key)
@@ -148,42 +169,6 @@ class PhenopacketTable:
             else:
                 lines.append(f"<b>{onset.key}</b>: {hpos}")
         return "<br/>".join(lines)
-
-    def to_html(self):
-        """create an HTML table with patient ID, age, sex, genotypes, and PhenotypicFeatures
-        """
-        ppack_list = self._phenopacket_list
-        spat_list = []
-        pmid_count_d = defaultdict(int)
-        no_pmid_found = 0
-        pmid_found = 0
-        for pp in ppack_list:
-            spat = SimplePatient(ga4gh_phenopacket=pp)
-            if spat.has_pmid():
-                pmid_count_d[spat.get_pmid()] += 1
-                pmid_found += 1
-            else:
-                no_pmid_found += 1
-            spat_list.append(spat)
-        # Create caption
-        if pmid_found == 0:
-            capt = f"{len(ppack_list)} phenopackets - no PMIDs (consider adding this information to the MetaData)"
-        else:
-            pmid_strings = []
-            for k, v in pmid_count_d.items():
-                pmid_strings.append(f"{k} (n={v})")
-            pmid_str = "; ".join(pmid_strings)
-            n_phenopackets = len(ppack_list)
-            if n_phenopackets == 1:
-                capt = f"{n_phenopackets} phenopacket - {pmid_str}"
-            else:
-                capt = f"{n_phenopackets} phenopackets - {pmid_str}"
-        header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
-        rows = []
-        for spat in spat_list:
-            rows.append(self._simple_patient_to_table_row(spat))
-        generator = HtmlTableGenerator(caption=capt, header_items=header_items, rows=rows)
-        return generator.get_html()
 
     @staticmethod
     def iso_to_days(iso_age:str) -> int:
@@ -228,9 +213,6 @@ class PhenopacketTable:
         :returns: A list of sorted Age2Day objects
         :rtype:  List[Age2Day]
         """
-        age2day_list = list(Age2Day(age, PhenopacketTable.iso_to_days(age)) for age in ages)
+        age2day_list = list(Age2Day(age, IndividualTable.iso_to_days(age)) for age in ages)
         sorted_list = sorted(age2day_list, key=lambda x: x.days)
         return sorted_list
-
-
-

@@ -137,7 +137,10 @@ class VariantManager:
             if v in self._var_d:
                 continue
             print(f"[INFO] encoding variant \"{v}\"")
-            var = vvalidator.encode_hgvs(v)
+            try:
+                var = vvalidator.encode_hgvs(v)
+            except Exception as e:
+                print(f"[ERROR] Could not retrieve Variant Validator information for {v}: {str(e)}")
             self._var_d[v] = var
         write_variant_pickle(name=self._cohort_name, my_object=self._var_d)
 
@@ -217,7 +220,7 @@ class VariantManager:
         """
         if len(self._unmapped_alleles) > 0:
             raise ValueError(f"Need to map all allele strings before using this method but "
-                             f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
+                            f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
         for i in individual_list:
             if i.id not in self._individual_to_alleles_d:
                 raise ValueError(f"Did not find {i.id} in our dictionary of individuals")

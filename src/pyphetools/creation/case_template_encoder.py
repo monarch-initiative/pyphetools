@@ -124,6 +124,7 @@ class CaseTemplateEncoder:
             if self._is_biallelic:
                 self._allele2_d[individual.id] = row["allele_2"]
         CaseTemplateEncoder.HPO_VERSION = hpo_cr.get_hpo_ontology().version
+        self._created_by = created_by
         self._metadata_d = {}
         for i in self._individuals:
             cite = i._citation
@@ -221,10 +222,23 @@ class CaseTemplateEncoder:
     def get_metadata_d(self):
         return self._metadata_d
 
-    @staticmethod
-    def output_individuals_as_phenopackets(individual_list:List[Individual], created_by=None, outdir="phenopackets"):
-        """write a list of Individual objects to file in GA4GH Phenopacket format
+    def get_phenopackets(self):
+        ppack_list = []
+        for individual in self._individuals:
+            cite = individual._citation
+            metadata = MetaData(created_by=self._created_by, citation=cite)
+            metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
+            phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
+            ppack_list.append(phenopckt)
+        return ppack_list
 
+
+
+    def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets"):
+        """write a list of Individual objects to file in GA4GH Phenopacket format
+        Note that the individual_list needs to be passed to this object, because we expect that
+        the QC code will have been used to cleanse the data of redundancies etc before output.
+        We use the statefullness to keep track of the created_by argument from the constructor
 
         :param outdir: Path to output directory. Defaults to "phenopackets". Created if not exists.
         :type outdir: str
@@ -235,8 +249,10 @@ class CaseTemplateEncoder:
             os.makedirs(outdir)
         written = 0
 
-        if created_by is None:
+        if self._created_by is None:
             created_by = 'pyphetools'
+        else:
+            created_by = self._created_by
         for individual in individual_list:
             cite = individual._citation
             metadata = MetaData(created_by=created_by, citation=cite)
