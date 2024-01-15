@@ -66,6 +66,7 @@ hpo_version = parser.get_version()
 hpo_ontology = parser.get_ontology()
 PMID = "PMID:16783569"
 title = "A novel X-linked recessive mental retardation syndrome comprising macrocephaly and ciliary dysfunction is allelic to oral-facial-digital type I syndrome"
+citation = TODO
 metadata = MetaData(created_by="ORCID:0000-0002-5648-2155", pmid=PMID, pubmed_title=title)
 metadata.default_versions_with_hpo(version=hpo_version)
 print(f"HPO version {hpo_version}")
@@ -80,7 +81,7 @@ hpo_cr = parser.get_hpo_concept_recognizer()
 hpo_version = parser.get_version()
 PMID = "PMID:24736735"
 title = "New insights into genotype-phenotype correlation for GLI3 mutations"
-metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", pmid=PMID, pubmed_title=title)
+metadata = MetaData(created_by="", pmid=PMID, pubmed_title=title)
 metadata.default_versions_with_hpo(version=hpo_version)
 ```
 
