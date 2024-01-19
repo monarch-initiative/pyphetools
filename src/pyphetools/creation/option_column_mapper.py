@@ -180,7 +180,7 @@ class OptionColumnMapper(ColumnMapper):
             items_d_string = str(temp_dict).replace(',', ',\n')
             lines.append(f"{items_d_name} = {items_d_string}")
             lines.append(f"{col_name}Mapper = OptionColumnMapper(concept_recognizer=hpo_cr, option_d={items_d_name})")
-            lines.append(f"{col_name}Mapper.preview_column({df_name}['" + str(df.columns[y]) + "'])")
+            lines.append(f"{col_name}Mapper.preview_column(df['" + str(df.columns[y]) + "'])")
             lines.append(f"column_mapper_d['{str(df.columns[y])}'] = {col_name}Mapper")
             lines.append("")
         return "\n".join(lines)
