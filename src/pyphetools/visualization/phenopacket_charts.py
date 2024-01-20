@@ -67,9 +67,22 @@ class PhenopacketCharts:
 
 
     def terms_per_phenopacket(self):
-        count_vector = [x for x in self._hpo_count_d.values()]
-        num_bins = np.max(count_vector)
-        ax = plt.hist(count_vector,color ='green', alpha = 0.7, rwidth=0.85, bins=num_bins)
+        """barchart with y (height)=number of terms per phenopacket and x: number of phenopackets with that many terms
+        """
+        max_terms = max(self._hpo_count_d.keys())
+
+        term_vector = []
+        n_packet_vector = []
+        for i in range(max_terms+1):
+            n_packets = self._hpo_count_d.get(i, 0)
+            term_vector.append(i)
+            n_packet_vector.append(n_packets)
+        ax = plt.bar(term_vector, n_packet_vector,color ='green', alpha = 0.7)
+        # the following two lines cause the Y axis to show just integers for 20 or less
+        max_n_individual = max(self._hpo_count_d.values())
+        if max_n_individual < 21:
+            yint = range(0, max_n_individual+1)
+            plt.yticks(yint)
         plt.xlabel('HPO terms per individual')
         plt.ylabel('# Individuals')
         plt.title("Total HPO term counts per individual")
