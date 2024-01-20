@@ -116,8 +116,13 @@ class VariantManager:
         variant_set = set()  # we expect HGVS nomenclature. Everything else will be parsed as chromosomal
         vvalidator = VariantValidator(genome_build=genome_assembly, transcript=self._transcript)
         # The DataFrame has two header rows.
-        # The second header row in effect is the first row of the DataFrame, so we drop it here.
-        df = self._dataframe.iloc[1:]
+        # For CaseTemplateEncoder, the second header row in effect is the first row of the DataFrame, so we drop it here.
+        # For CaseTemplateEncoder, the second row will contain "str" in the second row of the PMID column
+        # For other encoders, there may not be a "PMID" column, and if so it will not contain "str" in the second row
+        if "PMID" in self._dataframe.columns and self._dataframe.iloc[0]["PMID"] == "str":
+            df = self._dataframe.iloc[1:]
+        else:
+            df = self._dataframe
         for _, row in df.iterrows():
             individual_id = row[self._individual_column_name]
             allele1 = row[self._allele_1_column_name]
@@ -223,7 +228,7 @@ class VariantManager:
                             f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
         for i in individual_list:
             if i.id not in self._individual_to_alleles_d:
-                raise ValueError(f"Did not find {i.id} in our dictionary of individuals")
+                raise ValueError(f"Did not find {i.id} in our dictionary of individuals. Note that this function is intended to work with CaseTemplateEncoder")
             vlist = self._individual_to_alleles_d.get(i.id)
             if len(vlist) == 1:
                 # assume monoallelic
@@ -257,6 +262,16 @@ class VariantManager:
                     var2 = self._var_d.get(v2)
                     var2.set_heterozygous()
                     i.add_variant(var2)
+
+    def get_var(self, v):
+        """Get a Variant object that corresponds to v.
+
+        :param v: an HGVS string or free-text representation of a chromosomal variant
+        :type v: str
+        :returns: corresponding Variant
+        :rtype: Variant
+        """
+        return self._var_d.get(v)
 
 
 
