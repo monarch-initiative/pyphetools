@@ -1,55 +1,28 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
+from .thresholder import Thresholder
 from typing import List
 import pandas as pd
+import pkg_resources
 from collections import defaultdict
 import math
 
 
 class ThresholdedColumnMapper(ColumnMapper):
-    def __init__(self, column_name, hpo_id, hpo_label, threshold, call_if_above, observed_code=None):
+    INITIALIZED = False
+
+    def __init__(self, column_name, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None):
         super().__init__(column_name=column_name)
-        self._hpo_id = hpo_id
-        self._hpo_label = hpo_label
-        if not isinstance(threshold, int) and not isinstance(threshold, float):
-            raise ValueError(f"threshold argument must be integer or float but was {threshold}")
-        if not isinstance(call_if_above, bool):
-            raise ValueError(f"call_if_above argument must be True or False but was {call_if_above}")
-        self._threshold = float(threshold)  # transform ints to float for simplicity, it will not affect result
-        self._call_if_above = call_if_above
-        self._observed_code = observed_code
+        self._thresholder = Thresholder(hpo_term_low=hpo_term_low, hpo_term_high=hpo_term_high, hpo_term_abn=hpo_term_abn, threshold_low=threshold_low, threshold_high=threshold_high)
+        ThresholdedColumnMapper.init_thresholders_if_needed()
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
-        if isinstance(cell_contents, str):
-            contents = cell_contents.strip()
-            if contents == self._observed_code:
-                return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
-            if contents.lower() == "nan":
-                return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
-        elif isinstance(cell_contents, int):
-            contents = cell_contents
-        elif isinstance(cell_contents, float):
-            if math.isnan(cell_contents):
-                return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
-            contents = cell_contents
+        hpterm = self._thresholder.map_value(cell_contents=cell_contents)
+        if hpterm is not None:
+            return [hpterm]
         else:
-            raise ValueError(
-                f"Malformed cell contents for ThresholdedColumnMapper: {cell_contents}, type={type(cell_contents)}")
-        try:
+            return []
 
-            value = float(contents)
-            if self._call_if_above:
-                if value > self._threshold:
-                    return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
-                else:
-                    return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
-            else:
-                if value > self._threshold:
-                    return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)]
-                else:
-                    return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
-        except Exception as exc:
-            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, measured=False)]
 
     def preview_column(self, df:pd.DataFrame):
         if not isinstance(df, pd.DataFrame):
@@ -67,3 +40,13 @@ class ThresholdedColumnMapper(ColumnMapper):
             d = {"mapping": k, "count": str(v)}
             dlist.append(d)
         return pd.DataFrame(dlist)
+
+    @staticmethod
+    def init_thresholders_if_needed():
+        if ThresholdedColumnMapper.INITIALIZED:
+            return
+        stream = pkg_resources.resource_stream(__name__, 'data/thresholds.tsv')
+        df = pd.read_csv(stream, sep="\t")
+        for _, row in df.iterrows():
+            print(row)
+        ThresholdedColumnMapper.INITIALIZED = True

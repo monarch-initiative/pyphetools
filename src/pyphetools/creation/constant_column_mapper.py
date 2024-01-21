@@ -51,7 +51,7 @@ class ConstantColumnMapper(ColumnMapper):
         return self._hpo_terms
 
     def preview_column(self, df:pd.DataFrame) -> pd.DataFrame:
-        if not isinstance(df, pd.Series):
+        if not isinstance(df, pd.DataFrame):
             raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
         dlist = []
         column = df[self._column_name]

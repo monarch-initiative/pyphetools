@@ -35,6 +35,7 @@ dependencies = [
     "hpo-toolkit>=0.3.0",
     "matplotlib",
     "openpyxl",
+    "pkg_resources",
     "pandas",
     "phenopackets",
     "protobuf",

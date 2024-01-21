@@ -146,8 +146,9 @@ class OptionColumnMapper(ColumnMapper):
                             temp_dict[entry.strip()] = hpo_term[0].label
                         else:
                             temp_dict[entry.strip()] = 'PLACEHOLDER'
-            col_name = str(df.columns[y]).lower().replace(", ","_").replace(' ', '_')
-            col_name = col_name.lower()
+            original_column_name = str(df.columns[y])
+            clean_column_name = str(df.columns[y]).lower().replace(", ","_").replace(' ', '_').replace("/", "_")
+            col_name = clean_column_name.lower()
             # skip columns that are unlikely to be interesting for the OptionColumnMapper
             if "patient" in col_name:
                 continue
@@ -162,9 +163,11 @@ class OptionColumnMapper(ColumnMapper):
             items_d_name = f"{col_name}_d"
             items_d_string = str(temp_dict).replace(',', ',\n')
             lines.append(f"{items_d_name} = {items_d_string}")
-            lines.append(f"{col_name}Mapper = OptionColumnMapper(concept_recognizer=hpo_cr, option_d={items_d_name})")
-            lines.append(f"{col_name}Mapper.preview_column(df['" + str(df.columns[y]) + "'])")
-            lines.append(f"column_mapper_d['{str(df.columns[y])}'] = {col_name}Mapper")
+            lines.append("excluded = {}")
+            lines.append(f"{col_name}Mapper = OptionColumnMapper(column_name=\"{original_column_name}\", concept_recognizer=hpo_cr, option_d={items_d_name}, excluded_d=excluded)")
+            lines.append(f"column_mapper_list.append({col_name}Mapper)")
+            lines.append(f"{col_name}Mapper.preview_column(df)")
+
             lines.append("")
         return "\n".join(lines)
 
