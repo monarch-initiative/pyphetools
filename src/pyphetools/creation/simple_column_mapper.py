@@ -118,13 +118,13 @@ class SimpleColumnMapperGenerator:
         self._error_messages = []
 
 
-    def try_mapping_columns(self) -> Dict[str, ColumnMapper]:
+    def try_mapping_columns(self) -> List[ColumnMapper]:
         """As a side effect, this class initializes three lists of mapped, unmapped, and error columns
 
         :returns: A dictionary with successfully mapped columns
         :rtype: Dict[str,ColumnMapper]
         """
-        simple_mappers = defaultdict(ColumnMapper)
+        simple_mapper_list = list()
         hpo_id_re = r"(HP:\d+)"
         for col in self._df.columns:
             colname = str(col)
@@ -132,26 +132,28 @@ class SimpleColumnMapperGenerator:
             if self._hpo_cr.contains_term_label(colname):
                 hpo_term_list = self._hpo_cr.parse_cell(colname)
                 hpo_term = hpo_term_list[0]
-                simple_mappers[col] = SimpleColumnMapper(column_name=colname,
+                scm = SimpleColumnMapper(column_name=colname,
                                                         hpo_id=hpo_term.id,
                                                         hpo_label=hpo_term.label,
                                                         observed=self._observed,
                                                         excluded=self._excluded)
+                simple_mapper_list.append(scm)
             elif result:
                 hpo_id = result.group(1)
                 if self._hpo_cr.contains_term(hpo_id):
                     hterm = self._hpo_cr.get_term_from_id(hpo_id)
-                    simple_mappers[col] = SimpleColumnMapper(column_name=colname,
+                    scm = SimpleColumnMapper(column_name=colname,
                                                             hpo_id=hterm.id,
                                                             hpo_label=hterm.label,
                                                             observed=self._observed,
                                                             excluded=self._excluded)
+                    simple_mapper_list.append(scm)
                 else:
                     self._unmapped_columns.append(colname)
             else:
                 self._unmapped_columns.append(colname)
-        self._mapped_columns = list(simple_mappers.keys())
-        return simple_mappers
+        self._mapped_columns = [scm.get_column_name() for scm in simple_mapper_list]
+        return simple_mapper_list
 
 
     def get_unmapped_columns(self):

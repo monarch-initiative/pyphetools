@@ -48,4 +48,7 @@ class ColumnMapper(metaclass=abc.ABCMeta):
         else:
             return False
 
+    def get_column_name(self):
+        return self._column_name
+
 

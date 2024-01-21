@@ -6,6 +6,7 @@ from .phenopacket_charts import PhenopacketCharts
 from .phenopacket_ingestor import PhenopacketIngestor
 from .phenopacket_table import PhenopacketTable
 from .qc_visualizer import QcVisualizer
+from .simple_age import SimpleAge
 from .simple_patient import SimplePatient
 from .simple_variant import SimpleVariant
 from .hpo_category import HpoCategorySet

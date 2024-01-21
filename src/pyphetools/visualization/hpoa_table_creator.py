@@ -7,6 +7,7 @@ from google.protobuf.json_format import Parse
 
 from ..creation.disease import Disease
 from ..creation.hp_term import HpTerm
+from .simple_age import SimpleAge
 
 EMPTY_CELL = ""
 
@@ -99,6 +100,24 @@ class HpoaPmidCounter:
         return self._measured
 
 
+class HpoaOnsetCounter:
+    def __init__(self) -> None:
+        self._onset = defaultdict(int)
+
+    def increment_onset(self, hpo_id:str):
+        self._onset[hpo_id] += 1
+
+    def get_onset_numerator_d(self):
+        return self._onset
+
+    def get_onset_denominator(self):
+        d = sum([v for v in self._onset.values()])
+        if d == 0:
+            raise ValueError(f"Attempt to use HpoaOnsetCounter with no data")
+        return d
+
+
+
 class HpoaTableCreator:
     """
     Create an HPO "small file" with the following fourteen columns
@@ -119,13 +138,13 @@ class HpoaTableCreator:
     These should be tab separated fields.
 
     """
-    def __init__(self, phenopacket_list, onset_term_d) -> None:
+    def __init__(self, phenopacket_list) -> None:
         self._phenopackets = phenopacket_list
-        self._onset_term_d = onset_term_d
         self._all_hpo_d = self._get_all_hpos()
         self._disease = self._get_disease() # only allow one disease, therefore this is a scalar value (string)
         self._hpo_counter_d = self._count_hpos()
         self._biocurator_d = self._get_biocurator_d()
+        self._onset_rows = []
 
     def _get_all_hpos(self) -> Dict[str,HpTerm]:
         """Get a dictionary of HpTerms, with key being HPO id and the value the corresponding HpTerm
@@ -208,6 +227,45 @@ class HpoaTableCreator:
                 if pf.excluded is not None and not pf.excluded:
                     hpo_counter.increment_observed(hpterm.id)
         return hpo_counter_d
+
+    def add_age_of_onset_terms(self) -> pd.DataFrame:
+        self._onset_rows  = list() # reset
+        hpo_onset_counter = defaultdict(HpoaOnsetCounter)
+        for ppkt in self._phenopackets:
+            pmid = HpoaTableCreator.get_pmid(ppkt=ppkt)
+            hpo_counter = hpo_onset_counter.get(pmid)
+            if  hpo_counter is None:
+                hpo_counter = HpoaOnsetCounter()
+                hpo_onset_counter[pmid] = hpo_counter
+            age_list = list()
+            for pf in ppkt.phenotypic_features:
+                if not pf.excluded:
+                    if pf.onset is not None and pf.onset.age is not None and pf.onset.age.iso8601duration:
+                        term_onset = pf.onset.age.iso8601duration
+                        age_list.append(SimpleAge(term_onset))
+            if len(age_list) > 0:
+                age_list.sort(key= lambda x:x.get_total_days())
+                youngest_age = age_list[0]
+                hpo_onset_term = youngest_age.to_hpo_onset_term()
+                hpo_counter.increment_onset(hpo_onset_term)
+        if len(hpo_onset_counter) == 0:
+            print("[WARN] No onset information found, skipping this step...")
+            return
+        onset_info = []
+        for pmid, v in hpo_onset_counter.items():
+            numerator_d = v.get_onset_numerator_d()
+            denominator = v.get_onset_denominator()
+            biocurator = self._biocurator_d.get(pmid)
+            for hpo_onset_term, count in numerator_d.items():
+                row = HpoaTableRow(disease=self._disease, hpo_term=hpo_onset_term, publication=pmid, biocurator=biocurator,
+                                    freq_num=count, freq_denom=denominator)
+                self._onset_rows.append(row.get_dict())
+                # the following is returned just for checking
+                freq_str = f"{count}/{denominator}"
+                d = {"pmid":pmid, "Onset": hpo_onset_term.label, "HPO id": hpo_onset_term.id, "frequency": freq_str}
+                onset_info.append(d)
+        return pd.DataFrame(onset_info)
+
 
     def get_dataframe(self):
         rows = []

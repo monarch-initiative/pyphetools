@@ -121,7 +121,7 @@ class HpTerm:
         return f"{self._label} ({self._id})"
 
     def _term_and_id_with_onset(self):
-        if self._onset is not None:
+        if self._onset is not None and self._onset != Constants.NOT_PROVIDED:
             return f"{self.hpo_term_and_id}: onset {self._onset}"
         elif self._onset_term is not None:
             return f"{self.hpo_term_and_id}: onset {self._onset_term}"
