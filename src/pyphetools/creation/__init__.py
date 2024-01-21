@@ -23,6 +23,7 @@ from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator
 from .structural_variant import StructuralVariant
 from .thresholded_column_mapper import ThresholdedColumnMapper
+from .thresholder import Thresholder
 from .variant import Variant
 from .variant_column_mapper import VariantColumnMapper
 from .variant_manager import VariantManager
@@ -59,6 +60,7 @@ __all__ = [
     "SimpleColumnMapperGenerator",
     "StructuralVariant",
     "ThresholdedColumnMapper",
+    "Thresholder",
     "Variant",
     "VariantColumnMapper",
     "VariantManager",

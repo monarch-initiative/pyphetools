@@ -6,7 +6,7 @@ from .hp_term import HpTerm
 
 class Thresholder:
 
-    def __init__(self, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None):
+    def __init__(self, unit:str, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None):
         """
         if hpo_term_low is not None and not isinstance(hpo_term_low, HpTerm):
             raise ValueError(f"hpo_term_low argument must be HpTerm but was {type(hpo_term_low)}")
@@ -94,5 +94,18 @@ class Thresholder:
                 return self._non_measured_term()
         except Exception as exc:
             return self._non_measured_term()
+
+
+    @staticmethod
+    def alkaline_phophatase_blood():
+        """Alkaline phosphatase in the blook circulation
+        """
+        high = HpTerm(hpo_id="HP:0003155",label="Elevated circulating alkaline phosphatase concentration")
+        low = HpTerm(hpo_id="HP:0003282",label="Low alkaline phosphatase")
+        abn =  HpTerm(hpo_id="HP:0004379",label="Abnormality of alkaline phosphatase level")
+        #alkaline phosphatase concentration
+        return Thresholder(hpo_term_high=high, hpo_term_abn=abn, hpo_term_low=low, threshold_low=30,                                       threshold_high=120, unit="U/L")
+
+
 
 

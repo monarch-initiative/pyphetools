@@ -9,12 +9,11 @@ import math
 
 
 class ThresholdedColumnMapper(ColumnMapper):
-    INITIALIZED = False
 
-    def __init__(self, column_name, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None):
+    def __init__(self, column_name, thresholder:Thresholder):
         super().__init__(column_name=column_name)
-        self._thresholder = Thresholder(hpo_term_low=hpo_term_low, hpo_term_high=hpo_term_high, hpo_term_abn=hpo_term_abn, threshold_low=threshold_low, threshold_high=threshold_high)
-        ThresholdedColumnMapper.init_thresholders_if_needed()
+        self._thresholder = thresholder
+        ThresholdedColumnMapper.init_thresholders()
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
         hpterm = self._thresholder.map_value(cell_contents=cell_contents)
@@ -42,11 +41,32 @@ class ThresholdedColumnMapper(ColumnMapper):
         return pd.DataFrame(dlist)
 
     @staticmethod
-    def init_thresholders_if_needed():
-        if ThresholdedColumnMapper.INITIALIZED:
-            return
+    def init_thresholders():
+
         stream = pkg_resources.resource_stream(__name__, 'data/thresholds.tsv')
         df = pd.read_csv(stream, sep="\t")
+        thresholders = {}
         for _, row in df.iterrows():
-            print(row)
-        ThresholdedColumnMapper.INITIALIZED = True
+            # label	hpo_abn_label	hpo_abn_id	hpo_low_label	hpo_low_id	hpo_high_label	hpo_high_id	unit	low	high	Reference
+            label = row["label"]
+            hpo_abn_label = row["hpo_abn_label"]
+            hpo_abn_id = row["hpo_abn_id"]
+            abn_hp = HpTerm(hpo_id=hpo_abn_id, label=hpo_abn_label)
+            hpo_low_label = row["hpo_low_label"]
+            hpo_low_id = row["hpo_low_id"]
+            low_hp = HpTerm(hpo_id=hpo_low_id, label=hpo_low_label)
+            hpo_high_label = row["hpo_high_label"]
+            hpo_high_id = row["hpo_high_id"]
+            high_hp = HpTerm(hpo_id=hpo_high_id, label=hpo_high_label)
+            low = row["low"]
+            high = row["high"]
+            unit = row["unit"]
+            thresholders[label] = Thresholder(hpo_term_abn=abn_hp,
+                                            hpo_term_low=low_hp,
+                                            hpo_term_high=high_hp,
+                                            threshold_low=low,
+                                            threshold_high=high,
+                                            unit=unit)
+        Thresholder.ALKALINE_PHOSPHATASE = thresholders.get("alkaline phosphatase concentration")
+        # etc. with other items from the file ?
+

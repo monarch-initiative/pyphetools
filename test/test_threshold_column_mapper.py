@@ -1,5 +1,5 @@
 import unittest
-from src.pyphetools.creation import ThresholdedColumnMapper
+from src.pyphetools.creation import ThresholdedColumnMapper, Thresholder
 from src.pyphetools.creation import HpTerm
 
 class TestThresholdedColumnMapper(unittest.TestCase):
@@ -9,13 +9,15 @@ class TestThresholdedColumnMapper(unittest.TestCase):
         high = HpTerm(hpo_id="HP:0003155",label="Elevated circulating alkaline phosphatase concentration")
         low = HpTerm(hpo_id="HP:0003282",label="Low alkaline phosphatase")
         abn =  HpTerm(hpo_id="HP:0004379",label="Abnormality of alkaline phosphatase level")
+        thresholder = Thresholder(hpo_term_high=high,
+                                hpo_term_abn=abn,
+                                hpo_term_low=low,
+                                threshold_low=30,
+                                threshold_high=120,
+                                unit="U/L")
         #alkaline phosphatase concentration
         cls.mapper = ThresholdedColumnMapper(column_name="placeholder",
-                                            hpo_term_high=high,
-                                            hpo_term_abn=abn,
-                                            hpo_term_low=low,
-                                            threshold_low=30,
-                                            threshold_high=120)
+                                            thresholder=thresholder)
 
     def test_threshold_of_3(self):
         res = self.mapper.map_cell(3)
