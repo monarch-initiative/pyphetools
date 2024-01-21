@@ -12,23 +12,23 @@ class OptionColumnMapper(ColumnMapper):
 
     This mapper should be used if the column has a set of multiple defined items (strings) representing HPO terms.
     The excluded_d argument should be used if the column includes excluded (negated) HPO terms
-
+    :param column_name: name of the column in the pandas DataFrame
+    :type column_name: str
     :param concept_recognizer: HpoConceptRecognizer for text mining
     :type  concept_recognizer: pyphetools.creation.HpoConceptRecognizer
     :param option_d: dictionary with key: string corresponding to original table, value: corresponding HPO term label
     :type option_d:TypedDict[str,str]
     :param excluded_d: dictionary with key: similar to option_d but for excluded HPO terms, optional
     :type excluded_d:TypedDict[str,str]
-    :param assumeExcluded: Assume that any phenotype mentioned in `option_d` is absent if it is not mentioned in a cell
-    :type assumeExcluded: bool
+
     :param omitSet: set of strings to be excluded from concept recognition
     :type omitSet: Set[str]
     """
 
-    def __init__(self, concept_recognizer, option_d, excluded_d=None, assumeExcluded:bool=False, omitSet:Set[str]=None):
+    def __init__(self, column_name:str, concept_recognizer, option_d, excluded_d=None, omitSet:Set[str]=None):
         """Constructor
         """
-        super().__init__()
+        super().__init__(column_name=column_name)
         # Either have self._option_d be an empty dictionary or it must be a valid dictionary
         if option_d is None or not isinstance(option_d, dict):
             raise ValueError(f"option_d argument must be dictionary but was {type(option_d)}")
@@ -44,16 +44,6 @@ class OptionColumnMapper(ColumnMapper):
         elif not isinstance(omitSet, set):
             raise ValueError(f"argument 'omitSet' must be a Python set but was {type(omitSet)}")
         self._omit_set = omitSet
-        self._assumeExcluded = assumeExcluded
-        if assumeExcluded:
-            # if we assume excluded, then individuals do NOT have the items in option_d if they are not mentioned in the cell
-            self._assume_excluded_d = defaultdict(HpTerm)
-            for hpo_label in option_d.values():
-                hpo_term = self._hpo_cr.get_term_from_label(hpo_label)
-                hpo_term.excluded()
-                self._assume_excluded_d[hpo_label] = hpo_term
-        else:
-            self._assume_excluded_d = {}
 
 
     def map_cell(self, cell_contents) -> List[HpTerm]:
@@ -78,14 +68,9 @@ class OptionColumnMapper(ColumnMapper):
                     cell_contents = cell_contents.replace(er.label.lower(), " ")
         results_obs = self._hpo_cr.parse_cell(cell_contents=cell_contents, custom_d=self._option_d)
         results.extend(results_obs)
-        if self._assumeExcluded:
-            current_labels = { hpo_term.label for hpo_term in results}
-            for k, v in self._assume_excluded_d.items():
-                if v.label not in current_labels:
-                    results.append(v)
         return results
 
-    def preview_column(self, column) -> pd.DataFrame:
+    def preview_column(self, df:pd.DataFrame) -> pd.DataFrame:
         """
         Generate a pandas dataframe with a summary of parsing of the entire column
 
@@ -97,22 +82,20 @@ class OptionColumnMapper(ColumnMapper):
         :returns: a pandas dataframe with one row for each entry of the input column
         :rtype: pd.DataFrame
         """
-        if not isinstance(column, pd.Series):
-            raise ValueError("column argument must be pandas Series, but was {type(column)}")
-        dlist = []
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
+        column = df[self._column_name]
+        mapping_counter = defaultdict(int)
         for _, value in column.items():
-            d = {"original text": value}
-            column_val = []
-            results  = self.map_cell(str(value))
-            if results is None:
-                print(f"Got None results for {str(value)}")
-                d["terms"] = "n/a"
-            elif len(results) > 0:
-                for hpterm in results:
-                    column_val.append(f"{hpterm.id} ({hpterm.label}/{hpterm.display_value})")
-                d["terms"] = "; ".join(column_val)
-            else:
-                d["terms"] = "n/a"
+            cell_contents = str(value)
+            value = self.map_cell(cell_contents)
+            if len(value) > 0:
+                hpterm = value[0]
+                mapped = f"original value: \"{cell_contents}\" -> HP: {hpterm.hpo_term_and_id} ({hpterm.display_value})"
+                mapping_counter[mapped] += 1
+        dlist = []
+        for k, v in mapping_counter.items():
+            d = {"mapping": k, "count": str(v)}
             dlist.append(d)
         return pd.DataFrame(dlist)
 

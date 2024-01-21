@@ -6,10 +6,11 @@ class TestThresholdedColumnMapper(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        cls.mapper = ThresholdedColumnMapper(hpo_id="HP:0032988",
-                                             hpo_label="Persistent head lag",
-                                             threshold=4,
-                                             call_if_above=True)
+        cls.mapper = ThresholdedColumnMapper(column_name="placeholder",
+                                            hpo_id="HP:0032988",
+                                            hpo_label="Persistent head lag",
+                                            threshold=4,
+                                            call_if_above=True)
 
     def test_threshold_of_3(self):
         res = self.mapper.map_cell(3)

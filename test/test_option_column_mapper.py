@@ -18,7 +18,7 @@ class TestOptionMapper(unittest.TestCase):
 
     def test_hpo_cr_mild(self):
         """We should retrieve Intellectual disability, mild (HP:0001256)"""
-        optionMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=self.severity_d)
+        optionMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=self.severity_d)
         results = optionMapper.map_cell("mild")
         self.assertEqual(1, len(results))
         result = results[0]
@@ -27,7 +27,7 @@ class TestOptionMapper(unittest.TestCase):
 
     def test_hpo_cr_moderate(self):
         """We should retrieve Intellectual disability, moderate (HP:0002342)"""
-        optionMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=self.severity_d)
+        optionMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=self.severity_d)
         results = optionMapper.map_cell("moderate")
         self.assertEqual(1, len(results))
         result = results[0]
@@ -36,7 +36,7 @@ class TestOptionMapper(unittest.TestCase):
 
     def test_hpo_cr_severe(self):
         """We should retrieve Intellectual disability, severe (HP:0010864) """
-        optionMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=self.severity_d)
+        optionMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=self.severity_d)
         results = optionMapper.map_cell("severe")
         self.assertEqual(1, len(results))
         result = results[0]
@@ -51,7 +51,7 @@ class TestOptionMapper(unittest.TestCase):
             "DE": "Dural ectasia",
             "St": "Striae distensae"
         }
-        otherMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=other_d)
+        otherMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=other_d)
         res1 = otherMapper.map_cell("HP")
         res1.sort(key=lambda x: x.label) # sort alphabetically
         self.assertIsNotNone(res1)
@@ -73,7 +73,7 @@ class TestOptionMapper(unittest.TestCase):
     def test_eso(self):
         oph_d = {"strabismus": "Strabismus",
                 "esotropia": "Esotropia"}
-        ophMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=oph_d)
+        ophMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=oph_d)
         res = ophMapper.map_cell("right sided esotropia")
         self.assertIsNotNone(res)
         self.assertEqual(1, len(res))
@@ -85,7 +85,7 @@ class TestOptionMapper(unittest.TestCase):
         thumb_d = {"BT": "Broad thumb",
                     "BH": "Broad hallux",
                     "+": ["Broad thumb", "Broad hallux"]}
-        thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d)
+        thumbMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=thumb_d)
         res = thumbMapper.map_cell("+")
         res.sort(key=lambda x: x.label) # sort alphabetically
         self.assertIsNotNone(res)
@@ -101,7 +101,7 @@ class TestOptionMapper(unittest.TestCase):
         thumb_d = {"BT": "Broad thumb",
                     "BH": "Broad hallux",
                     "+": [ "Broad thumb", "Broad hallux"]}
-        thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d)
+        thumbMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=thumb_d)
         res = thumbMapper.map_cell("BT, BH")
         res.sort(key=lambda x: x.label) # sort alphabetically
         self.assertIsNotNone(res)
@@ -118,7 +118,7 @@ class TestOptionMapper(unittest.TestCase):
                 "BH": "Broad hallux",
                 "+": ["Broad thumb", "Broad hallux"]}
         excluded_d = {"-":"Broad thumb"}
-        thumbMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=thumb_d,
+        thumbMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=thumb_d,
                                         excluded_d=excluded_d)
         res = thumbMapper.map_cell("-")
         self.assertIsNotNone(res)
@@ -140,7 +140,8 @@ class TestOptionMapper(unittest.TestCase):
             'yes': 'Autism'}
         exluded_d = {'no': 'Autism',
                     'no formal testing (no concern for ASD)': 'Autism', }
-        autisticMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr,
+        autisticMapper = OptionColumnMapper(column_name="placeholder",
+                                            concept_recognizer=self.hpo_cr,
                                             option_d=autistic_like_behavior_d,
                                             excluded_d=exluded_d)
         hpo_term_list = autisticMapper.map_cell("yes - was being investigated")
@@ -157,7 +158,8 @@ class TestOptionMapper(unittest.TestCase):
                         "1.6umol/mmolCr": "Xanthinuria",
                         "0.0214XA/Cr": "Xanthinuria",
                         "normal": "Xanthinuria"}
-        urineXAmapper = OptionColumnMapper(concept_recognizer=self.hpo_cr,
+        urineXAmapper = OptionColumnMapper(column_name="placeholder",
+                                        concept_recognizer=self.hpo_cr,
                                         option_d=urine_xa_d,
                                         excluded_d=urine_not_xa_d)
         hpo_term_list = urineXAmapper.map_cell('11.7umol/mmolCr')

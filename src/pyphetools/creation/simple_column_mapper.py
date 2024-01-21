@@ -2,6 +2,7 @@ from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from typing import List, Dict
 import pandas as pd
+import re
 from collections import defaultdict
 
 
@@ -30,7 +31,8 @@ def get_separate_hpos_from_df(df, hpo_cr):
 
 class SimpleColumnMapper(ColumnMapper):
     """ColumnMapper for columns that contain information about a single phenotypic abnormality only
-
+    :param column_name: name of the column in the pandas DataFrame
+    :type column_name: str
     :param hpo_id: HPO  id, e.g., HP:0004321
     :type hpo_id: str
     :param hpo_label: Corresponding term label
@@ -42,11 +44,11 @@ class SimpleColumnMapper(ColumnMapper):
     :param non_measured: symbol used if the feature was not measured or is N/A. Defaults to None, optional
     :type non_measured: str
     """
-    def __init__(self, hpo_id, hpo_label, observed=None, excluded=None, non_measured=None):
+    def __init__(self, column_name, hpo_id, hpo_label, observed=None, excluded=None, non_measured=None):
         """
         Constructor
         """
-        super().__init__()
+        super().__init__(column_name=column_name)
         self._hpo_id = hpo_id
         self._hpo_label = hpo_label
         if observed is None or excluded is None:
@@ -61,6 +63,9 @@ class SimpleColumnMapper(ColumnMapper):
             raise ValueError(
                 f"Error: cell_contents argument ({cell_contents}) must be string but was {type(cell_contents)} -- coerced to string")
         contents = cell_contents.strip()
+        # first check if the cell contents represent a valid iso8601, which represents age of onset.
+        if ColumnMapper.is_valid_iso8601(contents):
+            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=contents)]
         if contents in self._observed:
             return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
         elif contents in self._excluded:
@@ -68,9 +73,10 @@ class SimpleColumnMapper(ColumnMapper):
         else:
             return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, measured=False)]
 
-    def preview_column(self, column) -> pd.DataFrame:
-        if not isinstance(column, pd.Series):
-            raise ValueError("column argument must be pandas Series, but was {type(column)}")
+    def preview_column(self, df:pd.DataFrame) -> pd.DataFrame:
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
+        column = df[self._column_name]
         mapping_counter = defaultdict(int)
         for _, value in column.items():
             cell_contents = str(value)
@@ -119,15 +125,29 @@ class SimpleColumnMapperGenerator:
         :rtype: Dict[str,ColumnMapper]
         """
         simple_mappers = defaultdict(ColumnMapper)
+        hpo_id_re = r"(HP:\d+)"
         for col in self._df.columns:
             colname = str(col)
+            result = re.search(r"(HP:\d+)", colname)
             if self._hpo_cr.contains_term_label(colname):
                 hpo_term_list = self._hpo_cr.parse_cell(colname)
                 hpo_term = hpo_term_list[0]
-                simple_mappers[col] = SimpleColumnMapper(hpo_id=hpo_term.id,
-                                                                    hpo_label=hpo_term.label,
-                                                                    observed=self._observed,
-                                                                    excluded=self._excluded)
+                simple_mappers[col] = SimpleColumnMapper(column_name=colname,
+                                                        hpo_id=hpo_term.id,
+                                                        hpo_label=hpo_term.label,
+                                                        observed=self._observed,
+                                                        excluded=self._excluded)
+            elif result:
+                hpo_id = result.group(1)
+                if self._hpo_cr.contains_term(hpo_id):
+                    hterm = self._hpo_cr.get_term_from_id(hpo_id)
+                    simple_mappers[col] = SimpleColumnMapper(column_name=colname,
+                                                            hpo_id=hterm.id,
+                                                            hpo_label=hterm.label,
+                                                            observed=self._observed,
+                                                            excluded=self._excluded)
+                else:
+                    self._unmapped_columns.append(colname)
             else:
                 self._unmapped_columns.append(colname)
         self._mapped_columns = list(simple_mappers.keys())

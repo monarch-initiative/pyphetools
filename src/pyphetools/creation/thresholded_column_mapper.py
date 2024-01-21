@@ -7,8 +7,8 @@ import math
 
 
 class ThresholdedColumnMapper(ColumnMapper):
-    def __init__(self, hpo_id, hpo_label, threshold, call_if_above, observed_code=None):
-        super().__init__()
+    def __init__(self, column_name, hpo_id, hpo_label, threshold, call_if_above, observed_code=None):
+        super().__init__(column_name=column_name)
         self._hpo_id = hpo_id
         self._hpo_label = hpo_label
         if not isinstance(threshold, int) and not isinstance(threshold, float):
@@ -51,9 +51,10 @@ class ThresholdedColumnMapper(ColumnMapper):
         except Exception as exc:
             return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, measured=False)]
 
-    def preview_column(self, column):
-        if not isinstance(column, pd.Series):
-            raise ValueError("column argument must be pandas Series, but was {type(column)}")
+    def preview_column(self, df:pd.DataFrame):
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
+        column = df[self._column_name]
         mapping_counter = defaultdict(int)
         for _, value in column.items():
             results = self.map_cell(str(value))

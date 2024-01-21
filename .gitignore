@@ -151,3 +151,5 @@ notebooks/.DS_Store
 ppt_venv/
 
 *.pickle
+phenopackets/
+notebooks/
