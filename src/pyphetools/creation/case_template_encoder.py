@@ -49,18 +49,34 @@ class DataEncoder(CellEncoder):
 class HpoEncoder(CellEncoder):
     def __init__(self, h1:str, h2:str):
         super().__init__(name=h1)
+        self._error = None
+        self._hpo_label = None
+        self._hpo_id = None
         if h1.endswith(" "):
-            raise ValueError(f"Error - HPO label ends with whitespace: \”{h1}\"")
-        if not h2.startswith("HP:") or len(h2) != 10:
-            raise ValueError(f"Error - Malformed HPO id: \”{h2}\"")
-        self._hpo_label = h1
-        self._hpo_id = h2
+            self._error = f"Error - HPO label ends with whitespace: \”{h1}\""
+        elif h2.startswith("HP:") and len(h2) != 10:
+            self._error = f"Error - Malformed HPO id: \”{h2}\" ({h1})"
+        elif not h2.startswith("HP:"):
+            self._error = f"Error - {h1} -- {h2}"
+        else:
+            self._hpo_label = h1
+            self._hpo_id = h2
 
     def is_data(self):
         return False
 
     def is_hpo(self):
-        return True
+        """
+        :returns: Truee iff this is an NPO column and there was no error
+        :rtype: bool
+        """
+        return self._error is None
+
+    def needs_attention(self):
+        return self._error is not None
+
+    def get_error(self):
+        return self._error
 
     def encode(self, cell_contents):
         cell_contents = str(cell_contents)
@@ -106,6 +122,7 @@ class CaseTemplateEncoder:
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"argment df must be pandas DataFrame but was {type(df)}")
         self._individuals = []
+        self._errors = []
         header_1 = df.columns.values.tolist()
         header_2 = df.loc[0, :].values.tolist()
         if len(header_1) != len(header_2):
@@ -146,7 +163,11 @@ class CaseTemplateEncoder:
                 index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
                 EXPECTED_HEADERS.remove(h1)
             elif in_hpo_range:
-                index_to_decoder_d[i] = HpoEncoder(h1=h1, h2=h2)
+                encoder = HpoEncoder(h1=h1, h2=h2)
+                if encoder.needs_attention():
+                    self._errors.append(encoder.get_error())
+                else:
+                    index_to_decoder_d[i] = encoder
         if not in_hpo_range:
             raise ValueError("Did not find HPO boundary column")
         print(f"Created encoders for {len(index_to_decoder_d)} fields")
@@ -272,3 +293,31 @@ class CaseTemplateEncoder:
                 fh.write(json_string)
                 written += 1
         print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
+
+
+    def to_summary(self) -> pd.DataFrame:
+        """
+
+        The table provides a summary of the table that was parsed from the input file. If there were errors, it
+        provides enough feedback so that the user knows what needs to be fixed
+
+        :returns: an table with status of parse
+        :rtype: pd.DataFrame
+        """
+        n_error = 0
+        items = []
+        for e in self._errors:
+            n_error += 1
+            d = {'item': f"Error {n_error}", 'value': e}
+            items.append(d)
+        d = {'item': 'created by', 'value':self._created_by}
+        items.append(d)
+        d = {'item':'number of individuals', 'value': str(len(self._individuals))}
+        items.append(d)
+        n_hpo_columns = sum([1 for encoder in self._index_to_decoder.values() if encoder.is_hpo()])
+        d = {'item':'number of HPO columns', 'value': str(n_hpo_columns)}
+        items.append(d)
+        return pd.DataFrame(items)
+
+
+

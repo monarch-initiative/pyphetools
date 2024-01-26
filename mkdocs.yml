@@ -35,6 +35,7 @@ nav:
   - Developers: 'developers.md'
   - User guide:
     - Introduction: 'user-guide/tutorial.md'
+    - Data Entry Template: 'user-guide/template.md'
     - Column mappers:
       - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
       - Simple column mapper: 'user-guide/simple_column_mapper.md'
