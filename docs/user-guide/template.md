@@ -24,8 +24,8 @@ one example row with data extracted from a publication (We show two tables for b
 2. title (str): The title of the publication being curated.
 3. individual_id (str): The identifier of the individual being described in the original publication. This field is required. Please add ‘individual’ if the original article does not provide an identifier (if needed, individual 1, individual 2,...).
 4. Comment (str): This field is provided to record additional information that will not be used for creating phenopackets but may be helpful for future reference.
-5. disease_id. The disease identifer (e.g., ``OMIM:154700`` or  ``MONDO:0007947``).
-6. disease_label. The name of the disease (e.g. ``Marfan syndrome``).
+5. disease_id (str). The disease identifer (e.g., ``OMIM:154700`` or  ``MONDO:0007947``).
+6. disease_label (str). The name of the disease (e.g. ``Marfan syndrome``).
 
 
 
@@ -38,7 +38,40 @@ one example row with data extracted from a publication (We show two tables for b
 7. transcript (str): The identifier of the transcript. NCBI RefSeq or ENSEMBL identifiers are preferred.
 8. allele_1 (HGVS str): A string representing the first pathogenic allele (variant) according to [HGVS](https://hgvs-nomenclature.org/stable/background/simple/) nomenclature.
 9. allele_2 (HGVS str): This field should not be used for monoallelic diseases (e.g. autosomal dominant, XLR), i.e., the Excel file should not contain this column. For biallelic diseases (autosomal recessive), specific the second allele (which will be the same as the first for homozygous genotypes).
-10. variant.comment: This field is provided to record additional information that will not be used for creating phenopackets but may be helpful for future reference.
-11. age_of_onset. iso8601. The age of onset of disease, recorded using [iso8601 convention](https://en.wikipedia.org/wiki/ISO_8601#Durations).
+10. variant.comment (str): This field is provided to record additional information that will not be used for creating phenopackets but may be helpful for future reference.
+11. age_of_onset (iso8601): The age of onset of disease, recorded using [iso8601 convention](https://en.wikipedia.org/wiki/ISO_8601#Durations).
 12. sex (M:F:U:O): one of M (male), female (F), other(O), or unknown (U)
-13.HPO (na): This acts as a separator column to denote that all folowing columns specify HPO annotations (See below).
+13. HPO (na): This acts as a separator column to denote that all folowing columns specify HPO annotations (See below). Add the string na to each cell in this column.
+
+### HPO Term Columns
+All of the following columns denote HPO terms. The first row has the HPO term label. Be sure to use the same label as is shown on the HPO
+webpage and do not chance the capitalization. The second row has the corresponding HPO id. The following table shows several examples, whereby
+the individual_id column from above is shown for ease of exposition.
+
+
+
+
+|individual_id |  Hepatitis  | 	Pancreatitis| 	Lymphadenopathy| 	Splenomegaly   |
+|:-------------|:------------|:-------------|:-----------------|:------------------|
+|              | HP:0012115  |HP:0001733    |  HP:0002716      |   HP:0001744      |
+| A            | observed    | excluded     |                  | P4Y2M             |
+| B            |P3Y          |              | observed       | excluded          |
+
+Each table cell can contain either
+1. observed: The phenotypic abnormality denoted by the HPO term was present
+2. excluded: The phenotypic abnormality denoted by the HPO term was investigated and ruled out.
+3. An [iso8601](https://en.wikipedia.org/wiki/ISO_8601#Durations) string denoting the age of onset.
+4. empty (blank): Not measured or no information available.
+
+In this example, individual A was observed to have hepatitis (but age of onset is unknown or not available), pancreatitis was ruled out, no information is available about lymphadenopathy, and splenomegaly was first observed at age 4 years and 2 months.
+
+Individual B was found to have hepatitis first observed at age 3 years, no information was available about pancreatitis, lymphadenopathy was observed (but age of onset is unknown or not available), and splenomegaly  was ruled out.
+
+
+
+
+
+
+
+
+

@@ -36,16 +36,18 @@ nav:
   - User guide:
     - Introduction: 'user-guide/tutorial.md'
     - Data Entry Template: 'user-guide/template.md'
-    - Column mappers:
-      - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
-      - Simple column mapper: 'user-guide/simple_column_mapper.md'
-      - Constant column mapper: 'user-guide/constant_column_mapper.md'
-      - Option column mapper: 'user-guide/option_column_mapper.md'
-      - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
-    - Variant column mapper: 'user-guide/variant_column_mapper.md'
-    - Cohort encoder: 'user-guide/cohort_encoder.md'
-    - Validation: 'user-guide/validation.md'
-    - Visualization: 'user-guide/visualization.md'
+    - Jupyter notebook:
+      - overview: "user-guide/jupyter.md"
+      - Column mappers:
+        - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
+        - Simple column mapper: 'user-guide/simple_column_mapper.md'
+        - Constant column mapper: 'user-guide/constant_column_mapper.md'
+        - Option column mapper: 'user-guide/option_column_mapper.md'
+        - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
+      - Variant column mapper: 'user-guide/variant_column_mapper.md'
+      - Cohort encoder: 'user-guide/cohort_encoder.md'
+      - Validation: 'user-guide/validation.md'
+      - Visualization: 'user-guide/visualization.md'
   - API:
     - "overview": 'api/overview.md'
     - "creation":

@@ -3,6 +3,7 @@ from typing import Dict, List
 from pyphetools.creation.citation import Citation
 from pyphetools.creation.constants import Constants
 from pyphetools.creation.disease import Disease
+from pyphetools.creation.hpo_cr import HpoConceptRecognizer
 from pyphetools.creation.metadata import MetaData
 from pyphetools.creation.hp_term import HpTerm
 from pyphetools.creation.individual import Individual
@@ -115,10 +116,21 @@ DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "
 
 
 class CaseTemplateEncoder:
+    """Class to encode data from user-provided Excel template.
+
+    :param df: template table with clinical data
+    :type df: pd.DataFrame
+    :param hpo_cr: HpoConceptRecognizer for text mining
+    :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
+    :param created_by: biocurator (typically, this should be an ORCID identifier)
+    :type created_by: str
+    """
 
     HPO_VERSION = None
 
-    def __init__(self, df, hpo_cr, created_by) -> None:
+    def __init__(self, df:pd.DataFrage, hpo_cr:HpoConceptRecognizer, created_by:str) -> None:
+        """constructor
+        """
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"argment df must be pandas DataFrame but was {type(df)}")
         self._individuals = []
@@ -149,7 +161,7 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
 
-    def  _process_header(self, header_1, header_2) -> Dict[int, CellEncoder]:
+    def  _process_header(self, header_1:List, header_2:List) -> Dict[int, CellEncoder]:
         index_to_decoder_d = {}
         in_hpo_range = False
         for i in range(self._n_columns):
@@ -173,7 +185,7 @@ class CaseTemplateEncoder:
         print(f"Created encoders for {len(index_to_decoder_d)} fields")
         return index_to_decoder_d
 
-    def _parse_individual(self, row):
+    def _parse_individual(self, row:pd.Series):
         if not isinstance(row, pd.Series):
             raise ValueError(f"argment df must be pandas DSeriestaFrame but was {type(row)}")
         data = row.values.tolist()
@@ -228,22 +240,22 @@ class CaseTemplateEncoder:
                             age=age,
                             disease=disease)
 
-    def get_individuals(self):
+    def get_individuals(self) -> List[Individual]:
         return self._individuals
 
-    def get_allele1_d(self):
+    def get_allele1_d(self)-> Dict[str,str]:
         return self._allele1_d
 
-    def get_allele2_d(self):
+    def get_allele2_d(self)-> Dict[str,str]:
         return self._allele2_d
 
-    def _is_biallelic(self):
+    def _is_biallelic(self) -> bool:
         return self._is_biallelic
 
-    def get_metadata_d(self):
+    def get_metadata_d(self) -> Dict[str,MetaData]:
         return self._metadata_d
 
-    def get_phenopackets(self):
+    def get_phenopackets(self) -> List[PPKt.Phenopacket]:
         ppack_list = []
         for individual in self._individuals:
             cite = individual._citation
@@ -255,7 +267,7 @@ class CaseTemplateEncoder:
 
 
 
-    def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets"):
+    def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets") -> None:
         """write a list of Individual objects to file in GA4GH Phenopacket format
         Note that the individual_list needs to be passed to this object, because we expect that
         the QC code will have been used to cleanse the data of redundancies etc before output.
