@@ -1,2 +1,3 @@
 label	hpo_abn_label	hpo_abn_id	hpo_low_label	hpo_low_id	hpo_high_label	hpo_high_id	unit	low	high	Reference
-alkaline phosphatase concentration	Abnormality of alkaline phosphatase level	HP:0004379	Low alkaline phosphatase	HP:0003282	Elevated circulating alkaline phosphatase concentration	HP:0003155	U/L	30	120	ABIM Laboratory Test Reference Ranges_ January 2024
+alkaline phosphatase blood	Abnormality of alkaline phosphatase level	HP:0004379	Low alkaline phosphatase	HP:0003282	Elevated circulating alkaline phosphatase concentration	HP:0003155	U/L	30	120	ABIM Laboratory Test Reference Ranges_ January 2024
+lactate blood	Increased serum lactate	HP:0002151	na	na	Increased serum lactate	HP:0002151	mmol/L	0.5	1	PMID:29262026
