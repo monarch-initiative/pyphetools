@@ -7,6 +7,8 @@ from google.protobuf.json_format import Parse
 
 from ..creation.disease import Disease
 from ..creation.hp_term import HpTerm
+from ..creation.individual import Individual
+from ..creation.metadata import MetaData
 from .simple_age import SimpleAge
 
 EMPTY_CELL = ""
@@ -138,13 +140,14 @@ class HpoaTableCreator:
     These should be tab separated fields.
 
     """
-    def __init__(self, phenopacket_list, onset_term_d ) -> None:
+    def __init__(self, phenopacket_list, onset_term_d,  moi_d) -> None:
         self._phenopackets = phenopacket_list
         self._all_hpo_d = self._get_all_hpos()
         self._disease = self._get_disease() # only allow one disease, therefore this is a scalar value (string)
         self._hpo_counter_d = self._count_hpos()
         self._biocurator_d = self._get_biocurator_d()
         self._onset_rows = self._add_age_of_onset_terms(onset_term_d)
+        self._moi_rows = self._add_moi_rows(moi_d)
 
     def _get_all_hpos(self) -> Dict[str,HpTerm]:
         """Get a dictionary of HpTerms, with key being HPO id and the value the corresponding HpTerm
@@ -235,10 +238,17 @@ class HpoaTableCreator:
             biocurator = self._biocurator_d.get(pmid)
             for oterm in oterm_list:
                 hpo_onset_term = HpTerm(hpo_id=oterm.id, label=oterm.label)
-                row = HpoaTableRow(disease=self._disease, hpo_term=hpo_onset_term, publication=pmid, biocurator=biocurator,
-                                        freq_num=oterm.numerator, freq_denom=oterm.denominator)
+                row = HpoaTableRow(disease=self._disease, hpo_term=hpo_onset_term, publication=pmid, biocurator=biocurator, freq_num=oterm.numerator, freq_denom=oterm.denominator)
                 onset_rows.append(row)
         return onset_rows
+
+    def _add_moi_rows(self, moi_d) -> List[HpoaTableRow]:
+        moi_rows = list()
+        for pmid, hpterm in moi_d.items():
+            biocurator = self._biocurator_d.get(pmid)
+            row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=pmid, biocurator=biocurator)
+            moi_rows.append(row)
+        return moi_rows
 
 
     def get_dataframe(self):
@@ -259,6 +269,8 @@ class HpoaTableCreator:
                 rows.append(row.get_dict())
         for onset_row in self._onset_rows:
             rows.append(onset_row.get_dict())
+        for moi_row in self._moi_rows:
+            rows.append(moi_row.get_dict())
         df = pd.DataFrame.from_records(data=rows, columns=column_names)
         return df
 
@@ -294,6 +306,7 @@ class HpoaTableBuilder:
         else:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)
+        self._moi_d = {}
 
     def embryonal_onset(self, pmid:str, num:int=None, denom:int=None):
         """Onset of disease at up to 8 weeks following fertilization (corresponding to 10 weeks of gestation).
@@ -401,8 +414,54 @@ class HpoaTableBuilder:
         self._onset_term_d[pmid].append(oterm)
         return self
 
+    def autosomal_recessive(self, pmid):
+        moi_term = HpTerm(hpo_id="HP:0000007", label="Autosomal recessive inheritance")
+        self._moi_d[pmid] = moi_term
+        return self
+
+    def autosomal_dominant(self, pmid):
+        moi_term = HpTerm(hpo_id="HP:0000006", label="Autosomal dominant inheritance")
+        self._moi_d[pmid] = moi_term
+        return self
+
+    def x_linked(self, pmid):
+        moi_term = HpTerm(hpo_id="HP:0001417", label="X-linked inheritance")
+        self._moi_d[pmid] = moi_term
+        return self
+
+    def x_linked_recessive(self, pmid):
+        moi_term = HpTerm(hpo_id="HP:0001419", label="X-linked recessive inheritance")
+        self._moi_d[pmid] = moi_term
+        return self
+
+    def x_linked_dominant(self, pmid):
+        moi_term = HpTerm(hpo_id="HP:0001423", label="X-linked dominant inheritance")
+        self._moi_d[pmid] = moi_term
+        return self
+
+
     def build(self):
-        return HpoaTableCreator(phenopacket_list=self._phenopackets, onset_term_d=self._onset_term_d)
+        return HpoaTableCreator(phenopacket_list=self._phenopackets, onset_term_d=self._onset_term_d, moi_d=self._moi_d)
+
+    @staticmethod
+    def from_individuals(individual_list:List[Individual], created_by:str):
+        """Create builder object from list of individuals
+        This can be easier than needed to create phenopacket objects in a workbook
+        The method requires that each Individual object have a Citation
+
+        :param individual_list: List of individuals to be summarized in HPOA format
+        :type individual_list: List[Individual]
+        :returns: HPOA table builder object
+        :rtype: HpoaTableBuilder
+        """
+        ppkt_list = list()
+        for i in individual_list:
+            cite = i.get_citation()
+            metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", citation=cite)
+            ppkt = i.to_ga4gh_phenopacket(metadata=metadata)
+            ppkt_list.append(ppkt)
+        return HpoaTableBuilder(phenopacket_list=ppkt_list)
+
 
 
 

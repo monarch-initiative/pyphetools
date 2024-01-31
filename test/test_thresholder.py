@@ -24,3 +24,9 @@ class TestThresholder(unittest.TestCase):
         self.assertEqual("HP:0004379", hpterm.id)
         self.assertFalse(hpterm.observed)
         print(hpterm)
+
+    def test_potassium(self):
+        kThresholder = Thresholder.potassium_blood()
+        hpterm = kThresholder.map_value(2)
+        self.assertEqual("Hypokalemia", hpterm.label)
+        self.assertEqual("HP:0002900", hpterm.id)
