@@ -67,15 +67,16 @@ class VariantManager:
     """
 
     def __init__(self,
-                 df:pd.DataFrame,
-                 individual_column_name:str,
-                 cohort_name:str,
-                 transcript:str,
-                 allele_1_column_name:str,
-                 allele_2_column_name:str=None,
-                 gene_symbol:str=None,
-                 gene_id:str=None
-                 ):
+                df:pd.DataFrame,
+                individual_column_name:str,
+                cohort_name:str,
+                transcript:str,
+                allele_1_column_name:str,
+                allele_2_column_name:str=None,
+                gene_symbol:str=None,
+                gene_id:str=None,
+                overwrite:bool=False
+                ):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"The \"df\" argument must be a pandas DataFrame but was {type(df)}")
         if individual_column_name not in df.columns:
@@ -95,11 +96,11 @@ class VariantManager:
         self._var_d = {}
         self._unmapped_alleles = set()
         self._individual_to_alleles_d = defaultdict(list)
-        self._create_variant_d()
+        self._create_variant_d(overwrite)
 
 
 
-    def _create_variant_d(self):
+    def _create_variant_d(self, overwrite):
         """
         Creates a dictionary with all HGVS variants, and as a side effect creates a set with variants that
         are not HGVS and need to be mapped manually. This method has the following effects
@@ -107,7 +108,10 @@ class VariantManager:
         - self._unmapped_alleles: set of all alleles that do not start eith "c." (non HGVS), that will need intervention by the user to map
         - self._individual_to_alleles_d: key individual ID, value-one or two element list of allele strings
         """
-        v_d = load_variant_pickle(self._cohort_name)
+        if overwrite:
+            v_d = {}
+        else:
+            v_d = load_variant_pickle(self._cohort_name)
         if v_d is None:
             self._var_d = {}
         else:

@@ -34,7 +34,13 @@ class CellEncoder(metaclass=abc.ABCMeta):
         pass
 
 class DataEncoder(CellEncoder):
+    """Convenience class to represent the header (two lines) of columns that represent fixed data in the template
 
+    :param h1: contents of the first header line
+    :type h1: str
+    :param h2: contents of the second header line
+    :type h2: str
+    """
     def __init__(self, h1:str, h2:str):
         super().__init__(name=h1)
 
@@ -48,6 +54,13 @@ class DataEncoder(CellEncoder):
         return False
 
 class HpoEncoder(CellEncoder):
+    """Convenience class to represent the header (two lines) of columns that represent HPO columns in the template
+
+    :param h1: contents of the first header line
+    :type h1: str
+    :param h2: contents of the second header line
+    :type h2: str
+    """
     def __init__(self, h1:str, h2:str):
         super().__init__(name=h1)
         self._error = None
@@ -68,12 +81,16 @@ class HpoEncoder(CellEncoder):
 
     def is_hpo(self):
         """
-        :returns: Truee iff this is an NPO column and there was no error
+        :returns: True iff this is an NPO column and there was no error
         :rtype: bool
         """
         return self._error is None
 
     def needs_attention(self):
+        """
+        :returns: True iff there was a problem with this column
+        :rtype: bool
+        """
         return self._error is not None
 
     def get_error(self):
@@ -94,6 +111,13 @@ class HpoEncoder(CellEncoder):
             raise ValueError(f"Could not parse HPO column cell_contents: \”{cell_contents}\"")
 
 class NullEncoder(CellEncoder):
+    """Convenience class to represent a column that we do not use for encoding
+
+    :param h1: contents of the first header line
+    :type h1: str
+    :param h2: contents of the second header line
+    :type h2: str
+    """
     def __init__(self, h1=None, h2=None):
         super().__init__(name="Begin of HPO column")
 
@@ -128,18 +152,18 @@ class CaseTemplateEncoder:
 
     HPO_VERSION = None
 
-    def __init__(self, df:pd.DataFrage, hpo_cr:HpoConceptRecognizer, created_by:str) -> None:
+    def __init__(self, df:pd.DataFrame, hpo_cr:HpoConceptRecognizer, created_by:str) -> None:
         """constructor
         """
         if not isinstance(df, pd.DataFrame):
-            raise ValueError(f"argment df must be pandas DataFrame but was {type(df)}")
+            raise ValueError(f"argument \"df\" must be pandas DataFrame but was {type(df)}")
         self._individuals = []
         self._errors = []
         header_1 = df.columns.values.tolist()
         header_2 = df.loc[0, :].values.tolist()
         if len(header_1) != len(header_2):
-            # should never happen
-            raise ValueError("headers are different lengths")
+            # should never happen unless the template file is corrupted
+            raise ValueError("headers are different lengths. Check template file for correctness.")
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1, header_2)
         data_df = df.iloc[1:]
@@ -173,11 +197,11 @@ class CaseTemplateEncoder:
                 continue
             elif not in_hpo_range and h1 in EXPECTED_HEADERS:
                 index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
-                EXPECTED_HEADERS.remove(h1)
             elif in_hpo_range:
                 encoder = HpoEncoder(h1=h1, h2=h2)
                 if encoder.needs_attention():
                     self._errors.append(encoder.get_error())
+                    index_to_decoder_d[i] = NullEncoder()
                 else:
                     index_to_decoder_d[i] = encoder
         if not in_hpo_range:

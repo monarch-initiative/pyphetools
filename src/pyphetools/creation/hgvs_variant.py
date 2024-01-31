@@ -77,7 +77,7 @@ class HgvsVariant(Variant):
         return self._genotype
 
     def __str__(self):
-        return f"{self._chr}:{self._position}{self._ref}>{self._alt}"
+        return f"{self._hgvs}({self._chr}:{self._position}{self._ref}>{self._alt})"
 
     def to_string(self):
         return self.__str__()
