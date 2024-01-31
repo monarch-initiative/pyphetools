@@ -220,6 +220,12 @@ class Thresholder:
         """
         return Thresholder._get_thresholder("lactate blood", low_thresh=low_thresh, high_thresh= high_thresh)
 
+    @staticmethod
+    def potassium_blood(unit=None, low_thresh=None, high_thresh=None):
+        """Serum potassium 3.5 to 5.2 mEq/L (adults)
+        """
+        return Thresholder._get_thresholder("lactate blood", low_thresh=low_thresh, high_thresh= high_thresh)
+
 
 
 
