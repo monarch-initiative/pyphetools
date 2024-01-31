@@ -129,6 +129,7 @@ class VariantManager:
             df = self._dataframe
         for _, row in df.iterrows():
             individual_id = row[self._individual_column_name]
+            individual_id = str(individual_id) # prevent automatic conversion into int for patient id 1, 2, 3 etc
             allele1 = row[self._allele_1_column_name]
             self._individual_to_alleles_d[individual_id].append(allele1)
             if allele1.startswith("c."):
@@ -137,6 +138,10 @@ class VariantManager:
                 self._unmapped_alleles.add(allele1)
             if self._allele_2_column_name is not None:
                 allele2 = row[self._allele_2_column_name]
+                if allele2 is None:
+                    continue
+                if allele2 == "na" or allele2 == "n/a":
+                    continue
                 self._individual_to_alleles_d[individual_id].append(allele2)
                 if allele2.startswith("c."):
                     variant_set.add(allele2)
@@ -145,12 +150,14 @@ class VariantManager:
         for v in variant_set:
             if v in self._var_d:
                 continue
+            if v == "na" or v == "n/a":
+                continue
             print(f"[INFO] encoding variant \"{v}\"")
             try:
                 var = vvalidator.encode_hgvs(v)
+                self._var_d[v] = var
             except Exception as e:
                 print(f"[ERROR] Could not retrieve Variant Validator information for {v}: {str(e)}")
-            self._var_d[v] = var
         write_variant_pickle(name=self._cohort_name, my_object=self._var_d)
 
     def code_as_chromosomal_deletion(self, allele_set):

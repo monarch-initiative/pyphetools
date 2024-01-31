@@ -211,7 +211,7 @@ class CaseTemplateEncoder:
 
     def _parse_individual(self, row:pd.Series):
         if not isinstance(row, pd.Series):
-            raise ValueError(f"argment df must be pandas DSeriestaFrame but was {type(row)}")
+            raise ValueError(f"argument df must be pandas DSeriestaFrame but was {type(row)}")
         data = row.values.tolist()
         if len(data) != self._n_columns:
             # Should never happen
@@ -254,6 +254,10 @@ class CaseTemplateEncoder:
         else:
             raise ValueError(f"Unrecognized sex symbol: {sex}")
         age = data_items.get("age")
+        if age is not None and isinstance(age, str) and age.startswith("P"):
+            isoage = age
+        else:
+            isoage = Constants.NOT_PROVIDED
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         disease = Disease(disease_id=disease_id, disease_label=disease_label)
@@ -261,7 +265,7 @@ class CaseTemplateEncoder:
                             citation=citation,
                             hpo_terms=hpo_terms,
                             sex=sex,
-                            age=age,
+                            age=isoage,
                             disease=disease)
 
     def get_individuals(self) -> List[Individual]:

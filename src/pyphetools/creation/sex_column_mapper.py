@@ -54,11 +54,12 @@ class SexColumnMapper:
             self._erroneous_input_counter[contents] += 1
             return Constants.UNKOWN_SEX_SYMBOL
 
-    def preview_column(self, column):
-        if not isinstance(column, pd.Series):
-            raise ValueError("column argument must be pandas Series, but was {type(column)}")
+    def preview_column(self, df:pd.DataFrame):
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
+        column = df[self.get_column_name()]
         dlist = []
-        for index, value in column.items():
+        for _, value in column.items():
             result = self.map_cell(str(value))
             if result is None:
                 dlist.append({"original column contents": value, "sex": "n/a"})
