@@ -243,11 +243,18 @@ class HpoaTableCreator:
         return onset_rows
 
     def _add_moi_rows(self, moi_d) -> List[HpoaTableRow]:
+        """Add mode of inheritance information
+        :param moi_d: dictionary with key: PMID, and value: List of MOI terms
+        :type moi_d:Dict[str,List[str]]
+        :returns: list of HPOA table rows
+        :rtype: List[HpoaTableRow]
+        """
         moi_rows = list()
-        for pmid, hpterm in moi_d.items():
+        for pmid, hpterm_list in moi_d.items():
             biocurator = self._biocurator_d.get(pmid)
-            row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=pmid, biocurator=biocurator)
-            moi_rows.append(row)
+            for hpterm in hpterm_list:
+                row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=pmid, biocurator=biocurator)
+                moi_rows.append(row)
         return moi_rows
 
 
@@ -306,7 +313,7 @@ class HpoaTableBuilder:
         else:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)
-        self._moi_d = {}
+        self._moi_d = defaultdict(list)
 
     def embryonal_onset(self, pmid:str, num:int=None, denom:int=None):
         """Onset of disease at up to 8 weeks following fertilization (corresponding to 10 weeks of gestation).
@@ -416,27 +423,27 @@ class HpoaTableBuilder:
 
     def autosomal_recessive(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0000007", label="Autosomal recessive inheritance")
-        self._moi_d[pmid] = moi_term
+        self._moi_d[pmid].append(moi_term)
         return self
 
     def autosomal_dominant(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0000006", label="Autosomal dominant inheritance")
-        self._moi_d[pmid] = moi_term
+        self._moi_d[pmid].append(moi_term)
         return self
 
     def x_linked(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0001417", label="X-linked inheritance")
-        self._moi_d[pmid] = moi_term
+        self._moi_d[pmid].append(moi_term)
         return self
 
     def x_linked_recessive(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0001419", label="X-linked recessive inheritance")
-        self._moi_d[pmid] = moi_term
+        self._moi_d[pmid].append(moi_term)
         return self
 
     def x_linked_dominant(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0001423", label="X-linked dominant inheritance")
-        self._moi_d[pmid] = moi_term
+        self._moi_d[pmid].append(moi_term)
         return self
 
 

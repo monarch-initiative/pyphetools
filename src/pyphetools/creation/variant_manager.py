@@ -219,6 +219,9 @@ class VariantManager:
         dlist.append(d)
         n_unmapped = len(self._unmapped_alleles)
         unmapped_alleles = ", ".join(self._unmapped_alleles)
+        for allele in self._unmapped_alleles:
+            if allele != allele.trim():
+                unmapped_alleles = f"{unmapped_alleles}; warning \"{allele}\" has extra white space - check format"
         d = {"status": "unmapped", "count": n_unmapped, "alleles": unmapped_alleles}
         dlist.append(d)
         return pd.DataFrame(dlist)

@@ -1,6 +1,7 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
-from typing import List, Dict
+from .hpo_cr import HpoConceptRecognizer
+from typing import List
 import pandas as pd
 import re
 from collections import defaultdict
@@ -105,7 +106,7 @@ class SimpleColumnMapperGenerator:
     :param hpo_cr: instance of HpoConceptRecognizer to match HPO term and get label/id
     :type hpo_cr: HpoConceptRecognizer
     """
-    def __init__(self, df, observed, excluded, hpo_cr) -> None:
+    def __init__(self, df:pd.DataFrame, observed:str, excluded:str, hpo_cr:HpoConceptRecognizer) -> None:
         """
         Constructor
         """
@@ -133,20 +134,20 @@ class SimpleColumnMapperGenerator:
                 hpo_term_list = self._hpo_cr.parse_cell(colname)
                 hpo_term = hpo_term_list[0]
                 scm = SimpleColumnMapper(column_name=colname,
-                                                        hpo_id=hpo_term.id,
-                                                        hpo_label=hpo_term.label,
-                                                        observed=self._observed,
-                                                        excluded=self._excluded)
+                                        hpo_id=hpo_term.id,
+                                        hpo_label=hpo_term.label,
+                                        observed=self._observed,
+                                        excluded=self._excluded)
                 simple_mapper_list.append(scm)
             elif result:
                 hpo_id = result.group(1)
                 if self._hpo_cr.contains_term(hpo_id):
                     hterm = self._hpo_cr.get_term_from_id(hpo_id)
                     scm = SimpleColumnMapper(column_name=colname,
-                                                            hpo_id=hterm.id,
-                                                            hpo_label=hterm.label,
-                                                            observed=self._observed,
-                                                            excluded=self._excluded)
+                                            hpo_id=hterm.id,
+                                            hpo_label=hterm.label,
+                                            observed=self._observed,
+                                            excluded=self._excluded)
                     simple_mapper_list.append(scm)
                 else:
                     self._unmapped_columns.append(colname)
@@ -179,7 +180,7 @@ class SimpleColumnMapperGenerator:
             <th>Result</th>
             <th>Columns</th>
         </tr>
-      """)
+        """)
         mapped_str = "; ".join(self._mapped_columns)
         unmapped_str = "; ".join([f"<q>{colname}</q>" for colname in self._unmapped_columns])
         def two_item_table_row(cell1, cell2):

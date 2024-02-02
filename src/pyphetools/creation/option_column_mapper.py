@@ -100,7 +100,7 @@ class OptionColumnMapper(ColumnMapper):
         return pd.DataFrame(dlist)
 
     @staticmethod
-    def autoformat(df: pd.DataFrame, concept_recognizer:HpoConceptRecognizer, delimiter:str=",", omit_columns:List[str]=None) -> str:
+    def autoformat(df: pd.DataFrame, hpo_cr:HpoConceptRecognizer, delimiter:str=",", omit_columns:List[str]=None) -> str:
         """Autoformat code from the columns so that we can easily copy-paste and change it.
 
         This method intends to save time by preformatting code the create OptionMappers. The following commands
@@ -125,8 +125,8 @@ class OptionColumnMapper(ColumnMapper):
         lines = []
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"argument \"df\" must be a pandas DataFrame but was {type(df)}")
-        if not isinstance(concept_recognizer, HpoConceptRecognizer):
-            raise ValueError(f"concept_recognizer arg must be HpoConceptRecognizer but was {type(concept_recognizer)}")
+        if not isinstance(hpo_cr, HpoConceptRecognizer):
+            raise ValueError(f"concept_recognizer arg must be HpoConceptRecognizer but was {type(hpo_cr)}")
         if omit_columns is None:
             omit_columns = set()
         elif isinstance(omit_columns, list):
@@ -135,20 +135,21 @@ class OptionColumnMapper(ColumnMapper):
             raise ValueError(f"If passed, omit_columns argument must be set or list but was {type(omit_columns)}")
         # df.shape[1] gives us the number of columns
         for y in range(df.shape[1]):
-            if y in omit_columns:
+            original_column_name = str(df.columns[y])
+            clean_column_name = str(df.columns[y]).lower().replace(", ","_").replace(' ', '_').replace("/", "_")
+            col_name = clean_column_name.lower()
+            if original_column_name in omit_columns:
                 continue
             temp_dict = {}
             for i in range(len(df)):
                 if len(str(df.iloc[i, y])) > 1:
                     for entry in str(df.iloc[i, y]).split(delimiter):
-                        hpo_term = concept_recognizer.parse_cell(entry.strip())
+                        hpo_term = hpo_cr.parse_cell(entry.strip())
                         if len(hpo_term) > 0:
                             temp_dict[entry.strip()] = hpo_term[0].label
                         else:
                             temp_dict[entry.strip()] = 'PLACEHOLDER'
-            original_column_name = str(df.columns[y])
-            clean_column_name = str(df.columns[y]).lower().replace(", ","_").replace(' ', '_').replace("/", "_")
-            col_name = clean_column_name.lower()
+
             # skip columns that are unlikely to be interesting for the OptionColumnMapper
             if "patient" in col_name:
                 continue
