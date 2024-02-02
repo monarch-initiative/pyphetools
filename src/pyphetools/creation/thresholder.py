@@ -215,6 +215,12 @@ class Thresholder:
         return Thresholder._get_thresholder("alkaline phosphatase blood", low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
+    def creatinine_blood(unit=None, low_thresh=None, high_thresh=None):
+        """Serum crea,  0.6-1.2 mg/dL in adult males and 0.5-1.1 mg/dL in adult females
+        """
+        return Thresholder._get_thresholder("creatinine blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
+    @staticmethod
     def lactate_blood(unit=None, low_thresh=None, high_thresh=None):
         """Serum lactate (0.5-1 mmol/L)
         """
@@ -226,10 +232,6 @@ class Thresholder:
         """
         return Thresholder._get_thresholder("potassium blood", low_thresh=low_thresh, high_thresh= high_thresh)
 
-    @staticmethod
-    def creatinine_blood(unit=None, low_thresh=None, high_thresh=None):
-        """Serum crea,  0.6-1.2 mg/dL in adult males and 0.5-1.1 mg/dL in adult females
-        """
-        return Thresholder._get_thresholder("creatinine blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
 
 
