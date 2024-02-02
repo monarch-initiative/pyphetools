@@ -1,9 +1,9 @@
 import pandas as pd
 from typing import List, Dict
-
 from .variant import Variant
 
 ACCEPTABLE_GENOTYPES = {"heterozygous", "homozygous", "hemizygous"}
+
 
 
 class VariantColumnMapper:
@@ -25,11 +25,11 @@ class VariantColumnMapper:
     :type delimiter: str
     """
     def __init__(self,
-                 variant_d,
-                 variant_column_name,
-                 genotype_column_name=None,
-                 default_genotype=None,
-                 delimiter=None) -> None:
+                variant_d,
+                variant_column_name,
+                genotype_column_name=None,
+                default_genotype=None,
+                delimiter=None) -> None:
 
         if default_genotype is not None and default_genotype not in ACCEPTABLE_GENOTYPES:
             raise ValueError(f"Did not recognize default genotype {default_genotype}")

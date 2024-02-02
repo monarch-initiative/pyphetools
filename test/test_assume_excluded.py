@@ -26,7 +26,9 @@ class TestAssumeExcluded(unittest.TestCase):
                             'Diastolicdysfunction': 'Left ventricular diastolic dysfunction',
                             'Lymphocytosis': 'Lymphocytosis',
                             'Single kidney': 'Unilateral renal agenesis'}
-        comorbiditiesMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=comorbidities_d)
+        comorbiditiesMapper = OptionColumnMapper(column_name="placeholder",
+                                                concept_recognizer=self.hpo_cr,
+                                                option_d=comorbidities_d)
         results = comorbiditiesMapper.map_cell('COPD')
         self.assertEqual(1, len(results))
         hpo_term = results[0]
@@ -34,29 +36,32 @@ class TestAssumeExcluded(unittest.TestCase):
         self.assertEqual('HP:0006510', hpo_term.id)
 
     def test_with_assume_exclusion(self):
-        comorbidities_d = {'Insulindependentdiabetes-onsetatage19': 'Type II diabetes mellitus',
+        excluded_d = {'Insulindependentdiabetes-onsetatage19': 'Type II diabetes mellitus',
                             'COPD': 'Chronic pulmonary obstruction',
                             'Diastolicdysfunction': 'Left ventricular diastolic dysfunction',
                             'Lymphocytosis': 'Lymphocytosis',
                             'Single kidney': 'Unilateral renal agenesis'}
-        comorbiditiesMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=comorbidities_d, assumeExcluded=True)
+        comorbiditiesMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d={}, excluded_d=excluded_d)
         results = comorbiditiesMapper.map_cell('COPD')
-        self.assertEqual(5, len(results))
-        results.sort(key=lambda x: x.label) # sort alphabetically
+        self.assertEqual(1, len(results))
         hpo0 = results[0]
         self.assertEqual('Chronic pulmonary obstruction', hpo0.label)
         self.assertEqual('HP:0006510', hpo0.id)
-        self.assertTrue(hpo0.observed)
-        hpo1 = results[1]
+        self.assertFalse(hpo0.observed)
+        results = comorbiditiesMapper.map_cell('Diastolicdysfunction')
+        hpo1 = results[0]
         self.assertEqual("Left ventricular diastolic dysfunction", hpo1.label)
         self.assertEqual("HP:0025168", hpo1.id)
         self.assertFalse(hpo1.observed)
-        hpo2 = results[2]
+        results = comorbiditiesMapper.map_cell('Lymphocytosis')
+        hpo2 = results[0]
         self.assertEqual("Lymphocytosis", hpo2.label)
         self.assertFalse(hpo2.observed)
-        hpo3 = results[3]
+        results = comorbiditiesMapper.map_cell('Insulindependentdiabetes-onsetatage19')
+        hpo3 = results[0]
         self.assertEqual("Type II diabetes mellitus", hpo3.label)
         self.assertFalse(hpo3.observed)
-        hpo4 = results[4]
+        results = comorbiditiesMapper.map_cell('Single kidney')
+        hpo4 = results[0]
         self.assertEqual("Unilateral renal agenesis", hpo4.label)
         self.assertFalse(hpo4.observed)

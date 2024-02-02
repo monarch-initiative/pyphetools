@@ -257,7 +257,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             hp_term = self.get_term_from_label(hpo_label)
             if hp_term.id != expected_id:
                 raise ValueError(f"Got {hp_term.id} but was expecting {expected_id} for {hpo_label}")
-            mpr = SimpleColumnMapper(hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=excluded)
+            mpr = SimpleColumnMapper(column_name=column_name, hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=excluded)
             simple_mapper_d[column_name] = mpr
         return simple_mapper_d
 

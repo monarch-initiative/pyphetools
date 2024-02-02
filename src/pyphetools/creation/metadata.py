@@ -201,6 +201,9 @@ class MetaData:
         else:
             raise ValueError("Could not get PMID because MetaData._extref was None")
 
+    def get_created_by(self) -> str:
+        return self._created_by
+
 
     def to_ga4gh(self):
         """

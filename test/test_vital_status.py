@@ -17,8 +17,8 @@ class TestVitalStatus(unittest.TestCase):
         vstatus = mapper.map_cell_to_vital_status("7 months")
         self.assertIsNotNone(vstatus)
         self.assertTrue(isinstance(vstatus, PPKt.VitalStatus))
-        self.assertEquals(PPKt.VitalStatus.DECEASED, vstatus.status)
-        self.assertEquals("P7M", vstatus.time_of_death.age.iso8601duration)
+        self.assertEqual(PPKt.VitalStatus.DECEASED, vstatus.status)
+        self.assertEqual("P7M", vstatus.time_of_death.age.iso8601duration)
 
     def test_vs2(self):
         aod_d = {
@@ -29,8 +29,8 @@ class TestVitalStatus(unittest.TestCase):
         vstatus = mapper.map_cell_to_vital_status("10 months")
         self.assertIsNotNone(vstatus)
         self.assertTrue(isinstance(vstatus, PPKt.VitalStatus))
-        self.assertEquals(PPKt.VitalStatus.DECEASED, vstatus.status)
-        self.assertEquals("P10M", vstatus.time_of_death.age.iso8601duration)
+        self.assertEqual(PPKt.VitalStatus.DECEASED, vstatus.status)
+        self.assertEqual("P10M", vstatus.time_of_death.age.iso8601duration)
 
     def test_individual_with_vs(self):
         """Test that we can add a VitalStatus to the phenopacket.

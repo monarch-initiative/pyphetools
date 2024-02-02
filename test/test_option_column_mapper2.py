@@ -18,7 +18,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
                     'GTC': 'Bilateral tonic-clonic seizure' ,
                     'ESES': "Status epilepticus"
                     }
-        seizureMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=seizure_d)
+        seizureMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=seizure_d)
         results = seizureMapper.map_cell("Absence")
         self.assertEqual(1, len(results))
         result = results[0]
@@ -32,7 +32,9 @@ class TestOptionColumnMapper2(unittest.TestCase):
                     'Infantile spasms': "Infantile spasms",
                     'GTC': 'Bilateral tonic-clonic seizure',
                     'ESES': "Status epilepticus"}
-        seizureMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=seizure_d)
+        seizureMapper = OptionColumnMapper(column_name="placeholder",
+                                        concept_recognizer=self.hpo_cr,
+                                        option_d=seizure_d)
         results = seizureMapper.map_cell("Absence and GTC")
         self.assertEqual(2, len(results))
         results = sorted(results, key=lambda x: x.id, reverse=True)
@@ -55,7 +57,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
             'deeply set eyes': 'Deeply set eye'
         }
         cell_contents = "Broad forehead, deeply set eyes, ptosis, bulbous nasal tip, micrognathia, prominent lobule of ear, tapering fingers"
-        morphMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=morph_d)
+        morphMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=morph_d)
         results = morphMapper.map_cell(cell_contents)
         self.assertEqual(7, len(results))
         results = sorted(results, key=lambda x: x.id, reverse=True)
@@ -66,7 +68,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
 
     def test_hpo_cr_ataxia(self):
         """We should retrieve Ataxia (HP:0001251)"""
-        neuroMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d={})
+        neuroMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d={})
         results = neuroMapper.map_cell("ataxia")
         self.assertEqual(1, len(results))
         result = results[0]
@@ -75,7 +77,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
 
     def test_hpo_cr_spastic_paraplegia(self):
         """We should retrieve Spastic paraplegia (HP:0001258)"""
-        neuroMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d={})
+        neuroMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d={})
         results = neuroMapper.map_cell("spastic paraplegia")
         self.assertEqual(1, len(results))
         result = results[0]
@@ -84,7 +86,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
 
     def test_hpo_cr_multiple_concepts_with_custom_map(self):
         text = 'spasticity; nerve conduction and EMG studies with abnormal findings "remarkable for the failure to activate the leg muscles due to an upper motor neuron pattern of aberrant motor unit potential firing rates. These findings are consistent with dysfunction of the corticospinal pathways rather than a lower motor unit."'
-        neuroMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d={})
+        neuroMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d={})
         results = neuroMapper.map_cell(text)
         self.assertEqual(1, len(results))
         result = results[0]
@@ -97,7 +99,7 @@ class TestOptionColumnMapper2(unittest.TestCase):
                                 'unstable gait': 'Unsteady gait',
                                 'dysfunction of the corticospinal pathways': 'Upper motor neuron dysfunction',
                                 }
-        neuroMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=neuro_exam_custom_map)
+        neuroMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=neuro_exam_custom_map)
         results = neuroMapper.map_cell(text)
         self.assertEqual(3, len(results))
         term_d = dict([(hpo_term.id, hpo_term.label) for hpo_term in results])
@@ -115,14 +117,14 @@ class TestOptionColumnMapper2(unittest.TestCase):
                             '\nIUGR': 'Intrauterine growth retardation',
                             'small cerebellum': 'Cerebellar hypoplasia',
                             }
-        prenatalMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=prenatal_custom_map)
+        prenatalMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=prenatal_custom_map)
         results = prenatalMapper.map_cell(text)
         self.assertEqual(3, len(results))
 
     def test_get_maximal_match(self):
         text = "severe global developmental delay"
         dev_custom_map = {'Severe global developmental delay': 'Severe global developmental delay'}
-        devMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=dev_custom_map)
+        devMapper = OptionColumnMapper(column_name="placeholder", concept_recognizer=self.hpo_cr, option_d=dev_custom_map)
         results = devMapper.map_cell(text)
         self.assertEqual(1, len(results))
         res = results[0]
@@ -134,7 +136,10 @@ class TestOptionColumnMapper2(unittest.TestCase):
                         'auto and heteroagressivity': ['Self-injurious behavior', 'Aggressive behavior']
                         }
         excluded_D = {"no":'Aggressive behavior' }
-        mapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=agressivenes_d, excluded_d=excluded_D)
+        mapper = OptionColumnMapper(column_name="placeholder",
+                                    concept_recognizer=self.hpo_cr,
+                                    option_d=agressivenes_d,
+                                    excluded_d=excluded_D)
         results = mapper.map_cell("yes")
         self.assertEqual(1, len(results))
         res = results[0]
@@ -157,8 +162,9 @@ class TestOptionColumnMapper2(unittest.TestCase):
                         'yes': 'Hypotonia',
                         'axial tone more affected than  appendicular': 'Axial hypotonia',
                         'muscular hypotonia in the first years': 'Hypotonia'}
-        hypotoniaMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=hypotonia_d,
-                                    excluded_d={'no': 'Hypotonia'})
+        hypotoniaMapper = OptionColumnMapper(column_name="placeholder",
+                                            concept_recognizer=self.hpo_cr, option_d=hypotonia_d,
+                                            excluded_d={'no': 'Hypotonia'})
         results = hypotoniaMapper.map_cell("muscular hypotonia in the first years")
         self.assertEqual(1, len(results))
 
@@ -170,8 +176,9 @@ class TestOptionColumnMapper2(unittest.TestCase):
             'moderate enlargement of the lateral ventricles': 'Lateral ventricle dilatation',
             'left greater than right': 'Lateral ventricle dilatation',
         }
-        ventriclesMapper = OptionColumnMapper(concept_recognizer=self.hpo_cr, option_d=ventricles_d,
-                                    excluded_d={"normal": "Ventriculomegaly", 'no ventriculomegaly': 'Ventriculomegaly'})
+        ventriclesMapper = OptionColumnMapper(column_name="placeholder",
+                                            concept_recognizer=self.hpo_cr, option_d=ventricles_d,
+                                            excluded_d={"normal": "Ventriculomegaly", 'no ventriculomegaly': 'Ventriculomegaly'})
         results = ventriclesMapper.map_cell("no ventriculomegaly")
         self.assertEqual(1, len(results))
         result = results[0]

@@ -124,11 +124,12 @@ class AgeColumnMapper:
             months = round(12 * m)
             return f"P{y}Y{months}M"
 
-    def preview_column(self, column):
-        if not isinstance(column, pd.Series):
-            raise ValueError("column argument must be pandas Series, but was {type(column)}")
+    def preview_column(self, df:pd.DataFrame) -> pd.DataFrame:
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
         preview_d = defaultdict(list)
-        for index, value in column.items():
+        column = df[self.get_column_name()]
+        for _, value in column.items():
             preview_d[value] = self.map_cell(str(value))
         dlist = []
         for k, v in preview_d.items():
@@ -138,10 +139,10 @@ class AgeColumnMapper:
                 dlist.append({"original column contents": k, "age": v})
         return pd.DataFrame(dlist)
 
-    def get_column_name(self):
+    def get_column_name(self) -> str:
         return self._column_name
 
-    def has_error(self):
+    def has_error(self) -> bool:
         return len(self._erroneous_input_counter) > 0
 
     def error_summary(self):

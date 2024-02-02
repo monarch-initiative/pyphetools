@@ -1,4 +1,4 @@
-import phenopackets 
+import phenopackets
 from .variant import Variant
 import string
 from typing import Dict
@@ -51,42 +51,42 @@ class HgvsVariant(Variant):
             self._variant_id = "var_" + "".join(random.choices(string.ascii_letters, k=25))
         else:
             self._variant_id = variant_id
-        
+
     @property
     def assembly(self):
         return self._assembly
-        
+
     @property
     def chr(self):
         return self._chr
-        
+
     @property
     def position(self):
         return self._position
-        
+
     @property
     def ref(self):
         return self._ref
-        
+
     @property
     def alt(self):
         return self._alt
-    
+
     @property
     def genotype(self):
         return self._genotype
-          
+
     def __str__(self):
-        return f"{self._chr}:{self._position}{self._ref}>{self._alt}"
-    
+        return f"{self._hgvs}({self._chr}:{self._position}{self._ref}>{self._alt})"
+
     def to_string(self):
         return self.__str__()
-    
+
     def to_ga4gh_variant_interpretation(self, acmg=None):
         """For the new interface. Refactor client code to use this function, which has an unambiguous name
         """
         return self.to_ga4gh(acmg=acmg)
-    
+
     def to_ga4gh(self, acmg=None):
         """
         Transform this Variant object into a "variantInterpretation" message of the GA4GH Phenopacket schema
@@ -100,11 +100,11 @@ class HgvsVariant(Variant):
         if self._hgvs is not None:
             hgvs_expression.syntax = "hgvs.c"
             hgvs_expression.value = self._hgvs
-            vdescriptor.expressions.append(hgvs_expression) 
-        if self._g_hgvs is not None: 
+            vdescriptor.expressions.append(hgvs_expression)
+        if self._g_hgvs is not None:
             hgvs_expression.syntax = "hgvs.g"
             hgvs_expression.value = self._g_hgvs
-            vdescriptor.expressions.append(hgvs_expression) 
+            vdescriptor.expressions.append(hgvs_expression)
         vdescriptor.molecule_context =  phenopackets.MoleculeContext.genomic
         if self._genotype is not None:
             if self._genotype == 'heterozygous':
@@ -112,13 +112,13 @@ class HgvsVariant(Variant):
                 vdescriptor.allelic_state.label = "heterozygous"
             elif self._genotype == 'homozygous':
                 vdescriptor.allelic_state.id = "GENO:0000136"
-                vdescriptor.allelic_state.label = "homozygous" 
+                vdescriptor.allelic_state.label = "homozygous"
             elif self._genotype == 'hemizygous':
                 vdescriptor.allelic_state.id = "GENO:0000134"
-                vdescriptor.allelic_state.label = "hemizygous" 
+                vdescriptor.allelic_state.label = "hemizygous"
             else:
-                print(f"Did not recognize genotype {self._genotype}")  
-        vinterpretation = phenopackets.VariantInterpretation() 
+                print(f"Did not recognize genotype {self._genotype}")
+        vinterpretation = phenopackets.VariantInterpretation()
         if acmg is not None:
             if acmg.lower() == 'benign':
                 vinterpretation.acmgPathogenicityClassification = phenopackets.AcmgPathogenicityClassification.BENIGN
@@ -141,4 +141,3 @@ class HgvsVariant(Variant):
         vdescriptor.vcf_record.CopyFrom(vcf_record)
         vinterpretation.variation_descriptor.CopyFrom(vdescriptor)
         return vinterpretation
-        

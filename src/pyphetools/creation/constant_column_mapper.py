@@ -6,7 +6,8 @@ from .hp_term import HpTerm
 
 class ConstantColumnMapper(ColumnMapper):
     """Column mapper for cases in which all patients have an (optionally excluded) HPO term.
-
+    :param column_name: name of the column in the pandas DataFrame
+    :type column_name: str
     :param hpo_id: HPO  id, e.g., HP:0004321
     :type hpo_id: str
     :param hpo_label: Corresponding term label
@@ -16,9 +17,9 @@ class ConstantColumnMapper(ColumnMapper):
     :param excluded: if True, then all individuals had this feature explicitly excluded
     :type excluded: bool
     """
-    def __init__(self, hpo_id=None, hpo_label=None, term_list=None, excluded:bool=False) -> None:
+    def __init__(self, column_name,  hpo_id=None, hpo_label=None, term_list=None, excluded:bool=False) -> None:
 
-        super().__init__()
+        super().__init__(column_name=column_name)
         self._hpo_id = hpo_id
         if hpo_id is None and hpo_label is None and term_list is not None:
             self._hpo_terms = []
@@ -49,10 +50,11 @@ class ConstantColumnMapper(ColumnMapper):
         """
         return self._hpo_terms
 
-    def preview_column(self, column) -> pd.DataFrame:
-        if not isinstance(column, pd.Series):
-            raise ValueError("column argument must be pandas Series, but was {type(column)}")
+    def preview_column(self, df:pd.DataFrame) -> pd.DataFrame:
+        if not isinstance(df, pd.DataFrame):
+            raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
         dlist = []
+        column = df[self._column_name]
         for _, value in column.items():
             display = ";".join(hpterm.display_value for hpterm in self._hpo_terms)
             dlist.append(display)

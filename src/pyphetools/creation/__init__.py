@@ -3,6 +3,7 @@ from .age_isoformater import AgeIsoFormater
 from .age_of_death_mapper import AgeOfDeathColumnMapper
 from .allelic_requirement import AllelicRequirement
 from .case_encoder import CaseEncoder
+from .case_template_encoder import CaseTemplateEncoder
 from .citation import Citation
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
@@ -22,9 +23,12 @@ from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator
 from .structural_variant import StructuralVariant
 from .thresholded_column_mapper import ThresholdedColumnMapper
-from .variant_validator import VariantValidator
-from .variant_column_mapper import VariantColumnMapper
+from .thresholder import Thresholder
 from .variant import Variant
+from .variant_column_mapper import VariantColumnMapper
+from .variant_manager import VariantManager
+from .variant_validator import VariantValidator
+
 
 
 __all__ = [
@@ -33,6 +37,7 @@ __all__ = [
     "AgeOfDeathColumnMapper",
     "AllelicRequirement",
     "CaseEncoder",
+    "CaseTemplateEncoder",
     "Citation",
     "CohortEncoder",
     "ColumnMapper",
@@ -55,7 +60,9 @@ __all__ = [
     "SimpleColumnMapperGenerator",
     "StructuralVariant",
     "ThresholdedColumnMapper",
-    "VariantValidator",
+    "Thresholder",
+    "Variant",
     "VariantColumnMapper",
-    "Variant"
+    "VariantManager",
+    "VariantValidator",
 ]

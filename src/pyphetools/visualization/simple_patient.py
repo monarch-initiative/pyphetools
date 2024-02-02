@@ -148,6 +148,13 @@ class SimplePatient:
         """
         return self._excluded
 
+    def get_total_hpo_count(self):
+        """
+        :return: total count of HPO terms (observed and excluded)
+        :rtype: int
+        """
+        return len(self._observed) + len(self._excluded)
+
     def get_variant_list(self):
         return self._variant_list
 

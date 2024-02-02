@@ -120,13 +120,21 @@ class HpTerm:
         """
         return f"{self._label} ({self._id})"
 
+    def _term_and_id_with_onset(self):
+        if self._onset is not None and self._onset != Constants.NOT_PROVIDED:
+            return f"{self.hpo_term_and_id}: onset {self._onset}"
+        elif self._onset_term is not None:
+            return f"{self.hpo_term_and_id}: onset {self._onset_term}"
+        else:
+            return self.hpo_term_and_id
+
     def __str__(self) -> str:
         if not self._measured:
             return f"not measured: {self._label} ({self._id})"
         elif not self._observed:
-            return f"excluded: {self._label} ({self._id})"
+            return f"excluded: {self._term_and_id_with_onset()}"
         else:
-            return f"{self._label} ({self._id})"
+            return self._term_and_id_with_onset()
 
     def to_string(self):
         return self.__str__()

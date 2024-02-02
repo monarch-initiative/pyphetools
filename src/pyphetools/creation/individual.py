@@ -184,6 +184,9 @@ class Individual:
         ppkt_id = ppkt_id.replace(" ", "_")
         return ppkt_id
 
+    def get_citation(self):
+        return self._citation
+
 
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None) -> PPKt.Phenopacket:
         """

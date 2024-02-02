@@ -3,6 +3,7 @@ from typing import Dict, List
 from pyphetools.creation.citation import Citation
 from pyphetools.creation.constants import Constants
 from pyphetools.creation.disease import Disease
+from pyphetools.creation.hpo_cr import HpoConceptRecognizer
 from pyphetools.creation.metadata import MetaData
 from pyphetools.creation.hp_term import HpTerm
 from pyphetools.creation.individual import Individual
@@ -33,7 +34,13 @@ class CellEncoder(metaclass=abc.ABCMeta):
         pass
 
 class DataEncoder(CellEncoder):
+    """Convenience class to represent the header (two lines) of columns that represent fixed data in the template
 
+    :param h1: contents of the first header line
+    :type h1: str
+    :param h2: contents of the second header line
+    :type h2: str
+    """
     def __init__(self, h1:str, h2:str):
         super().__init__(name=h1)
 
@@ -47,20 +54,47 @@ class DataEncoder(CellEncoder):
         return False
 
 class HpoEncoder(CellEncoder):
+    """Convenience class to represent the header (two lines) of columns that represent HPO columns in the template
+
+    :param h1: contents of the first header line
+    :type h1: str
+    :param h2: contents of the second header line
+    :type h2: str
+    """
     def __init__(self, h1:str, h2:str):
         super().__init__(name=h1)
+        self._error = None
+        self._hpo_label = None
+        self._hpo_id = None
         if h1.endswith(" "):
-            raise ValueError(f"Error - HPO label ends with whitespace: \”{h1}\"")
-        if not h2.startswith("HP:") or len(h2) != 10:
-            raise ValueError(f"Error - Malformed HPO id: \”{h2}\"")
-        self._hpo_label = h1
-        self._hpo_id = h2
+            self._error = f"Error - HPO label ends with whitespace: \”{h1}\""
+        elif h2.startswith("HP:") and len(h2) != 10:
+            self._error = f"Error - Malformed HPO id: \”{h2}\" ({h1})"
+        elif not h2.startswith("HP:"):
+            self._error = f"Error - {h1} -- {h2}"
+        else:
+            self._hpo_label = h1
+            self._hpo_id = h2
 
     def is_data(self):
         return False
 
     def is_hpo(self):
-        return True
+        """
+        :returns: True iff this is an NPO column and there was no error
+        :rtype: bool
+        """
+        return self._error is None
+
+    def needs_attention(self):
+        """
+        :returns: True iff there was a problem with this column
+        :rtype: bool
+        """
+        return self._error is not None
+
+    def get_error(self):
+        return self._error
 
     def encode(self, cell_contents):
         cell_contents = str(cell_contents)
@@ -77,6 +111,13 @@ class HpoEncoder(CellEncoder):
             raise ValueError(f"Could not parse HPO column cell_contents: \”{cell_contents}\"")
 
 class NullEncoder(CellEncoder):
+    """Convenience class to represent a column that we do not use for encoding
+
+    :param h1: contents of the first header line
+    :type h1: str
+    :param h2: contents of the second header line
+    :type h2: str
+    """
     def __init__(self, h1=None, h2=None):
         super().__init__(name="Begin of HPO column")
 
@@ -99,18 +140,30 @@ DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "
 
 
 class CaseTemplateEncoder:
+    """Class to encode data from user-provided Excel template.
+
+    :param df: template table with clinical data
+    :type df: pd.DataFrame
+    :param hpo_cr: HpoConceptRecognizer for text mining
+    :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
+    :param created_by: biocurator (typically, this should be an ORCID identifier)
+    :type created_by: str
+    """
 
     HPO_VERSION = None
 
-    def __init__(self, df, hpo_cr, created_by) -> None:
+    def __init__(self, df:pd.DataFrame, hpo_cr:HpoConceptRecognizer, created_by:str) -> None:
+        """constructor
+        """
         if not isinstance(df, pd.DataFrame):
-            raise ValueError(f"argment df must be pandas DataFrame but was {type(df)}")
+            raise ValueError(f"argument \"df\" must be pandas DataFrame but was {type(df)}")
         self._individuals = []
+        self._errors = []
         header_1 = df.columns.values.tolist()
         header_2 = df.loc[0, :].values.tolist()
         if len(header_1) != len(header_2):
-            # should never happen
-            raise ValueError("headers are different lengths")
+            # should never happen unless the template file is corrupted
+            raise ValueError("headers are different lengths. Check template file for correctness.")
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1, header_2)
         data_df = df.iloc[1:]
@@ -124,6 +177,7 @@ class CaseTemplateEncoder:
             if self._is_biallelic:
                 self._allele2_d[individual.id] = row["allele_2"]
         CaseTemplateEncoder.HPO_VERSION = hpo_cr.get_hpo_ontology().version
+        self._created_by = created_by
         self._metadata_d = {}
         for i in self._individuals:
             cite = i._citation
@@ -131,7 +185,7 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
 
-    def  _process_header(self, header_1, header_2) -> Dict[int, CellEncoder]:
+    def  _process_header(self, header_1:List, header_2:List) -> Dict[int, CellEncoder]:
         index_to_decoder_d = {}
         in_hpo_range = False
         for i in range(self._n_columns):
@@ -143,17 +197,21 @@ class CaseTemplateEncoder:
                 continue
             elif not in_hpo_range and h1 in EXPECTED_HEADERS:
                 index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
-                EXPECTED_HEADERS.remove(h1)
             elif in_hpo_range:
-                index_to_decoder_d[i] = HpoEncoder(h1=h1, h2=h2)
+                encoder = HpoEncoder(h1=h1, h2=h2)
+                if encoder.needs_attention():
+                    self._errors.append(encoder.get_error())
+                    index_to_decoder_d[i] = NullEncoder()
+                else:
+                    index_to_decoder_d[i] = encoder
         if not in_hpo_range:
             raise ValueError("Did not find HPO boundary column")
         print(f"Created encoders for {len(index_to_decoder_d)} fields")
         return index_to_decoder_d
 
-    def _parse_individual(self, row):
+    def _parse_individual(self, row:pd.Series):
         if not isinstance(row, pd.Series):
-            raise ValueError(f"argment df must be pandas DSeriestaFrame but was {type(row)}")
+            raise ValueError(f"argument df must be pandas DSeriestaFrame but was {type(row)}")
         data = row.values.tolist()
         if len(data) != self._n_columns:
             # Should never happen
@@ -196,6 +254,10 @@ class CaseTemplateEncoder:
         else:
             raise ValueError(f"Unrecognized sex symbol: {sex}")
         age = data_items.get("age")
+        if age is not None and isinstance(age, str) and age.startswith("P"):
+            isoage = age
+        else:
+            isoage = Constants.NOT_PROVIDED
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         disease = Disease(disease_id=disease_id, disease_label=disease_label)
@@ -203,28 +265,41 @@ class CaseTemplateEncoder:
                             citation=citation,
                             hpo_terms=hpo_terms,
                             sex=sex,
-                            age=age,
+                            age=isoage,
                             disease=disease)
 
-    def get_individuals(self):
+    def get_individuals(self) -> List[Individual]:
         return self._individuals
 
-    def get_allele1_d(self):
+    def get_allele1_d(self)-> Dict[str,str]:
         return self._allele1_d
 
-    def get_allele2_d(self):
+    def get_allele2_d(self)-> Dict[str,str]:
         return self._allele2_d
 
-    def _is_biallelic(self):
+    def _is_biallelic(self) -> bool:
         return self._is_biallelic
 
-    def get_metadata_d(self):
+    def get_metadata_d(self) -> Dict[str,MetaData]:
         return self._metadata_d
 
-    @staticmethod
-    def output_individuals_as_phenopackets(individual_list:List[Individual], created_by=None, outdir="phenopackets"):
-        """write a list of Individual objects to file in GA4GH Phenopacket format
+    def get_phenopackets(self) -> List[PPKt.Phenopacket]:
+        ppack_list = []
+        for individual in self._individuals:
+            cite = individual._citation
+            metadata = MetaData(created_by=self._created_by, citation=cite)
+            metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
+            phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
+            ppack_list.append(phenopckt)
+        return ppack_list
 
+
+
+    def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets") -> None:
+        """write a list of Individual objects to file in GA4GH Phenopacket format
+        Note that the individual_list needs to be passed to this object, because we expect that
+        the QC code will have been used to cleanse the data of redundancies etc before output.
+        We use the statefullness to keep track of the created_by argument from the constructor
 
         :param outdir: Path to output directory. Defaults to "phenopackets". Created if not exists.
         :type outdir: str
@@ -235,8 +310,10 @@ class CaseTemplateEncoder:
             os.makedirs(outdir)
         written = 0
 
-        if created_by is None:
+        if self._created_by is None:
             created_by = 'pyphetools'
+        else:
+            created_by = self._created_by
         for individual in individual_list:
             cite = individual._citation
             metadata = MetaData(created_by=created_by, citation=cite)
@@ -256,3 +333,31 @@ class CaseTemplateEncoder:
                 fh.write(json_string)
                 written += 1
         print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
+
+
+    def to_summary(self) -> pd.DataFrame:
+        """
+
+        The table provides a summary of the table that was parsed from the input file. If there were errors, it
+        provides enough feedback so that the user knows what needs to be fixed
+
+        :returns: an table with status of parse
+        :rtype: pd.DataFrame
+        """
+        n_error = 0
+        items = []
+        for e in self._errors:
+            n_error += 1
+            d = {'item': f"Error {n_error}", 'value': e}
+            items.append(d)
+        d = {'item': 'created by', 'value':self._created_by}
+        items.append(d)
+        d = {'item':'number of individuals', 'value': str(len(self._individuals))}
+        items.append(d)
+        n_hpo_columns = sum([1 for encoder in self._index_to_decoder.values() if encoder.is_hpo()])
+        d = {'item':'number of HPO columns', 'value': str(n_hpo_columns)}
+        items.append(d)
+        return pd.DataFrame(items)
+
+
+

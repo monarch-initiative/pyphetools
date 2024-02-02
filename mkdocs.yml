@@ -35,45 +35,50 @@ nav:
   - Developers: 'developers.md'
   - User guide:
     - Introduction: 'user-guide/tutorial.md'
-    - Column mappers:
-      - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
-      - Simple column mapper: 'user-guide/simple_column_mapper.md'
-      - Constant column mapper: 'user-guide/constant_column_mapper.md'
-      - Option column mapper: 'user-guide/option_column_mapper.md'
-      - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
-    - Variant column mapper: 'user-guide/variant_column_mapper.md'
-    - Cohort encoder: 'user-guide/cohort_encoder.md'
-    - Validation: 'user-guide/validation.md'
-    - Visualization: 'user-guide/visualization.md'
+    - Data Entry Template: 'user-guide/template.md'
+    - Jupyter notebook:
+      - overview: "user-guide/jupyter.md"
+      - Column mappers:
+        - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
+        - Simple column mapper: 'user-guide/simple_column_mapper.md'
+        - Constant column mapper: 'user-guide/constant_column_mapper.md'
+        - Option column mapper: 'user-guide/option_column_mapper.md'
+        - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
+      - Variant column mapper: 'user-guide/variant_column_mapper.md'
+      - Cohort encoder: 'user-guide/cohort_encoder.md'
+      - Validation: 'user-guide/validation.md'
+      - Visualization: 'user-guide/visualization.md'
   - API:
     - "overview": 'api/overview.md'
     - "creation":
-      - "overview": "api/creation.md"
-      - "AgeColumnMapper": "api/creation/age_column_mapper.md"
-      - "CaseEncoder": "api/creation/case_encoder.md"
+      - overview: "api/creation.md"
+      - AgeColumnMapper: "api/creation/age_column_mapper.md"
+      - CaseEncoder: "api/creation/case_encoder.md"
       - Citation:  "api/creation/citation.md"
-      - "CohortEncoder": "api/creation/cohort_encoder.md"
-      - "ColumnMapper": "api/creation/column_mapper.md"
-      - "ConstantColumnMapper": "api/creation/constant_column_mapper.md"
-      - "Disease": "api/creation/disease.md"
-      - "DiseaseIdColumnMapper": "api/creation/disease_id_column_mapper.md"
-      - "HgvsVariant": "api/creation/hgvs_variant.md"
-      - "HpoConceptRecognizer": "api/creation/hpo_cr.md"
-      - "HpoExactConceptRecognizer": "api/creation/hpo_exact_cr.md"
-      - "HpoParser": "api/creation/hpo_parser.md"
-      - "HpTerm": "api/creation/hp_term.md"
-      - "Individual": "api/creation/individual.md"
-      - "MetaData": "api/creation/metadata.md"
-      - "MixedCohortEncoder": "api/creation/mixed_cohort_encoder.md"
-      - "OptionColumnMapper": "api/creation/option_column_mapper.md"
-      - "SexColumnMapper": "api/creation/sex_column_mapper.md"
-      - "SimpleColumnMapper": "api/creation/simple_column_mapper.md"
-      - "SimpleColumnMapperGenerator": "api/creation/simple_column_mapper_generator.md"
-      - "StructuralVariant": "api/creation/structural_variant.md"
-      - "ThresholdedColumnMapper": "api/creation/thresholded_column_mapper.md"
-      - "VariantColumnMapper": "api/creation/variant_column_mapper.md"
-      - "Variant": "api/creation/variant.md"
-      - "VariantValidator": "api/creation/variant_validator.md"
+      - CohortEncoder: "api/creation/cohort_encoder.md"
+      - ColumnMapper: "api/creation/column_mapper.md"
+      - ConstantColumnMapper: "api/creation/constant_column_mapper.md"
+      - Disease: "api/creation/disease.md"
+      - DiseaseIdColumnMapper: "api/creation/disease_id_column_mapper.md"
+      - HgvsVariant: "api/creation/hgvs_variant.md"
+      - HpoConceptRecognizer: "api/creation/hpo_cr.md"
+      - HpoExactConceptRecognizer: "api/creation/hpo_exact_cr.md"
+      - HpoParser: "api/creation/hpo_parser.md"
+      - HpTerm: "api/creation/hp_term.md"
+      - Individual: "api/creation/individual.md"
+      - MetaData: "api/creation/metadata.md"
+      - MixedCohortEncoder: "api/creation/mixed_cohort_encoder.md"
+      - OptionColumnMapper: "api/creation/option_column_mapper.md"
+      - SexColumnMapper: "api/creation/sex_column_mapper.md"
+      - SimpleColumnMapper: "api/creation/simple_column_mapper.md"
+      - SimpleColumnMapperGenerator: "api/creation/simple_column_mapper_generator.md"
+      - StructuralVariant: "api/creation/structural_variant.md"
+      - Thresholder: "api/creation/thresholder.md"
+      - ThresholdedColumnMapper: "api/creation/thresholded_column_mapper.md"
+      - VariantColumnMapper: "api/creation/variant_column_mapper.md"
+      - Variant: "api/creation/variant.md"
+      - VariantManager: "api/creation/variant_manager.md"
+      - VariantValidator: "api/creation/variant_validator.md"
     - "validation":
       - "overview": "api/validation.md"
       - "CohortValidator": "api/validation/cohort_validator.md"
