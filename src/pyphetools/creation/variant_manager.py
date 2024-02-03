@@ -18,7 +18,7 @@ def get_pickle_filename(name):
 def load_variant_pickle(name):
     """
     Load the pickle file. If the file cannot be found, return None. If it is found, return the
-     pickled object (which in our case will be a dictionary of Variant objects).
+    pickled object (which in our case will be a dictionary of Variant objects).
     """
     fname = get_pickle_filename(name)
     if not os.path.isfile(fname):
@@ -52,8 +52,6 @@ class VariantManager:
     :type df: pd.DataFrame
     :param individual_column_name: Name of the individual (patient) column
     :type individual_column_name: str
-    :param cohort_name: a string that is used to name the pickle file that stores variant objects, usually the gene symbol
-    :type cohort_name: str
     :param transcript: accession number and version of the transcript, e.g., "NM_000342.3"
     :type transcript: str
     :param allele_1_column_name: name of the column with alleles (#1)
@@ -69,11 +67,10 @@ class VariantManager:
     def __init__(self,
                 df:pd.DataFrame,
                 individual_column_name:str,
-                cohort_name:str,
                 transcript:str,
+                gene_symbol:str,
                 allele_1_column_name:str,
                 allele_2_column_name:str=None,
-                gene_symbol:str=None,
                 gene_id:str=None,
                 overwrite:bool=False
                 ):
@@ -87,7 +84,7 @@ class VariantManager:
             raise ValueError(f"If not None, the \"allele_2_column_name\" argument must be a a column in df (a pandas DataFrame)")
         self._dataframe = df
         self._individual_column_name = individual_column_name
-        self._cohort_name = cohort_name
+        #self._cohort_name = transcript
         self._transcript = transcript
         self._allele_1_column_name = allele_1_column_name
         self._allele_2_column_name = allele_2_column_name
@@ -133,7 +130,7 @@ class VariantManager:
         if overwrite:
             v_d = {}
         else:
-            v_d = load_variant_pickle(self._cohort_name)
+            v_d = load_variant_pickle(self._gene_symbol)
         if v_d is None:
             self._var_d = {}
         else:
@@ -179,7 +176,7 @@ class VariantManager:
                 self._var_d[v] = var
             except Exception as e:
                 print(f"[ERROR] Could not retrieve Variant Validator information for {v}: {str(e)}")
-        write_variant_pickle(name=self._cohort_name, my_object=self._var_d)
+        write_variant_pickle(name=self._gene_symbol, my_object=self._var_d)
 
     def code_as_chromosomal_deletion(self, allele_set):
         """
@@ -312,6 +309,13 @@ class VariantManager:
         :rtype: Variant
         """
         return self._var_d.get(v)
+
+    def get_variant_d(self):
+        """
+        :returns:dictionary with key: original string for allele, value: Variant object
+        :rtype: Dict[str, Variant]
+        """
+        return self._var_d
 
 
 
