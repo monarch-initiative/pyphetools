@@ -2,17 +2,29 @@ import math
 import os
 import pandas as pd
 from .hp_term import HpTerm
+from .constants import Constants
 
 current_dir = os.path.dirname(__file__)
 THRESHOLDS_FILE = os.path.join(current_dir, "data", "thresholds.tsv");
 
 class Thresholder:
+    """A class to simplify the interpretation of thresholded values
+
+    The class organizes the interpretation of numerical values for tests such as blood potassium. Results
+    can be low, normal, or high, and there is an HPO term for each. The class also provides
+    commonly used normal ranges. We note that many lab tests have different ranges for males and females or
+    for adults and children. We do not attempt to model this, but instead provide ranges for adults.
+    In cases where there are different ranges for males and females, we by default use the minimum and maximum
+    value for each sex. It is possible to specify the range that should be used in the constructor method;
+    in this case, the default values are overriden. In very complicated cases with multiple different
+    normal ranges, consider using the OptionColumnMapper.
+    """
 
     THRESHOLDER_MAP_NEEDS_INITIALIZATION = True
 
     THRESHOLDER_MAP = {}
 
-    def __init__(self, unit:str, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None):
+    def __init__(self, unit:str, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None, threshold_low_male=None, threshold_high_male=None, threshold_low_female=None, threshold_high_female=None):
         """
         if hpo_term_low is not None and not isinstance(hpo_term_low, HpTerm):
             raise ValueError(f"hpo_term_low argument must be HpTerm but was {type(hpo_term_low)}")
@@ -30,14 +42,17 @@ class Thresholder:
         if threshold_high is not None and not isinstance(threshold_high, int) and not isinstance(threshold_high, float):
             raise ValueError(f"threshold_high argument must be integer or float but was {threshold_high}")
         self._unit = unit
-        if threshold_low is not None:
-            self._threshold_low = float(threshold_low)
+        self._threshold_low = self._set_threshold_to_float_or_none(threshold_low)
+        self._threshold_high = self._set_threshold_to_float_or_none(threshold_high)
+
+    def _set_threshold_to_float_or_none(self, thresh):
+        """in the input file, a threshold value can be set to na or n/a. If so, we set the value to None.
+        Otherwise, we convert all values to floats
+        """
+        if thresh is not None:
+            return float(thresh)
         else:
-            self._threshold_low = None
-        if threshold_high is not None:
-            self._threshold_high = float(threshold_high)
-        else:
-            self._threshold_high = None
+            return None
 
 
     def set_unit(self, unit) -> None:
@@ -215,6 +230,12 @@ class Thresholder:
         return Thresholder._get_thresholder("alkaline phosphatase blood", low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
+    def calcium_blood(unit=None, low_thresh=None, high_thresh=None):
+        """Calcium in the blood circulation 8.5 to 10.2 mg/dL (2.13 to 2.55 millimol/L).
+        """
+        return Thresholder._get_thresholder("calcium blood", low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
     def creatinine_blood(unit=None, low_thresh=None, high_thresh=None):
         """Serum crea,  0.6-1.2 mg/dL in adult males and 0.5-1.1 mg/dL in adult females
         """
@@ -225,6 +246,12 @@ class Thresholder:
         """Serum lactate (0.5-1 mmol/L)
         """
         return Thresholder._get_thresholder("lactate blood", low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def sodium_blood(unit=None, low_thresh=None, high_thresh=None):
+        """Sodium in the blood circulation 135-145 mEq/L
+        """
+        return Thresholder._get_thresholder("sodium blood", low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
     def potassium_blood(unit=None, low_thresh=None, high_thresh=None):

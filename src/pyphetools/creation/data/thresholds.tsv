@@ -1,6 +1,8 @@
-label	hpo_abn_label	hpo_abn_id	hpo_low_label	hpo_low_id	hpo_high_label	hpo_high_id	unit	low	high	Reference
-alkaline phosphatase blood	Abnormality of alkaline phosphatase level	HP:0004379	Low alkaline phosphatase	HP:0003282	Elevated circulating alkaline phosphatase concentration	HP:0003155	U/L	30	120	ABIM Laboratory Test Reference Ranges_ January 2024
-creatinine blood	Abnormal circulating creatinine concentration	HP:0012100	Decreased serum creatinine	HP:0012101	Elevated circulating creatinine concentration	HP:0003259	mg/dL	0.6	1.2	
-lactate blood	Increased serum lactate	HP:0002151	na	na	Increased serum lactate	HP:0002151	mmol/L	0.5	1	PMID:29262026
-potassium blood	Abnormal blood potassium concentration	HP:0011042	Hypokalemia	HP:0002900	Hyperkalemia	HP:0002153	mEq/L	3.5	5.2	PMID:29494072
-bicarbonate blood	Abnormal serum bicarbonate concentration	HP:0032065	Decreased serum bicarbonate concentration	HP:0032066	Elevated serum bicarbonate concentration	HP:0032067	mEq/L	22	29	
+label	hpo_abn_label	hpo_abn_id	hpo_low_label	hpo_low_id	hpo_high_label	hpo_high_id	unit	low	high	low.M	high.M	low.F	high.F	Reference
+alkaline phosphatase blood	Abnormality of alkaline phosphatase level	HP:0004379	Low alkaline phosphatase	HP:0003282	Elevated circulating alkaline phosphatase concentration	HP:0003155	U/L	30	120	na	na	na	na	ABIM Laboratory Test Reference Ranges_ January 2024
+bicarbonate blood	Abnormal serum bicarbonate concentration	HP:0032065	Decreased serum bicarbonate concentration	HP:0032066	Elevated serum bicarbonate concentration	HP:0032067	mEq/L	22	29	na	na	na	na	
+calcium blood	Abnormal circulating calcium concentration	HP:0004363	Hypocalcemia	HP:0002901	Hypercalcemia	HP:0003072	mmol/L	2.13	2.55					
+creatinine blood	Abnormal circulating creatinine concentration	HP:0012100	Decreased serum creatinine	HP:0012101	Elevated circulating creatinine concentration	HP:0003259	mg/dL	0.6	1.3	0.7	1.3	0.6	1.1	
+lactate blood	Increased serum lactate	HP:0002151	na	na	Increased serum lactate	HP:0002151	mmol/L	0.5	1	na	na	na	na	PMID:29262026
+potassium blood	Abnormal blood potassium concentration	HP:0011042	Hypokalemia	HP:0002900	Hyperkalemia	HP:0002153	mEq/L	3.5	5.2	na	na	na	na	PMID:29494072
+sodium blood	Abnormal blood sodium concentration	HP:0010931	Hyponatremia	HP:0002902	Hypernatremia	HP:0003228	mEq/L	135	145					
