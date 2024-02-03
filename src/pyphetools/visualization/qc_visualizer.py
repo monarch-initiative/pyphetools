@@ -93,7 +93,7 @@ class QcVisualizer:
             total_validation_issues += vi.n_errors()
             for ve in verrors:
                 error_count[ve.category] += 1
-                distinct_item_d[ve.category].add(ve.term)
+                distinct_item_d[ve.category].add(ve.message)
         html_lines = []
         n_individuals = len(validated_individual_list)
         n_individuals_with_errors = sum([1 for i in validated_individual_list if i.has_error()])
@@ -124,27 +124,27 @@ class QcVisualizer:
                 if "MALFORMED_LABEL" in distinct_item_d:
                     malformed_label_set = distinct_item_d.get("MALFORMED_LABEL")
                     if len(malformed_label_set) > 0:
-                        malformed = "; ".join([t.hpo_term_and_id for t in malformed_label_set])
+                        malformed = "; ".join(malformed_label_set)
                         para = f"<p>The following malformed labels were found: {malformed}. These need to be corrected before continuing.</p>"
                         html_lines.append(para)
                 if "REDUNDANT" in distinct_item_d:
                     redundant_label_set = distinct_item_d.get("REDUNDANT")
-                    redundant = "; ".join([t.hpo_term_and_id for t in redundant_label_set])
+                    redundant = "; ".join(redundant_label_set)
                     para = f"<p>The following redundant terms were found: {redundant}. Redundant terms will be removed, keeping only one instance of the most specific term.</p>"
                     html_lines.append(para)
                 if "CONFLICT" in distinct_item_d:
                     conflict_label_set = distinct_item_d.get("CONFLICT")
-                    conflict = "; ".join([t.hpo_term_and_id for t in conflict_label_set])
+                    conflict = "; ".join(conflict_label_set)
                     para = f"<p>The following excluded terms were found to have a conflict with an observed descendent term: {conflict}. The ancestor terms will be removed.</p>"
                     html_lines.append(para)
                 if "OBSERVED_AND_EXCLUDED" in distinct_item_d:
                     o_and_e_set = distinct_item_d.get("OBSERVED_AND_EXCLUDED")
-                    o_and_e = "; ".join([t.hpo_term_and_id for t in o_and_e_set])
+                    o_and_e = "; ".join(o_and_e_set)
                     para = f"<p>The following terms were annotated as being both observed and excluded: {o_and_e}. This needs to be fixed manually.</p>"
                     html_lines.append(para)
                 if "DUPLICATE" in distinct_item_d:
                     dup_set = distinct_item_d.get("DUPLICATE")
-                    dup = "; ".join([t.to_string() for t in dup_set])
+                    dup = "; ".join(dup_set)
                     para = f"<p>The following terms were annotated as duplicates: {dup}. This will be fixed automatically.</p>"
                     html_lines.append(para)
                 html_lines.append(self._get_unfixable_error_table())

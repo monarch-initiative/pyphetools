@@ -120,8 +120,10 @@ class ValidationResult:
         """
         if self._term is None:
             term = ""
+        elif isinstance(self._term, HpTerm):
+            term = self._term.hpo_term_and_id
         else:
-            term = self._term.to_string()
+            term = f"{self._term.name} ({self._term.identifier.value})"
         return [self.id, self.error_level, self.category, self.message, term]
 
     def __repr__(self):
@@ -246,10 +248,10 @@ class ValidationResultBuilder:
         self._message = f"Malformed term {malformed_term.label} with invalid HPO id {malformed_term.id}"
         return self
 
-    def malformed_hpo_label(self, hpo_label, valid_term:HpTerm):
+    def malformed_hpo_label(self, malformed_label, valid_term:HpTerm):
         self._error_level = ErrorLevel.ERROR
         self._category = Category.MALFORMED_LABEL
-        self._message = f"Invalid label '{hpo_label}' found for {valid_term.to_string()}"
+        self._message = f"Invalid label '{malformed_label}' found for {valid_term.name} ({valid_term.identifier.value})"
         self._term = valid_term
         return self
 

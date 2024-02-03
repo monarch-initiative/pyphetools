@@ -13,6 +13,12 @@ import pandas as pd
 from google.protobuf.json_format import MessageToJson
 import phenopackets as PPKt
 
+
+# The following constants are identical with the constants used in the  Excel template
+AGE_OF_ONSET_FIELDNAME = "age_of_onset"
+
+
+
 class CellEncoder(metaclass=abc.ABCMeta):
     def __init__(self, name):
         self._name = name
@@ -253,7 +259,7 @@ class CaseTemplateEncoder:
             sex = Constants.UNKOWN_SEX_SYMBOL
         else:
             raise ValueError(f"Unrecognized sex symbol: {sex}")
-        age = data_items.get("age")
+        age = data_items.get(AGE_OF_ONSET_FIELDNAME)
         if age is not None and isinstance(age, str) and age.startswith("P"):
             isoage = age
         else:

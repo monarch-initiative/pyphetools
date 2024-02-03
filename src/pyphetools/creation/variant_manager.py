@@ -96,9 +96,31 @@ class VariantManager:
         self._var_d = {}
         self._unmapped_alleles = set()
         self._individual_to_alleles_d = defaultdict(list)
+        if "PMID" in df.columns:
+            self._pmid_column_name = "PMID"
+        else:
+            self._pmid_column_name = None
         self._create_variant_d(overwrite)
 
 
+    def _format_pmid_id(self, identifier, pmid):
+        if pmid is not None:
+            return f"{pmid}_{identifier}"
+        else:
+            return identifier
+
+    def _get_identifier_with_pmid(self, row:pd.Series):
+        """Get an identifier such as PMID_33087723_A2 for a daa row with PMID:33087723 and identifier within that publication A2
+
+        Identifiers such as P1 are commonly used and there is a risk of a clash with collections of phenopackets from various papers.
+        Therefore, we use an identifier such as PMID_33087723_A2 if we can find a PMID
+        """
+        individual_id = row[self._individual_column_name]
+        individual_id = str(individual_id) # prevent automatic conversion into int for patient id 1, 2, 3 etc
+        if self._pmid_column_name is not None:
+            return self._format_pmid_id(identifier=individual_id, pmid=row[self._pmid_column_name])
+        else:
+            return individual_id
 
     def _create_variant_d(self, overwrite):
         """
@@ -128,8 +150,7 @@ class VariantManager:
         else:
             df = self._dataframe
         for _, row in df.iterrows():
-            individual_id = row[self._individual_column_name]
-            individual_id = str(individual_id) # prevent automatic conversion into int for patient id 1, 2, 3 etc
+            individual_id = self._get_identifier_with_pmid(row=row)
             allele1 = row[self._allele_1_column_name]
             self._individual_to_alleles_d[individual_id].append(allele1)
             if allele1.startswith("c."):
@@ -220,7 +241,7 @@ class VariantManager:
         n_unmapped = len(self._unmapped_alleles)
         unmapped_alleles = ", ".join(self._unmapped_alleles)
         for allele in self._unmapped_alleles:
-            if allele != allele.trim():
+            if allele != allele.strip():
                 unmapped_alleles = f"{unmapped_alleles}; warning \"{allele}\" has extra white space - check format"
         d = {"status": "unmapped", "count": n_unmapped, "alleles": unmapped_alleles}
         dlist.append(d)
@@ -241,9 +262,14 @@ class VariantManager:
             raise ValueError(f"Need to map all allele strings before using this method but "
                             f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
         for i in individual_list:
-            if i.id not in self._individual_to_alleles_d:
+            if i._citation is not None:
+                pmid = i.get_citation().pmid
+                individual_id = self._format_pmid_id(identifier=i.id, pmid=pmid)
+            else:
+                individual_id = self._format_pmid_id(identifier=i.id, pmid=None)
+            if individual_id not in self._individual_to_alleles_d:
                 raise ValueError(f"Did not find {i.id} in our dictionary of individuals. Note that this function is intended to work with CaseTemplateEncoder")
-            vlist = self._individual_to_alleles_d.get(i.id)
+            vlist = self._individual_to_alleles_d.get(individual_id)
             if len(vlist) == 1:
                 # assume monoallelic
                 v = vlist[0]
