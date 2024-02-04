@@ -176,6 +176,7 @@ class VariantManager:
                 self._var_d[v] = var
             except Exception as e:
                 print(f"[ERROR] Could not retrieve Variant Validator information for {v}: {str(e)}")
+                self._unmapped_alleles.add(v) # This allows us to use the chromosomal mappers.
         write_variant_pickle(name=self._gene_symbol, my_object=self._var_d)
 
     def code_as_chromosomal_deletion(self, allele_set):
@@ -185,7 +186,7 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\2 alleles?")
+            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
             raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
@@ -200,7 +201,7 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\2 alleles?")
+            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
             raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
@@ -215,7 +216,7 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\2 alleles?")
+            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
             raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
