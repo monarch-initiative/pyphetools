@@ -24,7 +24,7 @@ class Thresholder:
 
     THRESHOLDER_MAP = {}
 
-    def __init__(self, unit:str, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None, threshold_low_male=None, threshold_high_male=None, threshold_low_female=None, threshold_high_female=None):
+    def __init__(self, unit:str, hpo_term_low=None, hpo_term_high=None, hpo_term_abn=None, threshold_low=None, threshold_high=None):
         """
         if hpo_term_low is not None and not isinstance(hpo_term_low, HpTerm):
             raise ValueError(f"hpo_term_low argument must be HpTerm but was {type(hpo_term_low)}")
@@ -165,8 +165,9 @@ class Thresholder:
         """
         if thresh is None:
             return None
-        if isinstance(thresh, str) and len(thresh) == 0:
-            return None
+        if isinstance(thresh, str):
+            if len(thresh) == 0 or thresh == 'na' or thresh == "n/a":
+                return None
         if isinstance(thresh, float) and math.isnan(thresh):
             return None
         return float(thresh)
@@ -185,6 +186,12 @@ class Thresholder:
             hpo_low_id  = row["hpo_low_id"]
             hpo_high_label  = row["hpo_high_label"]
             hpo_high_id   = row["hpo_high_id"]
+            """
+            # Uncomment to test whether there are format errors
+            for item in [hpo_abn_label, hpo_abn_id, hpo_low_label, hpo_low_id,hpo_high_label, hpo_high_id]:
+                if item.startswith(" ") or item.endswith(" "):
+                    raise ValueError(f"Mqlformed HPO term: \"{item}\"")
+            """
             unit   = row["unit"]
             low  = row["low"]
             high  = row["high"]
@@ -222,18 +229,56 @@ class Thresholder:
     ## Static methods for commonly used lab tests.
     ## data in data/thresholds.tsv
 
+    @staticmethod
+    def albumin_urine(unit=None, low_thresh=None, high_thresh=None):
+        """Albuminuria - Urine Albumin-Creatinine Ratio (uACR)
+        """
+        return Thresholder._get_thresholder("albumin urine", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def ALT_blood(unit=None, low_thresh=None, high_thresh=None):
+        """ALT blood
+        """
+        return Thresholder._get_thresholder("ALT blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def AST_blood(unit=None, low_thresh=None, high_thresh=None):
+        """AST blood
+        """
+        return Thresholder._get_thresholder("AST blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
 
     @staticmethod
     def alkaline_phophatase_blood(unit=None, low_thresh=None, high_thresh=None):
         """Alkaline phosphatase in the blood circulation (U/L)
         """
-        return Thresholder._get_thresholder("alkaline phosphatase blood", low_thresh=low_thresh, high_thresh= high_thresh)
+        return Thresholder._get_thresholder("alkaline phosphatase blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def ALT_blood(unit=None, low_thresh=None, high_thresh=None):
+        """ALT_blood in the blood circulation (U/L)‚
+        """
+        return Thresholder._get_thresholder("ALT blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def AST_blood(unit=None, low_thresh=None, high_thresh=None):
+        """AST_blood in the blood circulation (U/L)‚
+        """
+        return Thresholder._get_thresholder("AST blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
     def calcium_blood(unit=None, low_thresh=None, high_thresh=None):
         """Calcium in the blood circulation 8.5 to 10.2 mg/dL (2.13 to 2.55 millimol/L).
         """
-        return Thresholder._get_thresholder("calcium blood", low_thresh=low_thresh, high_thresh= high_thresh)
+        return Thresholder._get_thresholder("calcium blood",unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+
+    @staticmethod
+    def creatine_kinase_blood(unit=None, low_thresh=None, high_thresh=None):
+        """CK females is 30 to 145 U/L; males 55 to 170 U/L
+        """
+        return Thresholder._get_thresholder("creatine kinase blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
 
     @staticmethod
     def creatinine_blood(unit=None, low_thresh=None, high_thresh=None):
@@ -241,23 +286,94 @@ class Thresholder:
         """
         return Thresholder._get_thresholder("creatinine blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
 
+
+    @staticmethod
+    def CRP_blood(unit=None, low_thresh=None, high_thresh=None):
+        """ CRP blood
+        """
+        return Thresholder._get_thresholder("CRP blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
+    @staticmethod
+    def free_fatty_acid_blood(unit=None, low_thresh=None, high_thresh=None):
+        """free fatty acid
+        """
+        return Thresholder._get_thresholder("free fatty acid blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
+    @staticmethod
+    def glucose_blood(unit=None, low_thresh=None, high_thresh=None):
+        """fasting blood glucose; 70 mg/dL (3.9 mmol/L) and 100 mg/dL (5.6 mmol/L).
+        """
+        return Thresholder._get_thresholder("glucose blood", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
+    @staticmethod
+    def hemoglobin_A1c(unit=None, low_thresh=None, high_thresh=None):
+        """hemoglobin_A1c
+        """
+        return Thresholder._get_thresholder("hemoglobin A1c", unit=unit, low_thresh=low_thresh, high_thresh=high_thresh)
+
+
+
+    @staticmethod
+    def HDL_cholesterol_blood(unit=None, low_thresh=None, high_thresh=None):
+        """HDL cholesterol blood
+        """
+        return Thresholder._get_thresholder("HDL cholesterol blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def insulin_blood(unit=None, low_thresh=None, high_thresh=None):
+        """insulin blood
+        """
+        return Thresholder._get_thresholder("insulin blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+
     @staticmethod
     def lactate_blood(unit=None, low_thresh=None, high_thresh=None):
         """Serum lactate (0.5-1 mmol/L)
         """
-        return Thresholder._get_thresholder("lactate blood", low_thresh=low_thresh, high_thresh= high_thresh)
+        return Thresholder._get_thresholder("lactate blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def LDL_cholesterol_blood(unit=None, low_thresh=None, high_thresh=None):
+        """LDL cholesterol blood
+        """
+        return Thresholder._get_thresholder("LDL cholesterol blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def NTproBNP_blood(unit=None, low_thresh=None, high_thresh=None):
+        """NT-proBNP < 100 picograms per milliliter (pg/mL)
+        """
+        return Thresholder._get_thresholder("NT-proBNP blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
     def sodium_blood(unit=None, low_thresh=None, high_thresh=None):
         """Sodium in the blood circulation 135-145 mEq/L
         """
-        return Thresholder._get_thresholder("sodium blood", low_thresh=low_thresh, high_thresh= high_thresh)
+        return Thresholder._get_thresholder("sodium blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
     def potassium_blood(unit=None, low_thresh=None, high_thresh=None):
         """Serum potassium 3.5 to 5.2 mEq/L (adults)
         """
-        return Thresholder._get_thresholder("potassium blood", low_thresh=low_thresh, high_thresh= high_thresh)
+        return Thresholder._get_thresholder("potassium blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def total_cholesterol_blood(unit=None, low_thresh=None, high_thresh=None):
+        """total cholesterol blood
+        """
+        return Thresholder._get_thresholder("total cholesterol blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+
+    @staticmethod
+    def triglyceride_blood(unit=None, low_thresh=None, high_thresh=None):
+        """triglyceride blood
+        """
+        return Thresholder._get_thresholder("triglyceride blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+    @staticmethod
+    def uric_acid_blood(unit=None, low_thresh=None, high_thresh=None):
+        """uric acid blood
+        """
+        return Thresholder._get_thresholder("uric acid blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
 
 
 

@@ -30,3 +30,9 @@ class TestThresholder(unittest.TestCase):
         hpterm = kThresholder.map_value(2)
         self.assertEqual("Hypokalemia", hpterm.label)
         self.assertEqual("HP:0002900", hpterm.id)
+
+    def test_NTproBNP_blood(self):
+        thresholder = Thresholder.NTproBNP_blood()
+        hpterm = thresholder.map_value(200)
+        self.assertEqual("Increased circulating NT-proBNP concentration", hpterm.label)
+        self.assertEqual("HP:0031185", hpterm.id)
