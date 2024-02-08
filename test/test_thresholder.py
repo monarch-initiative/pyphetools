@@ -36,3 +36,9 @@ class TestThresholder(unittest.TestCase):
         hpterm = thresholder.map_value(200)
         self.assertEqual("Increased circulating NT-proBNP concentration", hpterm.label)
         self.assertEqual("HP:0031185", hpterm.id)
+
+    def test_troponin_t_blood(self):
+        thresholder = Thresholder.troponin_t_blood()
+        hpterm = thresholder.map_value(20)
+        self.assertEqual("Increased circulating troponin T concentration", hpterm.label)
+        self.assertEqual("HP:0410174", hpterm.id)

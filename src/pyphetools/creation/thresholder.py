@@ -370,6 +370,13 @@ class Thresholder:
         return Thresholder._get_thresholder("triglyceride blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
 
     @staticmethod
+    def troponin_t_blood(unit=None, low_thresh=None, high_thresh=None):
+        """troponin t blood
+        """
+        return Thresholder._get_thresholder("troponin t blood", unit=unit, low_thresh=low_thresh, high_thresh= high_thresh)
+
+
+    @staticmethod
     def uric_acid_blood(unit=None, low_thresh=None, high_thresh=None):
         """uric acid blood
         """

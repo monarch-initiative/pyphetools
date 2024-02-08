@@ -20,4 +20,5 @@ potassium blood	Abnormal blood potassium concentration	HP:0011042	Hypokalemia	HP
 sodium blood	Abnormal blood sodium concentration	HP:0010931	Hyponatremia	HP:0002902	Hypernatremia	HP:0003228	mEq/L	135	145					
 total cholesterol blood	Hypercholesterolemia	HP:0003124	na	na	Hypercholesterolemia	HP:0003124	mg/dL	na	200	na	na	na	na	
 triglyceride blood	Hypertriglyceridemia	HP:0002155	na	na	Hypertriglyceridemia	HP:0002155	mg/dL	na	150	na	na	na	na	PMID:29083756
+troponin t blood	Increased circulating troponin T concentration	HP:0410174	na	na	Increased circulating troponin T concentration	HP:0410174	ng/L	na	14	na	na	na	na	
 uric acid blood	Hyperuricemia	HP:0002149	Hypouricemia	HP:0003537	Hyperuricemia	HP:0002149	mg/dL	2.6	7.2	3.5	7.2	2.6	6	
