@@ -1,6 +1,24 @@
-label	hpo_abn_label	hpo_abn_id	hpo_low_label	hpo_low_id	hpo_high_label	hpo_high_id	unit	low	high	Reference
-alkaline phosphatase blood	Abnormality of alkaline phosphatase level	HP:0004379	Low alkaline phosphatase	HP:0003282	Elevated circulating alkaline phosphatase concentration	HP:0003155	U/L	30	120	ABIM Laboratory Test Reference Ranges_ January 2024
-creatinine blood	Abnormal circulating creatinine concentration	HP:0012100	Decreased serum creatinine	HP:0012101	Elevated circulating creatinine concentration	HP:0003259	mg/dL	0.6	1.2	
-lactate blood	Increased serum lactate	HP:0002151	na	na	Increased serum lactate	HP:0002151	mmol/L	0.5	1	PMID:29262026
-potassium blood	Abnormal blood potassium concentration	HP:0011042	Hypokalemia	HP:0002900	Hyperkalemia	HP:0002153	mEq/L	3.5	5.2	PMID:29494072
-bicarbonate blood	Abnormal serum bicarbonate concentration	HP:0032065	Decreased serum bicarbonate concentration	HP:0032066	Elevated serum bicarbonate concentration	HP:0032067	mEq/L	22	29	
+label	hpo_abn_label	hpo_abn_id	hpo_low_label	hpo_low_id	hpo_high_label	hpo_high_id	unit	low	high	low.M	high.M	low.F	high.F	Reference
+albumin urine	Albuminuria	HP:0012592	na	na	Albuminuria	HP:0012592	mg/g	na	30	na	na	na	na	Urine Albumin-Creatinine Ratio (uACR)
+alkaline phosphatase blood	Abnormality of alkaline phosphatase level	HP:0004379	Low alkaline phosphatase	HP:0003282	Elevated circulating alkaline phosphatase concentration	HP:0003155	U/L	30	120	na	na	na	na	ABIM Laboratory Test Reference Ranges_ January 2024
+ALT blood	Elevated circulating alanine aminotransferase concentration	HP:0031964	na	na	Elevated circulating alanine aminotransferase concentration	HP:0031964	U/L	7	56	na	na	na	na	units very per lab
+AST blood	Elevated circulating aspartate aminotransferase concentration	HP:0031956	na	na	Elevated circulating aspartate aminotransferase concentration	HP:0031956	U/L	5	40	na	na	na	na	units very per lab
+bicarbonate blood	Abnormal serum bicarbonate concentration	HP:0032065	Decreased serum bicarbonate concentration	HP:0032066	Elevated serum bicarbonate concentration	HP:0032067	mEq/L	22	29	na	na	na	na	
+calcium blood	Abnormal circulating calcium concentration	HP:0004363	Hypocalcemia	HP:0002901	Hypercalcemia	HP:0003072	mmol/L	2.13	2.55					
+creatine kinase blood	Abnormal circulating creatine kinase concentration	HP:0040081	Decreased circulating creatine kinase concentration	HP:0025659	Elevated circulating creatine kinase concentration	HP:0003236	U/L	30	170	30	145	55	170	
+creatinine blood	Abnormal circulating creatinine concentration	HP:0012100	Decreased serum creatinine	HP:0012101	Elevated circulating creatinine concentration	HP:0003259	mg/dL	0.6	1.3	0.7	1.3	0.6	1.1	
+CRP blood	Abnormal circulating C-reactive protein concentration	HP:0032436	Reduced circulating C-reactive protein concecntration	HP:0032437	Elevated circulating C-reactive protein concentration	HP:0011227	mg/dL	0.3	1	na	na	na	na	
+free fatty acid blood	Abnormal circulating free fatty acid concentration	HP:0040300	Decreased circulating free fatty acid level	HP:0040299	Increased circulating free fatty acid level	HP:0030781	mmol/L	0.1	0.6	0.1	0.45	0.1	0.6	PMID:30781774
+glucose blood	Abnormal blood glucose concentration	HP:0011015	Hypoglycemia	HP:0001943	Hyperglycemia	HP:0003074	mg/dL	70	100	na	na	na	na	
+HDL cholesterol blood	Abnormal HDL cholesterol concentration	HP:0031888	Decreased HDL cholesterol concentration	HP:0003233	Increased HDL cholesterol concentration	HP:0012184	mg/dL	50	80	na	na	na	na	PMID:35583863
+hemoglobin A1c	Elevated hemoglobin A1c	HP:0040217	na	na	Elevated hemoglobin A1c	HP:0040217	%	na	6.5	na	na	na	na	
+insulin blood	Hyperinsulinemia	HP:0000842	Hypoinsulinemia	HP:0040216	Hyperinsulinemia	HP:0000842	microU/mL	5	15	na	na	na	na	
+lactate blood	Increased serum lactate	HP:0002151	na	na	Increased serum lactate	HP:0002151	mmol/L	0.5	1	na	na	na	na	PMID:29262026
+LDL cholesterol blood	Abnormal LDL cholesterol concentration	HP:0031886	Decreased LDL cholesterol concentration	HP:0003563	Increased LDL cholesterol concentration	HP:0003141	mg/dL	50	100	na	na	na	na	PMID:29850255
+NT-proBNP blood	Increased circulating NT-proBNP concentration	HP:0031185	na	na	Increased circulating NT-proBNP concentration	HP:0031185	pg/mL	na	100	na	na	na	na	
+potassium blood	Abnormal blood potassium concentration	HP:0011042	Hypokalemia	HP:0002900	Hyperkalemia	HP:0002153	mEq/L	3.5	5.2	na	na	na	na	PMID:29494072
+sodium blood	Abnormal blood sodium concentration	HP:0010931	Hyponatremia	HP:0002902	Hypernatremia	HP:0003228	mEq/L	135	145					
+total cholesterol blood	Hypercholesterolemia	HP:0003124	na	na	Hypercholesterolemia	HP:0003124	mg/dL	na	200	na	na	na	na	
+triglyceride blood	Hypertriglyceridemia	HP:0002155	na	na	Hypertriglyceridemia	HP:0002155	mg/dL	na	150	na	na	na	na	PMID:29083756
+troponin t blood	Increased circulating troponin T concentration	HP:0410174	na	na	Increased circulating troponin T concentration	HP:0410174	ng/L	na	14	na	na	na	na	
+uric acid blood	Hyperuricemia	HP:0002149	Hypouricemia	HP:0003537	Hyperuricemia	HP:0002149	mg/dL	2.6	7.2	3.5	7.2	2.6	6	

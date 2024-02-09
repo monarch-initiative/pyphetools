@@ -39,8 +39,8 @@ class MixedCohortEncoder(AbstractEncoder):
         :type df: pd.DataFrame
         :param hpo_cr: HpoConceptRecognizer for text mining
         :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
-        :param column_mapper_d: Dictionary with key: Column name, value: ColumnMapper object
-        :type column_mapper_d: Dict[pyphetools.creation.ColumnMapper]
+        :param column_mapper_list: list of ColumnMapper objects
+        :type column_mapper_list: List[pyphetools.creation.ColumnMapper]
         :param individual_column_name: label of column with individual/proband/patient identifier
         :type individual_column_name: str
         :param disease_id_mapper: label of column with disease id
@@ -60,7 +60,7 @@ class MixedCohortEncoder(AbstractEncoder):
     def __init__(self,
                 df,
                 hpo_cr,
-                column_mapper_d,
+                column_mapper_list,
                 individual_column_name,
                 disease_id_mapper,
                 metadata,
@@ -80,12 +80,12 @@ class MixedCohortEncoder(AbstractEncoder):
         self._hpo_concept_recognizer = hpo_cr
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"df argument must be pandas data frame but was {type(df)}")
-        if not isinstance(column_mapper_d, dict):
-            raise ValueError(f"column_mapper_d argument must be a dictionary but was {type(column_mapper_d)}")
+        if not isinstance(column_mapper_list, list):
+            raise ValueError(f"column_mapper_list argument must be a list but was {type(column_mapper_list)}")
         if not isinstance(individual_column_name, str):
             raise ValueError(f"individual_column_name argument must be a string but was {type(individual_column_name)}")
         self._df = df.astype(str)
-        self._column_mapper_d = column_mapper_d
+        self._column_mapper_list = column_mapper_list
         self._id_column_name = individual_column_name
         self._age_mapper = agemapper
         self._sex_mapper = sexmapper
@@ -150,7 +150,8 @@ class MixedCohortEncoder(AbstractEncoder):
             if title is None:
                 raise ValueError(f"Could not get title (required) for individual {individual_id}")
             hpo_terms = []
-            for column_name, column_mapper in self._column_mapper_d.items():
+            for column_mapper in self._column_mapper_list:
+                column_name = column_mapper.get_column_name()
                 if column_name not in df.columns:
                     raise ValueError(f"Did not find column name '{column_name}' in dataframe -- check spelling!")
                 cell_contents = row[column_name]

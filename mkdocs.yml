@@ -32,7 +32,9 @@ theme:
 nav:
   - Home: 'index.md'
   - Installation: 'installation.md'
-  - Developers: 'developers.md'
+  - Developers:
+    - For developers: 'developers.md'
+    - HPOA files: 'developers/hpoa_editing.md'
   - User guide:
     - Introduction: 'user-guide/tutorial.md'
     - Data Entry Template: 'user-guide/template.md'
@@ -88,6 +90,7 @@ nav:
     - "visualization":
       - "overview": "api/visualization.md"
       - "DetailedSupplTable":  "api/visualization/detailed_suppl_table.md"
+      - "HpoaTableCreator": "api/visualization/hpoa_table_creator.md"
       - "PhenopacketIngestor": "api/visualization/phenopacket_ingestor.md"
       - "PhenopacketTable": "api/visualization/phenopacket_table.md"
       - "QcVisualizer": "api/visualization/qc_visualizer.md"

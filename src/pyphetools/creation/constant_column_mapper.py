@@ -1,5 +1,6 @@
 from typing import List
 import pandas as pd
+from collections import defaultdict
 from .column_mapper import ColumnMapper
 from .hp_term import HpTerm
 
@@ -53,10 +54,16 @@ class ConstantColumnMapper(ColumnMapper):
     def preview_column(self, df:pd.DataFrame) -> pd.DataFrame:
         if not isinstance(df, pd.DataFrame):
             raise ValueError("df argument must be pandas DataFrame, but was {type(column)}")
+        mapping_counter = defaultdict(int)
+
         dlist = []
         column = df[self._column_name]
         for _, value in column.items():
             display = ";".join(hpterm.display_value for hpterm in self._hpo_terms)
-            dlist.append(display)
+            display = f"{value} -> {display}"
+            mapping_counter[display] +=1
+        for k, v in mapping_counter.items():
+            d = {"mapping": k, "count": str(v)}
+            dlist.append(d)
         return pd.DataFrame(dlist)
 

@@ -88,10 +88,9 @@ class OptionColumnMapper(ColumnMapper):
         mapping_counter = defaultdict(int)
         for _, value in column.items():
             cell_contents = str(value)
-            value = self.map_cell(cell_contents)
-            if len(value) > 0:
-                hpterm = value[0]
-                mapped = f"original value: \"{cell_contents}\" -> HP: {hpterm.hpo_term_and_id} ({hpterm.display_value})"
+            term_list = self.map_cell(cell_contents)
+            for hpterm in term_list:
+                mapped = f"{hpterm.hpo_term_and_id} ({hpterm.display_value})"
                 mapping_counter[mapped] += 1
         dlist = []
         for k, v in mapping_counter.items():

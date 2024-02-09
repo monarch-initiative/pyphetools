@@ -117,7 +117,8 @@ class OntologyQC:
                 hpo_term = self._ontology.get_term(term_id=hpo_id)
                 if hpo_term.name != term.label:
                     valid_term = HpTerm.from_hpo_tk_term(hpo_term)
-                    error = ValidationResultBuilder(self._phenopacket_id).malformed_hpo_label(term.label, valid_term=valid_term).build()
+                    error = ValidationResultBuilder(self._phenopacket_id).malformed_hpo_label(malformed_label=term.label,
+                                                                                              valid_term=hpo_term).build()
                     self._errors.append(error)
 
     def _clean_terms(self) -> List[HpTerm]:
