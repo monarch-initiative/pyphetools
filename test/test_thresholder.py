@@ -42,3 +42,22 @@ class TestThresholder(unittest.TestCase):
         hpterm = thresholder.map_value(20)
         self.assertEqual("Increased circulating troponin T concentration", hpterm.label)
         self.assertEqual("HP:0410174", hpterm.id)
+
+
+    def test_nan_value(self):
+        """A cell that has a nan value should map to not observed of the abnormal term
+        """
+        kThresholder = Thresholder.potassium_blood()
+        hpterm = kThresholder.map_value("nan")
+        self.assertEqual("Abnormal blood potassium concentration", hpterm.label)
+        self.assertEqual("HP:0011042", hpterm.id)
+        self.assertFalse(hpterm.measured)
+
+    def test_nan_float_value(self):
+        """A cell that has a nan value should map to not observed of the abnormal term
+        """
+        kThresholder = Thresholder.potassium_blood()
+        hpterm = kThresholder.map_value(float('nan'))
+        self.assertEqual("Abnormal blood potassium concentration", hpterm.label)
+        self.assertEqual("HP:0011042", hpterm.id)
+        self.assertFalse(hpterm.measured)

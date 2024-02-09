@@ -116,12 +116,12 @@ class Thresholder:
         if isinstance(cell_contents, str):
             contents = cell_contents.strip()
             if contents.lower() == "nan":
-                return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)
+                return HpTerm(hpo_id=self._hpo_term_abn.id, label=self._hpo_term_abn.label, measured=False)
         elif isinstance(cell_contents, int):
             contents = cell_contents
         elif isinstance(cell_contents, float):
             if math.isnan(cell_contents):
-                return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)
+                return HpTerm(hpo_id=self._hpo_term_abn.id, label=self._hpo_term_abn.label, measured=False)
             contents = cell_contents
         else:
             raise ValueError(
