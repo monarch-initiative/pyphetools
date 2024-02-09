@@ -123,24 +123,32 @@ class HpoaOnsetCounter:
 class HpoaTableCreator:
     """
     Create an HPO "small file" with the following fourteen columns
-    1. #diseaseID
-    2. diseaseName
-    3. phenotypeID
-    4. phenotypeName
-    5. onsetID
-    6. onsetName
-    7. frequency
-    8. sex
-    9. negation
-    10. modifier
-    11. description
-    12. publication
-    13. evidence
-    14. biocuration
+        1. #diseaseID
+        2. diseaseName
+        3. phenotypeID
+        4. phenotypeName
+        5. onsetID
+        6. onsetName
+        7. frequency
+        8. sex
+        9. negation
+        10. modifier
+        11. description
+        12. publication
+        13. evidence
+        14. biocuration
     These should be tab separated fields.
 
     """
     def __init__(self, phenopacket_list, onset_term_d,  moi_d) -> None:
+        """Constructor
+
+        :param phenopacket_list: List of GA4GH phenopackets
+        :type phenopacket_list: List[PPKt.Phenopacket]
+        :param onset_term_d: Dictionary with key PMID string and value: OnsetTerm object
+        :type: Dict[str, OnsetTerm]
+        :param moi_d: Dictionary with key PMID and value Mode of inheritance
+        """
         self._phenopackets = phenopacket_list
         self._all_hpo_d = self._get_all_hpos()
         self._disease = self._get_disease() # only allow one disease, therefore this is a scalar value (string)
@@ -234,7 +242,6 @@ class HpoaTableCreator:
     def _add_age_of_onset_terms(self, onset_term_d) -> List[HpoaTableRow]:
         onset_rows  = list() # reset
         for pmid, oterm_list in onset_term_d.items():
-            # oterm = OnsetTerm(onset_term_id="HP:0003621", onset_term_label="Juvenile onset", numerator=num, denominator=denom)
             biocurator = self._biocurator_d.get(pmid)
             for oterm in oterm_list:
                 hpo_onset_term = HpTerm(hpo_id=oterm.id, label=oterm.label)
