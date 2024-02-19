@@ -90,9 +90,9 @@ class TestCaseParse(unittest.TestCase):
     def test_age_last_exam(self):
         individual = self._parser.get_individual()
         self.assertIsNotNone(individual)
-        self.assertIsNotNone(individual.age)
+        self.assertIsNotNone(individual.age_of_onset)
         expected_age = "P4Y11M"
-        self.assertEqual(expected_age, individual.age)
+        self.assertEqual(expected_age, individual.age_of_onset)
 
     def test_sex(self):
         ppkt = self._parser.get_phenopacket()

@@ -56,6 +56,7 @@ nav:
       - overview: "api/creation.md"
       - AgeColumnMapper: "api/creation/age_column_mapper.md"
       - CaseEncoder: "api/creation/case_encoder.md"
+      - CaseTemplateEncoder: "api/creation/case_template_encoder.md"
       - Citation:  "api/creation/citation.md"
       - CohortEncoder: "api/creation/cohort_encoder.md"
       - ColumnMapper: "api/creation/column_mapper.md"
@@ -68,6 +69,7 @@ nav:
       - HpoParser: "api/creation/hpo_parser.md"
       - HpTerm: "api/creation/hp_term.md"
       - Individual: "api/creation/individual.md"
+      - IsoAge: "api/creation/iso_age.md"
       - MetaData: "api/creation/metadata.md"
       - MixedCohortEncoder: "api/creation/mixed_cohort_encoder.md"
       - OptionColumnMapper: "api/creation/option_column_mapper.md"
@@ -87,13 +89,14 @@ nav:
       - "ContentValidator": "api/validation/content_validator.md"
       - "OntologyQC": "api/validation/ontology_qc.md"
       - "ValidationResult": "api/validation/validation_result.md"
-    - "visualization":
-      - "overview": "api/visualization.md"
-      - "DetailedSupplTable":  "api/visualization/detailed_suppl_table.md"
-      - "HpoaTableCreator": "api/visualization/hpoa_table_creator.md"
-      - "PhenopacketIngestor": "api/visualization/phenopacket_ingestor.md"
-      - "PhenopacketTable": "api/visualization/phenopacket_table.md"
-      - "QcVisualizer": "api/visualization/qc_visualizer.md"
+    - visualization:
+      - overview: "api/visualization.md"
+      - DetailedSupplTable:  "api/visualization/detailed_suppl_table.md"
+      - HpoaTableCreator: "api/visualization/hpoa_table_creator.md"
+      - OnsetCalculator: "api/visualization/onset_calculator.md"
+      - PhenopacketIngestor: "api/visualization/phenopacket_ingestor.md"
+      - PhenopacketTable: "api/visualization/phenopacket_table.md"
+      - QcVisualizer: "api/visualization/qc_visualizer.md"
 
 plugins:
   - social

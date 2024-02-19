@@ -3,6 +3,7 @@ import re
 import os
 from typing import List, Union
 from google.protobuf.json_format import MessageToJson
+from .iso_age import IsoAge
 from .citation import Citation
 from .constants import Constants
 from .disease import Disease
@@ -49,7 +50,7 @@ class Individual:
             self._sex = PPKt.Sex.UNKNOWN_SEX
         else:
             self._sex = sex
-        self._age = age
+        self._age_of_onset = age
         if hpo_terms is None:
             self._hpo_terms = list()
         else:
@@ -82,15 +83,15 @@ class Individual:
         self._sex = sex
 
     @property
-    def age(self):
+    def age_of_onset(self):
         """
         :returns: an iso8601 representation of age
         :rtype: str
         """
-        return self._age
+        return self._age_of_onset
 
-    def set_age(self, iso_age):
-        self._age = iso_age
+    def set_age_of_onset(self, iso_age):
+        self._age_of_onset = iso_age
 
     @property
     def hpo_terms(self):
@@ -184,8 +185,53 @@ class Individual:
         ppkt_id = ppkt_id.replace(" ", "_")
         return ppkt_id
 
-    def get_citation(self):
+    def get_citation(self) -> Citation:
+        """
+        :returns: a Citation object with PMID and article title
+        :rtype: Citation
+        """
         return self._citation
+
+
+    def _get_onset(self):
+        """The assumption of this method is that if we have a valid age of onset field, use this.
+        Otherwise, try to find an age of onset from the phenotypic features and take the youngest age
+        """
+        if self._age_of_onset is not None and self._age_of_onset != Constants.NOT_PROVIDED:
+            return self._age_of_onset
+        phenotypic_feature_onsets = set()
+        if isinstance(self._hpo_terms, list):
+            for hp in self._hpo_terms:
+                if not hp.measured:
+                    continue
+                pf = hp.to_ga4gh_phenotypic_feature()
+                if pf.onset.age.iso8601duration is None and self._age_of_onset != Constants.NOT_PROVIDED:
+                    phenotypic_feature_onsets.add(pf.onset.age.iso8601duration)
+        if len(phenotypic_feature_onsets) == 0:
+            return Constants.NOT_PROVIDED
+        age_format_list = list()
+        for o in phenotypic_feature_onsets:
+            age_format_list.append(IsoAge.from_iso8601(o))
+        sorted_age = sorted(age_format_list, lambda x: x.total_days)
+        youngest_age = sorted_age[0]
+        return youngest_age.to_iso8601()
+
+    def _get_disease_object(self):
+        iso_age = self._get_onset()
+        disease_term = PPKt.OntologyClass()
+        if self._disease is not None:
+            disease_term.id = self._disease.id
+            disease_term.label = self._disease.label
+        else:
+            disease_term.id = "MONDO:0000001"
+            disease_term.label = "disease"
+            print("[WARNING] could not find disease information")
+        disease_object = PPKt.Disease()
+        disease_object.term.CopyFrom(disease_term)
+        if iso_age is not None and iso_age != Constants.NOT_PROVIDED:
+            disease_object.onset.age.iso8601duration = iso_age
+        return disease_object
+
 
 
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None) -> PPKt.Phenopacket:
@@ -209,17 +255,19 @@ class Individual:
             php.subject.sex = PPKt.Sex.OTHER_SEX
         elif self._sex == Constants.UNKOWN_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
-        if self._age is not None and self._age != Constants.NOT_PROVIDED:
-            php.subject.time_at_last_encounter.age.iso8601duration = self._age
+        if self._age_of_onset is not None and self._age_of_onset != Constants.NOT_PROVIDED:
+            php.subject.time_at_last_encounter.age.iso8601duration = self._age_of_onset
         if self._vital_status is not None:
             php.subject.vital_status.CopyFrom(self._vital_status)
+        disease_object = self._get_disease_object()
+        php.diseases.append(disease_object)
         if isinstance(self._hpo_terms, list):
             for hp in self._hpo_terms:
                 if not hp.measured:
                     continue
                 pf = hp.to_ga4gh_phenotypic_feature()
-                if pf.onset.age.iso8601duration is None and self._age != Constants.NOT_PROVIDED:
-                    pf.onset.age.iso8601duration = self._age
+                if pf.onset.age.iso8601duration is None and self._age_of_onset != Constants.NOT_PROVIDED:
+                    pf.onset.age.iso8601duration = self._age_of_onset
                 php.phenotypic_features.append(pf)
         elif isinstance(self._hpo_terms, dict):
             for age_key, hpoterm_list in self._hpo_terms.items():
@@ -261,7 +309,7 @@ class Individual:
     def __str__(self):
         hpo_list = [t.to_string() for t in self._hpo_terms]
         hpo_str = "\n" + "\n".join(hpo_list)
-        return f"{self._individual_id}: {self._age}, {self._sex}: {self._disease} {hpo_str}"
+        return f"{self._individual_id}: {self._age_of_onset}, {self._sex}: {self._disease} {hpo_str}"
 
     @staticmethod
     def output_individuals_as_phenopackets(individual_list, metadata:MetaData, outdir="phenopackets"):

@@ -1,6 +1,5 @@
 import os
 import json
-from collections import defaultdict
 from typing import List, Dict
 
 from google.protobuf.json_format import Parse
@@ -9,7 +8,8 @@ from ..creation.disease import Disease
 from ..creation.hp_term import HpTerm
 from ..creation.individual import Individual
 from ..creation.metadata import MetaData
-from .simple_age import SimpleAge
+from .counted_hpo_term import CountedHpoTerm, CohortTermCounter
+from .onset_calculator import OnsetCalculator
 
 EMPTY_CELL = ""
 
@@ -52,36 +52,6 @@ class HpoaTableRow:
             }
         return d
 
-
-class OnsetTerm:
-    def __init__(self, onset_term_id, onset_term_label, numerator, denominator):
-        if not isinstance(numerator, int):
-            raise ValueError(f"Malformed numerator (must be integer but was {numerator})")
-        if not isinstance(denominator, int):
-            raise ValueError(f"Malformed denominator (must be integer but was {denominator})")
-        self._onset_term_id = onset_term_id
-        self._onset_term_label = onset_term_label
-        self._num = numerator
-        self._denom = denominator
-
-    @property
-    def id(self):
-        return self._onset_term_id
-
-    @property
-    def label(self):
-        return self._onset_term_label
-
-    def has_frequency(self):
-        return self._num is not None and self._denom is not None
-
-    @property
-    def numerator(self):
-        return self._num
-
-    @property
-    def denominator(self):
-        return self._denom
 
 
 class HpoaPmidCounter:
@@ -240,6 +210,10 @@ class HpoaTableCreator:
         return hpo_counter_d
 
     def _add_age_of_onset_terms(self, onset_term_d) -> List[HpoaTableRow]:
+        """
+        :param onset_term_d: Dictionary with key=pmid, value: list of CountedHpoTerm objects
+        :type onset_term_d: Dict[str, List[CountedHpoTerm]]
+        """
         onset_rows  = list() # reset
         for pmid, oterm_list in onset_term_d.items():
             biocurator = self._biocurator_d.get(pmid)
@@ -321,112 +295,13 @@ class HpoaTableBuilder:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)
         self._moi_d = defaultdict(list)
-
-    def embryonal_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of disease at up to 8 weeks following fertilization (corresponding to 10 weeks of gestation).
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0011460", onset_term_label="Embryonal onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def fetal_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset prior to birth but after 8 weeks of embryonic development (corresponding to a gestational age of 10 weeks).
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0011461", onset_term_label="Fetal onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def second_trimester_onset(self, pmid:str, num:int=None, denom:int=None):
-        """second trimester, which comprises the range of gestational ages from 14 0/7 weeks to 27 6/7 (inclusive)
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0034198", onset_term_label="Second trimester onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def late_first_trimester_onset(self, pmid:str, num:int=None, denom:int=None):
-        """late first trimester during the early fetal period, which is defined as 11 0/7 to 13 6/7 weeks of gestation (inclusive).
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0034199", onset_term_label="Late first trimester onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def third_trimester_onset(self, pmid:str, num:int=None, denom:int=None):
-        """third trimester, which is defined as 28 weeks and zero days (28+0) of gestation and beyond.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0034197", onset_term_label="Third trimester onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def antenatal_onset(self, pmid:str, num:int=None, denom:int=None):
-        """onset prior to birth
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0030674", onset_term_label="Antenatal onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def congenital_onset(self, pmid:str, num:int=None, denom:int=None):
-        """A phenotypic abnormality that is present at birth.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003577", onset_term_label="Congenital onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def neonatal_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of signs or symptoms of disease within the first 28 days of life.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003623", onset_term_label="Neonatal onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-
-    def infantile_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of signs or symptoms of disease between 28 days to one year of life.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003593", onset_term_label="Infantile onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def childhood_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of disease at the age of between 1 and 5 years.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0011463", onset_term_label="Childhood onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def juvenile_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of signs or symptoms of disease between the age of 5 and 15 years.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003621", onset_term_label="Juvenile onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def adult_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of disease after 16 years  .
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003581", onset_term_label="Adult onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def young_adult_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of disease at the age of between 16 and 40 years.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0011462", onset_term_label="Young adult onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def middle_age_onset(self, pmid:str, num:int=None, denom:int=None):
-        """onset of symptoms at the age of 40 to 60 years.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003596", onset_term_label="Middle age onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
-
-    def late_onset(self, pmid:str, num:int=None, denom:int=None):
-        """Onset of symptoms after the age of 60 years.
-        """
-        oterm = OnsetTerm(onset_term_id="HP:0003584", onset_term_label="Late onset", numerator=num, denominator=denom)
-        self._onset_term_d[pmid].append(oterm)
-        return self
+        onset_calc = OnsetCalculator(self._phenopackets)
+        pmid_onset_d = onset_calc.get_pmid_to_onset_d()
+        for pmid, onset_list in pmid_onset_d.items():
+            tcounter = CohortTermCounter(pmid=pmid)
+            for onset in onset_list:
+                tcounter.increment_term(onset)
+            self._onset_term_d[pmid].extend(tcounter.get_counted_terms())
 
     def autosomal_recessive(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0000007", label="Autosomal recessive inheritance")

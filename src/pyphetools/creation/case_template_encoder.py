@@ -17,7 +17,10 @@ import phenopackets as PPKt
 # The following constants are identical with the constants used in the  Excel template
 AGE_OF_ONSET_FIELDNAME = "age_of_onset"
 
+from enum import Enum
 
+
+CellType = Enum('Celltype', ['DATA', 'HPO', 'MISC', 'NULL'])
 
 class CellEncoder(metaclass=abc.ABCMeta):
     def __init__(self, name):
@@ -28,15 +31,11 @@ class CellEncoder(metaclass=abc.ABCMeta):
         return self._name
 
     @abc.abstractmethod
+    def columntype(self):
+        pass
+
+    @abc.abstractmethod
     def encode(self, cell_contents):
-        pass
-
-    @abc.abstractmethod
-    def is_data(self):
-        pass
-
-    @abc.abstractmethod
-    def is_hpo(self):
         pass
 
 class DataEncoder(CellEncoder):
@@ -53,11 +52,8 @@ class DataEncoder(CellEncoder):
     def encode(self, cell_contents):
         return str(cell_contents)
 
-    def is_data(self):
-        return True
-
-    def is_hpo(self):
-        return False
+    def columntype(self):
+        return CellType.DATA
 
 class HpoEncoder(CellEncoder):
     """Convenience class to represent the header (two lines) of columns that represent HPO columns in the template
@@ -77,7 +73,7 @@ class HpoEncoder(CellEncoder):
         elif h2.startswith("HP:") and len(h2) != 10:
             self._error = f"Error - Malformed HPO id: \”{h2}\" ({h1})"
         elif not h2.startswith("HP:"):
-            self._error = f"Error - {h1} -- {h2}"
+            self._error = f"Error: Did not recognize heaeder fields: - \"{h1}\" -- \"{h2}\""
         else:
             self._hpo_label = h1
             self._hpo_id = h2
@@ -85,12 +81,8 @@ class HpoEncoder(CellEncoder):
     def is_data(self):
         return False
 
-    def is_hpo(self):
-        """
-        :returns: True iff this is an NPO column and there was no error
-        :rtype: bool
-        """
-        return self._error is None
+    def columntype(self):
+        return CellType.HPO
 
     def needs_attention(self):
         """
@@ -116,6 +108,30 @@ class HpoEncoder(CellEncoder):
         else:
             raise ValueError(f"Could not parse HPO column cell_contents: \”{cell_contents}\"")
 
+class MiscEncoder(CellEncoder):
+    """encode the optional Miscellaneous HPO encoder column, in which users can enter rarely annotated HPO terms as a list of semicolon-separated primary labels
+    """
+    def __init__(self, hpo_cr:HpoConceptRecognizer, h1=None, h2=None, ):
+        super().__init__(name="Miscellaneous HPO column")
+        self._hpo_cr = hpo_cr
+
+    def encode(self, cell_contents):
+        if isinstance(cell_contents, float):
+            return []
+        cell_contents = str(cell_contents)
+        if len(cell_contents) == 0 or cell_contents == "nan":
+            return []
+        term_list = cell_contents.split(";")
+        results = []
+        for term_label in term_list:
+            term = self._hpo_cr.get_term_from_label(term_label)
+            results.append(term)
+        return results
+
+    def columntype(self):
+        return CellType.MISC
+
+
 class NullEncoder(CellEncoder):
     """Convenience class to represent a column that we do not use for encoding
 
@@ -130,11 +146,8 @@ class NullEncoder(CellEncoder):
     def encode(self, cell_contents):
         return None
 
-    def is_data(self):
-        return False
-
-    def is_hpo(self):
-        return False
+    def columntype(self):
+        return CellType.NULL
 
 EXPECTED_HEADERS = {"PMID", "title", "individual_id", "Comment", "disease_id", "disease_label", "transcript",
                             "allele_1", "allele_2", "variant.comment", "age_of_onset", "sex"}
@@ -171,7 +184,7 @@ class CaseTemplateEncoder:
             # should never happen unless the template file is corrupted
             raise ValueError("headers are different lengths. Check template file for correctness.")
         self._n_columns = len(header_1)
-        self._index_to_decoder = self._process_header(header_1, header_2)
+        self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2,hpo_cr=hpo_cr)
         data_df = df.iloc[1:]
         self._is_biallelic = "allele_2" in header_1
         self._allele1_d = {}
@@ -191,7 +204,7 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
 
-    def  _process_header(self, header_1:List, header_2:List) -> Dict[int, CellEncoder]:
+    def  _process_header(self, header_1:List, header_2:List, hpo_cr:HpoConceptRecognizer, ) -> Dict[int, CellEncoder]:
         index_to_decoder_d = {}
         in_hpo_range = False
         for i in range(self._n_columns):
@@ -201,8 +214,13 @@ class CaseTemplateEncoder:
                 in_hpo_range = True
                 index_to_decoder_d[i] = NullEncoder()
                 continue
-            elif not in_hpo_range and h1 in EXPECTED_HEADERS:
-                index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
+            if h1 == "Miscellaneous":
+                index_to_decoder_d[i] = MiscEncoder(h1=h1, h2=h2, hpo_cr=hpo_cr)
+            elif not in_hpo_range:
+                if h1 in EXPECTED_HEADERS:
+                    index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
+                else:
+                    raise ValueError(f"Malformed template header at column {i}: \"{h1}\"")
             elif in_hpo_range:
                 encoder = HpoEncoder(h1=h1, h2=h2)
                 if encoder.needs_attention():
@@ -213,6 +231,9 @@ class CaseTemplateEncoder:
         if not in_hpo_range:
             raise ValueError("Did not find HPO boundary column")
         print(f"Created encoders for {len(index_to_decoder_d)} fields")
+        if len(self._errors) > 0:
+            for e in self._errors:
+                print(f"ERROR: {e}")
         return index_to_decoder_d
 
     def _parse_individual(self, row:pd.Series):
@@ -229,13 +250,19 @@ class CaseTemplateEncoder:
             cell_contents = data[i]
             if encoder is None:
                 print(f"Encoder {i} was None for data {cell_contents}")
-                continue
-            if encoder.is_data() and encoder.name in DATA_ITEMS:
+                print(row)
+                raise ValueError(f"Encoder {i} was None for data {cell_contents}")
+            encoder_type = encoder.columntype()
+            if encoder_type == CellType.DATA and encoder.name in DATA_ITEMS:
                 data_items[encoder.name] = encoder.encode(cell_contents)
-            elif encoder.is_hpo():
+            elif encoder_type == CellType.HPO:
                 hpoterm = encoder.encode(cell_contents)
                 if hpoterm is not None:
                     hpo_terms.append(hpoterm)
+            elif encoder_type == CellType.MISC:
+                term_list = encoder.encode(cell_contents=cell_contents)
+                for trm in term_list:
+                    hpo_terms.append(trm)
         # Check we have all of the items we need
         for item in data_items.keys():
             if item not in DATA_ITEMS:
@@ -326,6 +353,8 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
             json_string = MessageToJson(phenopckt)
+            print("#############")
+            print(json_string)
             pmid = cite.pmid
             if pmid is None:
                 fname = "phenopacket_" + individual.id

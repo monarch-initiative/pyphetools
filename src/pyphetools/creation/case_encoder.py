@@ -83,7 +83,7 @@ class CaseEncoder:
             raise ValueError("ontology cannot be None")
         self._individual = Individual(individual_id=individual_id, sex=sex_symbol)
         if age_at_last_exam is not None:
-            self._individual.set_age(age_at_last_exam)
+            self._individual.set_age_of_onset(age_at_last_exam)
         if disease is not None:
             self._individual.set_disease(disease=disease)
         if citation is not None:

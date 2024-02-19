@@ -1,10 +1,11 @@
 import hpotk
 from collections import Counter
-from typing import List, Optional
+from typing import List, Optional, Set
 from ..creation.hp_term import HpTerm
 from .validation_result import ValidationResult, ValidationResultBuilder
 from collections import defaultdict
 from ..creation.individual import Individual
+from ..creation.constants import Constants
 
 
 
@@ -107,7 +108,11 @@ class OntologyQC:
         return non_redundant_terms
 
 
-    def _check_terms(self, hpo_terms:List[HpTerm]) -> None:
+    def _check_term_ids_and_labels(self, hpo_terms:List[HpTerm]) -> None:
+        """
+        Check whether the term identifiers (e.g., HP:0001234) are present in the ontology as primary ids and whether
+        the label matches the current priumary label; if not, flag the errors in self._errors
+        """
         for term in hpo_terms:
             hpo_id = term.id
             if not hpo_id in self._ontology:
@@ -127,13 +132,24 @@ class OntologyQC:
         :rtype hpo_terms: List[HpTerm]
         """
         by_age_dictionary =  defaultdict(list)
+        # collect all terms without a defined age of onset
+        # We will assume these terms exist at all specific ages of onset, thus we need this to calculate redundancy
+        observed_terms_without_onset = list()
+        excluded_terms_without_onset = list()
         for term in self._individual.hpo_terms:
             if not term.measured:
                 self._errors.append(ValidationResultBuilder(self._phenopacket_id).not_measured(term=term).build())
             else:
-                by_age_dictionary[term.onset].append(term)
-        self._check_terms(self._individual.hpo_terms)
+                if term.onset == Constants.NOT_PROVIDED:
+                    if term.observed:
+                        observed_terms_without_onset.append(term)
+                    else:
+                        excluded_terms_without_onset.append(term)
+                else:
+                    by_age_dictionary[term.onset].append(term)
+        self._check_term_ids_and_labels(self._individual.hpo_terms)
         clean_terms = []
+
         for onset, term_list in by_age_dictionary.items():
             observed_hpo_terms = [term for term in term_list if term.observed]
             excluded_hpo_terms = [term for term in term_list if not term.observed]
@@ -145,6 +161,52 @@ class OntologyQC:
                 excluded_hpo_terms = self._fix_conflicts(observed_hpo_terms, excluded_hpo_terms)
             clean_terms.extend(observed_hpo_terms)
             clean_terms.extend(excluded_hpo_terms)
+        # When we get here, clean terms contains terms with specific onsets and conflicting/redundant terms
+        # have been removed. There may be terms with no specific onset. We only add such terms if they are neither
+        # ancestors or descendants of the specific terms
+        observed_terms_without_onset = self._fix_redundancies(observed_terms_without_onset)
+        excluded_terms_without_onset = self._fix_redundancies(excluded_terms_without_onset)
+        all_term_set = set(clean_terms)
+        for t in observed_terms_without_onset:
+            addT = True
+            for s in all_term_set:
+                # keep the term with the age of onset regardless of whether it is more or less specific
+                if s.id == t.id:
+                    error = ValidationResultBuilder(self._phenopacket_id).duplicate_term(s).build()
+                    self._errors.append(error)
+                    addT = False
+                    break
+                if self._ontology.graph.is_ancestor_of(t.id, s.id):
+                    error = ValidationResultBuilder(self._phenopacket_id).redundant_term(t, s).build()
+                    self._errors.append(error)
+                    addT = False
+                    break
+                if self._ontology.graph.is_ancestor_of(s.id, t.id):
+                    error = ValidationResultBuilder(self._phenopacket_id).redundant_term(s, t).build()
+                    self._errors.append(error)
+                    addT = False
+                    break
+            if addT:
+                clean_terms.append(t)
+                all_term_set.add(t)
+        # now check for problems with excluded terms
+        for t in excluded_terms_without_onset:
+            addT = True
+            for s in all_term_set:
+                # if an excluded term is equal to or ancestor of an observed term this is an error
+                if s.id == t.id:
+                    error = ValidationResultBuilder(self._phenopacket_id).observed_and_excluded_term(term=s).build()
+                    self._errors.append(error)
+                    addT = False
+                elif self._ontology.graph.is_ancestor_of(t.id, s.id):
+                    error = ValidationResultBuilder(self._phenopacket_id).conflict(term=s, conflicting_term=t).build()
+                    self._errors.append(error)
+                    addT = False
+                    break
+            if addT:
+                clean_terms.append(t)
+                all_term_set.add(t)
+
         return clean_terms
 
     def has_error(self) -> bool:
