@@ -150,10 +150,10 @@ class NullEncoder(CellEncoder):
         return CellType.NULL
 
 EXPECTED_HEADERS = {"PMID", "title", "individual_id", "Comment", "disease_id", "disease_label", "transcript",
-                            "allele_1", "allele_2", "variant.comment", "age_of_onset", "sex"}
+                            "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
 
 DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "transcript",
-                            "allele_1", "allele_2",  "age_of_onset", "sex"}
+                            "allele_1", "allele_2",  "age_of_onset","age_at_last_encounter", "sex"}
 
 
 
@@ -328,6 +328,28 @@ class CaseTemplateEncoder:
 
 
 
+    def _transform_individuals_to_phenopackets(self, individual_list:List[Individual]):
+        """Create one phenopacket for each of the individuals
+
+        :param individual_list: List of individual objects
+        :type individual_list:List[Individual]
+        :returns: list of corresponding phenopackets
+        :rtype: List[PPKt.Phenopacket]
+        """
+        ppkt_list = list()
+        if self._created_by is None:
+            created_by = 'pyphetools'
+        else:
+            created_by = self._created_by
+        for individual in individual_list:
+            cite = individual._citation
+            metadata = MetaData(created_by=created_by, citation=cite)
+            metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
+            phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
+            ppkt_list.append(phenopckt)
+        return ppkt_list
+
+
     def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets") -> None:
         """write a list of Individual objects to file in GA4GH Phenopacket format
         Note that the individual_list needs to be passed to this object, because we expect that
@@ -353,8 +375,6 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
             json_string = MessageToJson(phenopckt)
-            print("#############")
-            print(json_string)
             pmid = cite.pmid
             if pmid is None:
                 fname = "phenopacket_" + individual.id
@@ -368,6 +388,18 @@ class CaseTemplateEncoder:
                 fh.write(json_string)
                 written += 1
         print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
+
+
+    def print_individuals_as_phenopackets(self, individual_list:List[Individual]) -> None:
+        """Function designed to show all phenopackets in a notebook for Q/C
+        :param individual_list: List of individual objects
+        :type individual_list:List[Individual]
+        """
+        ppkt_list = self._transform_individuals_to_phenopackets(individual_list)
+        for ppkt in ppkt_list:
+            json_string = MessageToJson(ppkt)
+            print("####")
+            print(json_string)
 
 
     def to_summary(self) -> pd.DataFrame:
