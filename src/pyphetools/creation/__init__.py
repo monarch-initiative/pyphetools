@@ -19,6 +19,7 @@ from .individual import Individual
 from .metadata import MetaData
 from .mixed_cohort_encoder import MixedCohortEncoder
 from .option_column_mapper import OptionColumnMapper
+from .pyphetools_age import PyPheToolsAge, IsoAge, HpoAge, GestationalAge, HPO_ONSET_TERMS
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator
 from .structural_variant import StructuralVariant
@@ -55,6 +56,7 @@ __all__ = [
     "MetaData",
     "MixedCohortEncoder",
     "OptionColumnMapper",
+    "PyPheToolsAge", "IsoAge", "HpoAge", "GestationalAge", "HPO_ONSET_TERMS",
     "SexColumnMapper",
     "SimpleColumnMapper",
     "SimpleColumnMapperGenerator",

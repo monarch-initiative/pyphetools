@@ -45,6 +45,7 @@ class CaseEncoder:
                 citation: Citation,
                 individual_id:str,
                 metadata:PPKt.MetaData,
+                age_of_onset:str=None,
                 age_at_last_exam:str=None,
                 sex:str=None,
                 disease:Disease=None) -> None:

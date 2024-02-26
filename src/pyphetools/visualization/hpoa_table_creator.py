@@ -241,8 +241,8 @@ class HpoaTableCreator:
 
     def get_dataframe(self):
         rows = []
-        column_names = ["#diseaseID", "diseaseName", "phenotypeID", "phenotypeName", "onsetID",
-                        "onsetName", "frequency", "sex", "negation",  "modifier",
+        column_names = ["#diseaseID", "diseaseName", "phenotypeID", "phenotypeName",
+                        "onsetID", "onsetName", "frequency", "sex", "negation",  "modifier",
                         "description", "publication","evidence", "biocuration"]
         for pmid, counter in self._hpo_counter_d.items():
             biocurator = self._biocurator_d.get(pmid)

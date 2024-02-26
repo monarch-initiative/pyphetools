@@ -16,6 +16,7 @@ import phenopackets as PPKt
 
 # The following constants are identical with the constants used in the  Excel template
 AGE_OF_ONSET_FIELDNAME = "age_of_onset"
+AGE_AT_LAST_ENCOUNTER_FIELDNAME = "age_at_last_encounter"
 
 from enum import Enum
 
@@ -149,14 +150,19 @@ class NullEncoder(CellEncoder):
     def columntype(self):
         return CellType.NULL
 
-EXPECTED_HEADERS = {"PMID", "title", "individual_id", "Comment", "disease_id", "disease_label", "transcript",
-                            "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
+EXPECTED_HEADERS = {"PMID", "title", "individual_id", "Comment", "disease_id", "disease_label",
+                    "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
 
 DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "transcript",
                             "allele_1", "allele_2",  "age_of_onset","age_at_last_encounter", "sex"}
 
+# note that the allele_2 field is option
+REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"Comment", "disease_id", "disease_label",
+                        "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
+ALLELE_2_IDX = 8
 
-
+REQUIRED_H2_FIELDS = ["str", "str",	"str", "optional", "str", "str", "str",	"str", "optional",
+                        "str", "age", "age", "M:F:O:U", "na"]
 
 class CaseTemplateEncoder:
     """Class to encode data from user-provided Excel template.
@@ -183,6 +189,15 @@ class CaseTemplateEncoder:
         if len(header_1) != len(header_2):
             # should never happen unless the template file is corrupted
             raise ValueError("headers are different lengths. Check template file for correctness.")
+        # check headers are well formed
+        idx = 0
+        for i in range(len(REQUIRED_H1_FIELDS)):
+            if idx == ALLELE_2_IDX and header_1[idx] != REQUIRED_H1_FIELDS[idx]:
+                idx += 1 # skip optional index
+            if header_1[idx] != REQUIRED_H1_FIELDS[idx]:
+                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{REQUIRED_H1_FIELDS[idx]}\" but got \"{header_1[idx]}\"")
+            if header_2[idx] != REQUIRED_H2_FIELDS[idx]:
+                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{REQUIRED_H2_FIELDS[idx]}\" but got \"{header_2[idx]}\"")
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2,hpo_cr=hpo_cr)
         data_df = df.iloc[1:]
@@ -286,11 +301,16 @@ class CaseTemplateEncoder:
             sex = Constants.UNKOWN_SEX_SYMBOL
         else:
             raise ValueError(f"Unrecognized sex symbol: {sex}")
-        age = data_items.get(AGE_OF_ONSET_FIELDNAME)
-        if age is not None and isinstance(age, str) and age.startswith("P"):
-            isoage = age
+        onset_age = data_items.get(AGE_OF_ONSET_FIELDNAME)
+        if onset_age is not None and isinstance(onset_age, str):
+            onset_age = onset_age
         else:
-            isoage = Constants.NOT_PROVIDED
+            onset_age = Constants.NOT_PROVIDED
+        encounter_age = data_items.get(AGE_AT_LAST_ENCOUNTER_FIELDNAME)
+        if encounter_age is not None and isinstance(encounter_age, str):
+            encounter_age = encounter_age
+        else:
+            encounter_age = Constants.NOT_PROVIDED
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         disease = Disease(disease_id=disease_id, disease_label=disease_label)
@@ -298,7 +318,8 @@ class CaseTemplateEncoder:
                             citation=citation,
                             hpo_terms=hpo_terms,
                             sex=sex,
-                            age=isoage,
+                            age_of_onset=onset_age,
+                            age_at_last_encounter=encounter_age,
                             disease=disease)
 
     def get_individuals(self) -> List[Individual]:

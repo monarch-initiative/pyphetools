@@ -2,6 +2,7 @@ import unittest
 import os
 import pandas as pd
 from src.pyphetools.creation import HpoParser, CaseEncoder, MetaData, Citation
+from src.pyphetools.creation import PyPheToolsAge, IsoAge
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 import phenopackets as PPkt
 
@@ -92,7 +93,11 @@ class TestCaseParse(unittest.TestCase):
         self.assertIsNotNone(individual)
         self.assertIsNotNone(individual.age_of_onset)
         expected_age = "P4Y11M"
-        self.assertEqual(expected_age, individual.age_of_onset)
+        onset_age = individual.age_of_onset
+        self.assertIsNotNone(onset_age)
+        self.assertTrue(isinstance(onset_age, PyPheToolsAge))
+        self.assertTrue(isinstance(onset_age, IsoAge))
+        self.assertEqual(expected_age, onset_age.age_string)
 
     def test_sex(self):
         ppkt = self._parser.get_phenopacket()
