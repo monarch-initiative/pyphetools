@@ -1,6 +1,6 @@
 import math
 import abc
-import regex
+import re
 from typing import Optional, Union
 DAYS_IN_WEEK = 7
 AVERAGE_DAYS_IN_MONTH = 30.437
@@ -280,7 +280,7 @@ class GestationalAge(PyPheToolsAge):
 
     def __init__(self, age_string) -> None:
         super().__init__(f"age_string")
-        match = regex.search(r'(\d+)\+([0-6])', age_string)
+        match = re.search(r'(\d+)\+([0-6])', age_string)
         if match:
             self._weeks = match.group(1)
             self._days = match.group(2)
@@ -306,7 +306,7 @@ class GestationalAge(PyPheToolsAge):
         :returns: True if this is formated as a gestational age, false otherwise
         :rtype: bool
         """
-        match = regex.search(r'\d+\+[0-6]', age_string)
+        match = re.search(r'\d+\+[0-6]', age_string)
         if match:
             return True
         else:
