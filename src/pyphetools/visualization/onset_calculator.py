@@ -26,30 +26,20 @@ class OnsetCalculator:
             elif len(ppack.diseases) > 1:
                 print("Warning: Identified multiple disease element")
             disease = ppack.diseases[0]
-            if disease.onset is not None and disease.onset is not None:
-                onset_term = self.onset_to_hpo_term(disease.onset)
-                if onset_term is None or onset_term == Constants.NOT_PROVIDED:
-                    continue
-                self._pmid_to_onsetlist_d[pmid].append(onset_term)
-            elif disease.onset is not None and disease.onset.ontology_class is not None:
-                label = disease.onset.ontology_class.label
-                onset_term =  self.onset_to_hpo_term(label)
-                if onset_term is None or onset_term == Constants.NOT_PROVIDED:
-                    continue
-                self._pmid_to_onsetlist_d[pmid].append(onset_term)
-
-    def onset_to_hpo_term(self, onset:Union[PyPheToolsAge, str]) ->Optional[HpTerm]:
-        """
-        try to retrieve an HPO term that represents the age of onset. This can be either an HPO term such as Antenatal onset
-        or an iso8601 string. If nothing can be found (e.g., for "na"), return None
-        """
-        if isinstance(onset, PyPheToolsAge):
-            onset_string = onset.age_string
-        elif isinstance(onset, str):
-            onset_string = onset
-        else:
-            return None
-        return PyPheToolsAge.onset_to_hpo_term(onset_string=onset_string)
+            if disease.onset is not None:
+                if disease.onset.ontology_class is not None:
+                    clz = disease.onset.ontology_class
+                    hpo_onset_term = HpTerm(hpo_id=clz.id, label=clz.label)
+                    self._pmid_to_onsetlist_d[pmid].append(hpo_onset_term)
+                elif disease.onset.age is not None:
+                    isoage = disease.onset.age.iso8601duration
+                    hpo_onset_term = PyPheToolsAge.onset_to_hpo_term(onset_string=isoage)
+                    if hpo_onset_term is not None and hpo_onset_term != Constants.NOT_PROVIDED:
+                        self._pmid_to_onsetlist_d[pmid].append(hpo_onset_term)
+                else:
+                    print("[ERROR] Could not parse disease onset")
+                    print(disease.onset)
+                    raise ValueError(f"Could not parse disease onset {disease}")
 
     def get_pmid_to_onset_d(self)-> Dict[str, List[HpTerm]]:
         return self._pmid_to_onsetlist_d

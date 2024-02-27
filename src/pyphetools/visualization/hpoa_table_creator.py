@@ -173,7 +173,8 @@ class HpoaTableCreator:
         if len(disease_set) == 0:
             raise ValueError("Could not retrieve Disease for cohort")
         elif len(disease_set) > 1:
-            raise ValueError(f"Error: must have only a single Disease for HPOA conversion but we found {len(disease_set)}")
+            disease_lst = '; '.join([disease.id for disease in disease_set])
+            raise ValueError(f"Error: must have only a single Disease for HPOA conversion but we found {len(disease_set)}: {disease_lst}")
         [disease] = disease_set
         print(f"Extracted disease: {disease}")
         return disease
