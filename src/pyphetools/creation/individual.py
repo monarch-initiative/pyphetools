@@ -9,7 +9,7 @@ from .disease import Disease
 from .hp_term import HpTerm
 from .hgvs_variant import Variant
 from .metadata import MetaData, Resource
-from .pyphetools_age import PyPheToolsAge
+from .pyphetools_age import PyPheToolsAge, NoneAge, IsoAge
 
 
 class Individual:
@@ -35,8 +35,8 @@ class Individual:
                 hpo_terms:List[HpTerm]=None,
                 citation:Citation=None,
                 sex:str=Constants.NOT_PROVIDED,
-                age_of_onset:str=Constants.NOT_PROVIDED,
-                age_at_last_encounter:str=Constants.NOT_PROVIDED,
+                age_of_onset:str=NoneAge("na"),
+                age_at_last_encounter:str=NoneAge("na"),
                 interpretation_list:List[PPKt.VariantInterpretation]=None,
                 disease:Disease=None):
         """Constructor
@@ -51,8 +51,12 @@ class Individual:
             self._sex = PPKt.Sex.UNKNOWN_SEX
         else:
             self._sex = sex
-        self._age_of_onset = PyPheToolsAge.get_age(age_string=age_of_onset)
-        self._age_at_last_encounter = PyPheToolsAge.get_age(age_at_last_encounter)
+        #if not isinstance(age_of_onset, PyPheToolsAge):
+        #    raise ValueError(f"age_of_onset argument must be PyPheToolsAge but was {type(age_of_onset)}")
+        self._age_of_onset = age_of_onset
+        #if not isinstance(age_at_last_encounter, PyPheToolsAge):
+        #    raise ValueError(f"age_at_last_encounter argument must be PyPheToolsAge but was {type(age_of_onset)}")
+        self._age_at_last_encounter = age_at_last_encounter
         if hpo_terms is None:
             self._hpo_terms = list()
         else:
@@ -251,9 +255,9 @@ class Individual:
             print("[WARNING] could not find disease information")
         disease_object = PPKt.Disease()
         disease_object.term.CopyFrom(disease_term)
-        if self.age_of_onset is not None and self.age_of_onset != Constants.NOT_PROVIDED:
+        if self.age_of_onset is not None and self.age_of_onset.is_valid():
             disease_object.onset.CopyFrom(self.age_of_onset.to_ga4gh_time_element())
-        if iso_age is not None and iso_age != Constants.NOT_PROVIDED:
+        if iso_age is not None and iso_age.is_valid():
             disease_object.onset.CopyFrom(iso_age.to_ga4gh_time_element())
         return disease_object
 
@@ -272,17 +276,17 @@ class Individual:
         php = PPKt.Phenopacket()
         php.id = self.get_phenopacket_id(phenopacket_id=phenopacket_id)
         php.subject.id = self._individual_id
-        if self._age_at_last_encounter is not None and self._age_at_last_encounter != Constants.NOT_PROVIDED:
-            php.subject.time_at_last_encounter.CopyFrom(self._age_at_last_encounter)
+        if self._age_at_last_encounter is not None and self._age_at_last_encounter.is_valid():
+            php.subject.time_at_last_encounter.CopyFrom(self._age_at_last_encounter.to_ga4gh_time_element())
         if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = PPKt.Sex.MALE
         elif self._sex == Constants.FEMALE_SYMBOL:
             php.subject.sex = PPKt.Sex.FEMALE
         elif self._sex == Constants.OTHER_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.OTHER_SEX
-        elif self._sex == Constants.UNKOWN_SEX_SYMBOL:
+        elif self._sex == Constants.UNKNOWN_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
-        if self._age_of_onset is not None and self._age_of_onset != Constants.NOT_PROVIDED:
+        if self._age_of_onset is not None and self._age_of_onset.is_valid():
             php.subject.time_at_last_encounter.CopyFrom(self._age_of_onset.to_ga4gh_time_element())
         if self._vital_status is not None:
             php.subject.vital_status.CopyFrom(self._vital_status)
@@ -421,7 +425,7 @@ class Individual:
         if len(ppkt.interpretations) > 1:
             raise ValueError(f"pyphetools dpoes not currently support multiple Interpretation messages in one phenopacket but we found {len(ppkt.interpretations)}")
         interpretation = ppkt.interpretations[0]
-        if interpretation.diagnosis is not None and interpretation.diagnosis.disease is not None:
+        if interpretation.HasField("diagnosis") and interpretation.diagnosis.HasField("disease"):
             d = interpretation.diagnosis.disease
             disease = Disease(disease_id=d.id, disease_label=d.label)
         else:
@@ -449,13 +453,12 @@ class Individual:
         subject_id =  ppkt.subject.id
         sex = ppkt.subject.sex
         age = ppkt.subject.time_at_last_encounter.age.iso8601duration
-        variant_interpretations = []
         hpo_terms = []
         for pf in ppkt.phenotypic_features:
             hpo_id = pf.type.id
             hpo_label = pf.type.label
             observed = not pf.excluded
-            if pf.onset.age.iso8601duration is not None and pf.onset.age.iso8601duration.startswith("P"):
+            if pf.HasField("age") and pf.age.HasField("iso8601duration") and pf.onset.age.iso8601duration.startswith("P"):
                 onset_age = pf.onset.age.iso8601duration
             else:
                 onset_age = None

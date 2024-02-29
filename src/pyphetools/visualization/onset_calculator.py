@@ -26,13 +26,14 @@ class OnsetCalculator:
             elif len(ppack.diseases) > 1:
                 print("Warning: Identified multiple disease element")
             disease = ppack.diseases[0]
-            if disease.onset is not None:
-                if disease.onset.ontology_class is not None:
-                    clz = disease.onset.ontology_class
-                    hpo_onset_term = HpTerm(hpo_id=clz.id, label=clz.label)
+            if disease.HasField("onset"):
+                onset = disease.onset
+                if onset.HasField("ontology_class"):
+                    onset_term = onset.ontology_class
+                    hpo_onset_term = HpTerm(hpo_id=onset_term.id, label=onset_term.label)
                     self._pmid_to_onsetlist_d[pmid].append(hpo_onset_term)
-                elif disease.onset.age is not None:
-                    isoage = disease.onset.age.iso8601duration
+                elif  onset.HasField("age"):
+                    isoage = onset.age.iso8601duration
                     hpo_onset_term = PyPheToolsAge.onset_to_hpo_term(onset_string=isoage)
                     if hpo_onset_term is not None and hpo_onset_term != Constants.NOT_PROVIDED:
                         self._pmid_to_onsetlist_d[pmid].append(hpo_onset_term)

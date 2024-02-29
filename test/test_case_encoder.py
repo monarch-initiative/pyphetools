@@ -18,12 +18,13 @@ class TestCaseParse(unittest.TestCase):
         cls._hpo_cr = hpparser.get_hpo_concept_recognizer()
         metadata = MetaData(created_by="ORCID:0000-0002-0736-9199")
         metadata.default_versions_with_hpo(version="2022-05-05")
-        age_of_last_examination = "P4Y11M"
+        age_of_last_examination = IsoAge.from_iso8601("P4Y11M")
         sex = "female"
         citation = Citation(pmid="PMID:123", title="example title")
         cls._parser = CaseEncoder(hpo_cr=cls._hpo_cr,
                                 individual_id="A",
                                 citation=citation,
+                                age_of_onset=age_of_last_examination,
                                 age_at_last_exam=age_of_last_examination,
                                 sex=sex,
                                 metadata=metadata.to_ga4gh())
@@ -96,7 +97,6 @@ class TestCaseParse(unittest.TestCase):
         onset_age = individual.age_of_onset
         self.assertIsNotNone(onset_age)
         self.assertTrue(isinstance(onset_age, PyPheToolsAge))
-        self.assertTrue(isinstance(onset_age, IsoAge))
         self.assertEqual(expected_age, onset_age.age_string)
 
     def test_sex(self):

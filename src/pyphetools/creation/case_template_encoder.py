@@ -150,14 +150,14 @@ class NullEncoder(CellEncoder):
     def columntype(self):
         return CellType.NULL
 
-EXPECTED_HEADERS = {"PMID", "title", "individual_id", "Comment", "disease_id", "disease_label",
+EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "disease_label",
                     "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
 
 DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "transcript",
                             "allele_1", "allele_2",  "age_of_onset","age_at_last_encounter", "sex"}
 
 # note that the allele_2 field is option
-REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"Comment", "disease_id", "disease_label",
+REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id", "disease_label",
                         "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
 ALLELE_2_IDX = 8
 
@@ -298,7 +298,7 @@ class CaseTemplateEncoder:
         elif sex == "O":
             sex = Constants.OTHER_SEX_SYMBOL
         elif sex == "U":
-            sex = Constants.UNKOWN_SEX_SYMBOL
+            sex = Constants.UNKNOWN_SEX_SYMBOL
         else:
             raise ValueError(f"Unrecognized sex symbol: {sex}")
         onset_age = data_items.get(AGE_OF_ONSET_FIELDNAME)

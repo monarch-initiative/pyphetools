@@ -12,6 +12,7 @@ from .disease import Disease
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .pyphetools_age import NoneAge
 from .simple_column_mapper import SimpleColumnMapper
 from .variant import Variant
 
@@ -45,8 +46,8 @@ class CaseEncoder:
                 citation: Citation,
                 individual_id:str,
                 metadata:PPKt.MetaData,
-                age_of_onset:str=None,
-                age_at_last_exam:str=None,
+                age_of_onset:str=NoneAge("na"),
+                age_at_last_exam:str=NoneAge("na"),
                 sex:str=None,
                 disease:Disease=None) -> None:
         if not isinstance(hpo_cr, HpoConceptRecognizer):
@@ -55,15 +56,8 @@ class CaseEncoder:
         self._hpo_concept_recognizer = hpo_cr
         pmid = citation.pmid
         if not pmid.startswith("PMID:"):
-            raise ValueError(f"Malformed pmid argument ({pmid}). Must start with PMID:")
-        if age_at_last_exam is not None:
-            match = re.search(ISO8601_REGEX, age_at_last_exam)
-            if match:
-                self._age_at_last_examination = age_at_last_exam
-            else:
-                raise ValueError(f"Could not parse {age_at_last_exam} as ISO8601 period")
-        else:
-            self._age_at_last_examination = None
+            raise ValueError(f"Malformed pmid argument: \"{pmid}\". Must start with PMID:")
+        self._age_at_last_examination = age_at_last_exam
         self._seen_hpo_terms = set() # Use to prevent duplicate HP annotations
         if not isinstance(metadata, PPKt.MetaData):
             raise ValueError(f"metadata argument must be phenopackets.MetaData but was {type(metadata)}")
@@ -71,20 +65,19 @@ class CaseEncoder:
         female_symbols = {"f", "girl", "female", "woman", "w"}
         male_symbols = {"f", "boy", "male", "man", "m"}
         if sex is None:
-            sex_symbol = Constants.UNKOWN_SEX_SYMBOL
+            sex_symbol = Constants.UNKNOWN_SEX_SYMBOL
         elif sex.lower() in female_symbols:
             sex_symbol = Constants.FEMALE_SYMBOL
         elif sex.lower() in male_symbols:
             sex_symbol = Constants.MALE_SYMBOL
         else:
             print(f"Warning: did not recognize sex symbol \"{sex}\"")
-            sex_symbol = Constants.UNKOWN_SEX_SYMBOL
+            sex_symbol = Constants.UNKNOWN_SEX_SYMBOL
         ontology = hpo_cr.get_hpo_ontology()
         if ontology is None:
             raise ValueError("ontology cannot be None")
-        self._individual = Individual(individual_id=individual_id, sex=sex_symbol)
-        if age_at_last_exam is not None:
-            self._individual.set_age_of_onset(age_at_last_exam)
+        self._individual = Individual(individual_id=individual_id, sex=sex_symbol, age_of_onset=age_of_onset,
+                                    age_at_last_encounter=age_at_last_exam)
         if disease is not None:
             self._individual.set_disease(disease=disease)
         if citation is not None:
@@ -130,8 +123,8 @@ class CaseEncoder:
         results = self._hpo_concept_recognizer.parse_cell(cell_contents=text, custom_d=custom_d)
         if custom_age is not None:
             current_age = custom_age
-        elif self._age_at_last_examination is not None:
-            current_age = self._age_at_last_examination
+        elif self._age_at_last_examination.is_valid():
+            current_age = self._age_at_last_examination.age_string
         else:
             current_age = Constants.NOT_PROVIDED
         for term in results:

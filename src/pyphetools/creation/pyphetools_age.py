@@ -58,20 +58,35 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
+    def is_valid(self) -> bool:
+        """
+        :returns:subclasses should return True if the parse was successful, otherwise False
+        :rtype: bool
+        """
+
     @property
     def age_string(self):
-        return self._age_string
+        if self.is_valid():
+            return self._age_string
+        else:
+            return Constants.NOT_PROVIDED
 
     @staticmethod
-    def get_age(age_string):
+    def get_age(age_string) -> "PyPheToolsAge":
         """Return an appropriate subclass of PyPheToolsAge or None
         - if starts with P interpret as an ISO 8601 age string
         - if starts with HP interpret as an HPO Onset term
         - if is a string such as 34+2 interpret as a gestation age
-        :returns:PyPheToolsAge obejct (one of the subclasses) or None
-        :rtype: Optional[PyPheToolsAge]
+        - If we cannot parse, return a NoneAge obejct, a signal that no age is available
+        :returns:PyPheToolsAge object (one of the subclasses)
+        :rtype: PyPheToolsAge
         """
-        if age_string.startswith("P"):
+        if age_string is None:
+            return NoneAge("na")
+        if isinstance(age_string, float) and math.isnan(age_string):
+            return NoneAge("na") # sometimes pandas returns an empty cell as a float NaN
+        elif age_string.startswith("P"):
             return IsoAge.from_iso8601(age_string)
         elif age_string in HPO_ONSET_TERMS:
             return HpoAge(age_string=age_string)
@@ -81,7 +96,7 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
             # only warn if the user did not enter na=not available
             if age_string != 'na':
                 print(f"[WARNING] Could not parse {age_string} as age.")
-            return Constants.NOT_PROVIDED
+            return NoneAge(age_string=age_string)
 
     @staticmethod
     def onset_to_hpo_term(onset_string:str) ->Optional[HpTerm]:
@@ -139,6 +154,17 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
 
 
 
+class NoneAge(PyPheToolsAge):
+    """class to be used if no age information was available
+    """
+    def __init__(self, age_string:str):
+        super().__init__(age_string)
+
+    def to_ga4gh_time_element(self):
+        return None
+
+    def is_valid(self):
+        return False
 
 
 class IsoAge(PyPheToolsAge):
@@ -180,6 +206,9 @@ class IsoAge(PyPheToolsAge):
         self._months = months
         self._days = days
         self._total_days = total_days
+
+    def is_valid(self):
+        return True
 
     @property
     def years(self):
@@ -276,6 +305,9 @@ class HpoAge(PyPheToolsAge):
         time_elem.ontology_class.CopyFrom(clz)
         return time_elem
 
+    def is_valid(self):
+        return True
+
 class GestationalAge(PyPheToolsAge):
 
     def __init__(self, age_string) -> None:
@@ -286,6 +318,9 @@ class GestationalAge(PyPheToolsAge):
             self._days = match.group(2)
         else:
             raise ValueError(f"Could not extract gestation age from \"{age_string}\".")
+
+    def is_valid(self):
+        return True
 
     def to_ga4gh_time_element(self) -> PPKt.TimeElement:
         """
