@@ -104,7 +104,7 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         elif age_string.startswith("P"):
             return IsoAge.from_iso8601(age_string)
         elif age_string in HPO_ONSET_TERMS:
-            return HpoAge(age_string=age_string)
+            return HpoAge(hpo_onset_label=age_string)
         elif GestationalAge.is_gestational_age(age_string):
             return GestationalAge(age_string)
         else:

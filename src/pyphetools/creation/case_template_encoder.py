@@ -7,6 +7,7 @@ from pyphetools.creation.hpo_cr import HpoConceptRecognizer
 from pyphetools.creation.metadata import MetaData
 from pyphetools.creation.hp_term import HpTerm
 from pyphetools.creation.individual import Individual
+from pyphetools.creation.pyphetools_age import NoneAge, PyPheToolsAge
 import os
 import re
 import pandas as pd
@@ -303,14 +304,14 @@ class CaseTemplateEncoder:
             raise ValueError(f"Unrecognized sex symbol: {sex}")
         onset_age = data_items.get(AGE_OF_ONSET_FIELDNAME)
         if onset_age is not None and isinstance(onset_age, str):
-            onset_age = onset_age
+            onset_age = PyPheToolsAge.get_age(onset_age)
         else:
-            onset_age = Constants.NOT_PROVIDED
+            onset_age = NoneAge("na")
         encounter_age = data_items.get(AGE_AT_LAST_ENCOUNTER_FIELDNAME)
         if encounter_age is not None and isinstance(encounter_age, str):
-            encounter_age = encounter_age
+            encounter_age = PyPheToolsAge.get_age(encounter_age)
         else:
-            encounter_age = Constants.NOT_PROVIDED
+            encounter_age = NoneAge("na")
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         disease = Disease(disease_id=disease_id, disease_label=disease_label)

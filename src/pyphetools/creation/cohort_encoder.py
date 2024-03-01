@@ -9,6 +9,7 @@ from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
+from .pyphetools_age import NoneAge
 from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
@@ -26,7 +27,7 @@ class CohortEncoder(AbstractEncoder):
     cases, it is preferable to use the variant_dictionary, which has key=string (cell contents) and value=Hgvs or
     StructuralVariant object.
 
-    :param df: tabular data abotu a cohort
+    :param df: tabular data about a cohort
     :type df: pd.DataFrame
     :param hpo_cr: HpoConceptRecognizer for text mining
     :type hpo_cr: pyphetools.creation.HpoConceptRecognizer
@@ -161,14 +162,14 @@ class CohortEncoder(AbstractEncoder):
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
             if age_column_name == Constants.NOT_PROVIDED:
-                age = Constants.NOT_PROVIDED
+                age = NoneAge("na")
             else:
                 age_cell_contents = row[age_column_name]
                 try:
                     age = self._age_mapper.map_cell(age_cell_contents)
                 except Exception as ee:
                     print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
-                    age = Constants.NOT_PROVIDED
+                    age = NoneAge("na")
             if sex_column_name == Constants.NOT_PROVIDED:
                 sex = self._sex_mapper.map_cell(Constants.NOT_PROVIDED)
             else:
