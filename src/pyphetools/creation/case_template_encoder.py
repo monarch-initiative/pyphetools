@@ -102,11 +102,14 @@ class HpoEncoder(CellEncoder):
             return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)
         elif cell_contents == "excluded":
             return  HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, observed=False)
-        elif cell_contents.startswith("P"):
-            # iso8601 age
-            return  HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=cell_contents)
         elif cell_contents == "na" or cell_contents == "nan" or len(cell_contents) == 0:
             return None
+        elif len(cell_contents) > 0:
+            onset = PyPheToolsAge.get_age(cell_contents)
+            if onset.is_valid():
+            # iso8601 age
+                return  HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=onset)
+            # if we cannot parse successfully, there is probably an error in the format. Drop down to end of function to warn user
         else:
             raise ValueError(f"Could not parse HPO column cell_contents: \”{cell_contents}\"")
 
