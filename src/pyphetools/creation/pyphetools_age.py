@@ -68,6 +68,18 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         """
         pass
 
+    @abc.abstractmethod
+    def to_hpo_age(self) -> "HpoAge":
+        """convert this PyPheToolsAge object to an HpoAge object.
+        This is the identity function if the object already is of class HpoAge. For other classes, we choose the
+        HpoAge object that is most appropriate given the ISO8601 or Gestational age. The purpose of this
+        function is that for HPOA output, we need to have an HPO term to denote the age of onset frequencies
+
+        :returns: HpoAge object representing the age
+        :rtype: HpoAge
+        """
+        pass
+
     @property
     def age_string(self):
         if self.is_valid():
@@ -114,6 +126,12 @@ class NoneAge(PyPheToolsAge):
 
     def is_valid(self):
         return False
+
+    def to_hpo_age(self):
+        """There is no information about age, so return the NoneAge object to denote this.
+        Client code should always check the is_valid function
+        """
+        return self
 
 
 class IsoAge(PyPheToolsAge):
@@ -188,6 +206,29 @@ class IsoAge(PyPheToolsAge):
         else:
             return "".join(components)
 
+    def to_hpo_age(self):
+        """Convert to HpoAge object
+        """
+        if self._years >= 60:
+            return HpoAge("Late onset")
+        elif self._years >= 40:
+            return HpoAge("Middle age onset")
+        elif self._years >= 16:
+            return HpoAge("Young adult onset")
+        elif self._years >= 5:
+            return HpoAge("Juvenile onset")
+        elif self._years >= 1:
+            return HpoAge("Childhood onset")
+        elif self._months >= 1:
+            return HpoAge("Infantile onset")
+        elif self._days >= 1:
+            return HpoAge("Neonatal onset")
+        elif self._days == 0:
+            return HpoAge("Congenital onset")
+        else:
+            raise ValueError(f"[ERROR] Could not calculate HpoAge for {self.age_string}")
+
+
     def to_ga4gh_time_element(self) -> PPKt.TimeElement:
         """
         :returns: a representation of Age formated as one of the options of GA4GH TimeElement
@@ -255,6 +296,11 @@ class HpoAge(PyPheToolsAge):
         time_elem.ontology_class.CopyFrom(clz)
         return time_elem
 
+    def to_hpo_age(self):
+        """Return self, this is already an HpoAge object
+        """
+        return self
+
     def is_valid(self):
         return True
 
@@ -283,6 +329,21 @@ class GestationalAge(PyPheToolsAge):
         gest_age.days = self._days
         time_elem.age.gestational_age.CopyFrom(gest_age)
         return time_elem
+
+    def to_hpo_age(self):
+        """Return self, this is already an HpoAge object
+        """
+        if self._weeks >= 28:
+            # prior to birth during the third trimester, which is defined as 28 weeks and zero days (28+0) of gestation and beyond.
+            return HpoAge("Third trimester onset") # HP:0034197
+        elif self._weeks >= 14:
+            # prior to birth during the second trimester, which comprises the range of gestational ages from 14 0/7 weeks to 27 6/7 (inclusive).
+            return HpoAge("Second trimester onset") # HP:0034198
+        elif self._weeks >= 11:
+            # 11 0/7 to 13 6/7 weeks of gestation (inclusive).
+            return HpoAge("Late first trimester onset")  #  HP:0034199
+        else:
+            return HpoAge("Embryonal onset")
 
     @staticmethod
     def is_gestational_age(age_string):
