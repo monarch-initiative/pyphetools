@@ -124,9 +124,9 @@ class CaseEncoder:
         if custom_age is not None:
             current_age = custom_age
         elif self._age_at_last_examination.is_valid():
-            current_age = self._age_at_last_examination.age_string
+            current_age = self._age_at_last_examination
         else:
-            current_age = Constants.NOT_PROVIDED
+            current_age = NoneAge("na")
         for term in results:
             if term in self._seen_hpo_terms:
                 continue

@@ -1,46 +1,48 @@
 import math
 import abc
 import re
-from typing import Optional, Union
 DAYS_IN_WEEK = 7
 AVERAGE_DAYS_IN_MONTH = 30.437
 AVERAGE_DAYS_IN_YEAR = 365.25
 import phenopackets as PPKt
 
 from .constants import Constants
-from .hp_term import HpTerm
 
 
+# The following terms are to simplify making HpoAge objects
 HPO_ONSET_TERMS = {
     # Onset of symptoms after the age of 60 years.
-    "Late onset": HpTerm(hpo_id="HP:0003584", label="Late onset"),
-    "Middle age onset": HpTerm(hpo_id="HP:0003596",label="Middle age onset"),
-    "Young adult onset": HpTerm(hpo_id="HP:0011462", label="Young adult onset"),
+    "Late onset": "HP:0003584",
+    # Onset of symptoms after the age of 40 years.
+    "Middle age onset": "HP:0003596",
+    # Onset of symptoms after the age of 16 years.
+    "Young adult onset":"HP:0011462",
     # Onset of disease after 16 years  .
-    "Adult onset":  HpTerm(hpo_id="HP:0003581", label="Adult onset"),
+    "Adult onset":  "HP:0003581",
     #Onset of signs or symptoms of disease between the age of 5 and 15 years.
-    "Juvenile onset": HpTerm(hpo_id="HP:0003621", label="Juvenile onset"),
+    "Juvenile onset": "HP:0003621",
     #Onset of disease at the age of between 1 and 5 years.
-    "Childhood onset": HpTerm(hpo_id="HP:0011463", label="Childhood onset"),
+    "Childhood onset":"HP:0011463",
     # Onset of signs or symptoms of disease between 28 days to one year of life.
-    "Infantile onset": HpTerm(hpo_id="HP:0003593", label="Infantile onset"),
+    "Infantile onset": "HP:0003593",
     # Onset of signs or symptoms of disease within the first 28 days of life.
-    "Neonatal onset": HpTerm(hpo_id="HP:0003623", label="Neonatal onset"),
+    "Neonatal onset":"HP:0003623",
     # A phenotypic abnormality that is present at birth.
-    "Congenital onset": HpTerm(hpo_id="HP:0003577", label="Congenital onset"),
+    "Congenital onset": "HP:0003577",
     #  onset prior to birth
-    "Antenatal onset": HpTerm(hpo_id="HP:0030674", label="Antenatal onset"),
+    "Antenatal onset": "HP:0030674",
     #Onset of disease at up to 8 weeks following fertilization (corresponding to 10 weeks of gestation).
-    "Embryonal onset": HpTerm(hpo_id="HP:0011460", label="Embryonal onset"),
+    "Embryonal onset": "HP:0011460",
     # Onset prior to birth but after 8 weeks of embryonic development (corresponding to a gestational age of 10 weeks).
-    "Fetal onset": HpTerm(hpo_id="HP:0011461", label="Fetal onset"),
+    "Fetal onset": "HP:0011461",
     #late first trimester during the early fetal period, which is defined as 11 0/7 to 13 6/7 weeks of gestation (inclusive).
-    "Late first trimester onset": HpTerm(hpo_id="HP:0034199", label="Late first trimester onset"),
+    "Late first trimester onset":"HP:0034199",
     # second trimester, which comprises the range of gestational ages from 14 0/7 weeks to 27 6/7 (inclusive)
-    "Second trimester onset": HpTerm(hpo_id="HP:0034198", label="Second trimester onset"),
+    "Second trimester onset":"HP:0034198",
     #third trimester, which is defined as 28 weeks and zero days (28+0) of gestation and beyond.
-    "Third trimester onset":  HpTerm(hpo_id="HP:0034197", label="Third trimester onset"),
+    "Third trimester onset":  "HP:0034197",
 }
+
 
 class PyPheToolsAge(metaclass=abc.ABCMeta):
     """Class for managing the various ways we have of representing Age as either an ISI 8601 string,
@@ -64,6 +66,7 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         :returns:subclasses should return True if the parse was successful, otherwise False
         :rtype: bool
         """
+        pass
 
     @property
     def age_string(self):
@@ -97,60 +100,6 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
             if age_string != 'na':
                 print(f"[WARNING] Could not parse {age_string} as age.")
             return NoneAge(age_string=age_string)
-
-    @staticmethod
-    def onset_to_hpo_term(onset_string:str) ->Optional[HpTerm]:
-        """
-        try to retrieve an HPO term that represents the age of onset. This can be either an HPO term such as Antenatal onset
-        or an iso8601 string. If nothing can be found (e.g., for "na"), return None
-        """
-        if onset_string is None or onset_string.lower() == "na":
-            return None
-        iso_age = IsoAge.from_iso8601(onset_string)
-        if iso_age.years >= 60:
-            return HPO_ONSET_TERMS.get("Late onset")
-        elif iso_age.years >= 40:
-            return  HPO_ONSET_TERMS.get("Middle age onset")
-        elif iso_age.years >= 16:
-            return  HPO_ONSET_TERMS.get("Young adult onset")
-        elif iso_age.years >= 5:
-            return HPO_ONSET_TERMS.get("Juvenile onset")
-        elif iso_age.years >= 1:
-            return HPO_ONSET_TERMS.get("Childhood onset")
-        elif iso_age.months >= 1:
-            return HPO_ONSET_TERMS.get("Infantile onset")
-        elif iso_age.days >= 1:
-            return HPO_ONSET_TERMS.get("Neonatal onset")
-        elif iso_age.days == 0:
-            return HPO_ONSET_TERMS.get("Congenital onset")
-        # if we get here, we could not find anything. This may be an error, because according to our template,
-        # the user must enter an iso8601 string or an HPO label
-        raise ValueError(f"Could not identify HPO onset term for {onset_string}")
-
-    @staticmethod
-    def to_hpo_onset_term(onset:Union['PyPheToolsAge', str]):
-        if isinstance(onset, str):
-            if onset in HPO_ONSET_TERMS:
-                return HPO_ONSET_TERMS.get(onset)
-            elif onset.startswith("P"):
-                iso_age = IsoAge.from_iso8601(onset)
-                return PyPheToolsAge.onset_to_hpo_term(iso_age)
-            elif onset == "na" or onset == Constants.NOT_PROVIDED:
-                return None
-        else:
-            # it must have been a PyPheToolsAge object. Check which kind
-            age_string = onset.age_string
-            if age_string.startswith("P"):
-                iso_age = IsoAge.from_iso8601(onset)
-                return PyPheToolsAge.onset_to_hpo_term(iso_age)
-            elif age_string.startswith("HP"):
-                if age_string in HPO_ONSET_TERMS:
-                    return HPO_ONSET_TERMS.get(age_string)
-                else:
-                    # should never happen
-                    raise ValueError(f"Invalid age string {age_string}")
-            else:
-                raise ValueError(f"Gestational age not yet implemented: {age_string}")
 
 
 
@@ -287,11 +236,12 @@ class IsoAge(PyPheToolsAge):
         return IsoAge(y=y, m=m, w=w, d=d, age_string=original_age_string)
 
 class HpoAge(PyPheToolsAge):
-    def __init__(self, age_string) -> None:
-        super().__init__(age_string)
-        if age_string not in HPO_ONSET_TERMS:
-            raise ValueError(f"Age \"{age_string}\" is not a valid HPO Onset term")
-        self._onset_term = HPO_ONSET_TERMS.get(age_string)
+    def __init__(self, hpo_onset_label) -> None:
+        super().__init__(age_string=hpo_onset_label)
+        if hpo_onset_label not in HPO_ONSET_TERMS:
+            raise ValueError(f"Age \"{hpo_onset_label}\" is not a valid HPO Onset term")
+        self._onset_label = hpo_onset_label
+        self._onset_id = HPO_ONSET_TERMS.get(hpo_onset_label)
 
     def to_ga4gh_time_element(self) -> PPKt.TimeElement:
         """
@@ -300,8 +250,8 @@ class HpoAge(PyPheToolsAge):
         """
         time_elem = PPKt.TimeElement()
         clz = PPKt.OntologyClass()
-        clz.id = self._onset_term.id
-        clz.label = self._onset_term.label
+        clz.id = self._onset_id
+        clz.label = self._onset_label
         time_elem.ontology_class.CopyFrom(clz)
         return time_elem
 
