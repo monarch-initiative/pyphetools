@@ -40,7 +40,7 @@ class SexColumnMapper:
 
     def map_cell(self, cell_contents) -> str:
         if self._not_provided:
-            return Constants.UNKOWN_SEX_SYMBOL
+            return Constants.UNKNOWN_SEX_SYMBOL
         contents = cell_contents.strip()
         if contents == self._female_symbol:
             return Constants.FEMALE_SYMBOL
@@ -49,10 +49,10 @@ class SexColumnMapper:
         elif contents == self._other_symbol:
             return Constants.OTHER_SEX_SYMBOL
         elif contents == self._unknown_symbol:
-            return Constants.UNKOWN_SEX_SYMBOL
+            return Constants.UNKNOWN_SEX_SYMBOL
         else:
             self._erroneous_input_counter[contents] += 1
-            return Constants.UNKOWN_SEX_SYMBOL
+            return Constants.UNKNOWN_SEX_SYMBOL
 
     def preview_column(self, df:pd.DataFrame):
         if not isinstance(df, pd.DataFrame):

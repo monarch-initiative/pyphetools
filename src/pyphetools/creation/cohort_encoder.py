@@ -203,7 +203,7 @@ class CohortEncoder(AbstractEncoder):
                 disease = self._disease_dictionary.get(individual_id)
                 indi = Individual(individual_id=individual_id,
                                 sex=sex,
-                                age=age,
+                                age_of_onset=age,
                                 hpo_terms=hpo_terms,
                                 citation=self._metadata.get_citation(),
                                 interpretation_list=interpretation_list,
@@ -211,7 +211,7 @@ class CohortEncoder(AbstractEncoder):
             elif self._disease_dictionary is None and self._disease is not None:
                 indi = Individual(individual_id=individual_id,
                                 sex=sex,
-                                age=age,
+                                age_of_onset=age,
                                 hpo_terms=hpo_terms,
                                 citation=self._metadata.get_citation(),
                                 interpretation_list=interpretation_list,
