@@ -140,13 +140,13 @@ class OntologyQC:
             if not term.measured:
                 self._errors.append(ValidationResultBuilder(self._phenopacket_id).not_measured(term=term).build())
             else:
-                if term.onset == Constants.NOT_PROVIDED:
+                if term.onset.is_valid():
+                    by_age_dictionary[term.onset.age_string].append(term)
+                else:
                     if term.observed:
                         observed_terms_without_onset.append(term)
                     else:
                         excluded_terms_without_onset.append(term)
-                else:
-                    by_age_dictionary[term.onset].append(term)
         self._check_term_ids_and_labels(self._individual.hpo_terms)
         clean_terms = []
 

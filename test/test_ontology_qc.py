@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.pyphetools.creation import HpoParser, HpTerm, Individual
+from src.pyphetools.creation import HpoParser, HpTerm, Individual, IsoAge
 from src.pyphetools.validation import OntologyQC
 
 
@@ -104,6 +104,22 @@ class TestOntologyQC(unittest.TestCase):
         self.assertEqual("ERROR", error.error_level)
         self.assertEqual("OBSERVED_AND_EXCLUDED", error.category)
         self.assertEqual("Term Arachnodactyly (HP:0001166) was annotated to be both observed and excluded.", error.message)
+
+    def test_redundancy_with_and_without_onset(self):
+        """
+        If we have Myoclonic seizure with onset P1Y and Seizure with no onset, then we do not want to include
+        Seizure in the final output because it is redundant.
+        Myoclonic seizure HP:0032794 ("grandchild" of Seizure)
+        Seizure HP:0001250
+        """
+        onset = IsoAge.from_iso8601("P1Y")
+        myoclonic_seiz = HpTerm(hpo_id="HP:0032794", label="Myoclonic seizure", observed=True, onset=onset)
+        seiz = HpTerm(hpo_id="HP:0001250", label="Seizure", observed=True)
+        hpo_terms = [myoclonic_seiz, seiz]
+        individual = Individual(individual_id="id", hpo_terms=hpo_terms)
+        qc = OntologyQC(ontology=self._ontology, individual=individual)
+        qc_hpo_terms = qc.get_clean_terms()
+        self.assertEqual(1, len(qc_hpo_terms))
 
 
 

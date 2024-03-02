@@ -286,8 +286,6 @@ class Individual:
             php.subject.sex = PPKt.Sex.OTHER_SEX
         elif self._sex == Constants.UNKNOWN_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
-        if self._age_of_onset is not None and self._age_of_onset.is_valid():
-            php.subject.time_at_last_encounter.CopyFrom(self._age_of_onset.to_ga4gh_time_element())
         if self._vital_status is not None:
             php.subject.vital_status.CopyFrom(self._vital_status)
         disease_object = self._get_disease_object()
