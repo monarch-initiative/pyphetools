@@ -22,7 +22,7 @@ AGE_AT_LAST_ENCOUNTER_FIELDNAME = "age_at_last_encounter"
 from enum import Enum
 
 
-CellType = Enum('Celltype', ['DATA', 'HPO', 'MISC', 'NULL'])
+CellType = Enum('Celltype', ['DATA', 'HPO', 'NTR', 'MISC', 'NULL'])
 
 class CellEncoder(metaclass=abc.ABCMeta):
     def __init__(self, name):
@@ -65,11 +65,12 @@ class HpoEncoder(CellEncoder):
     :param h2: contents of the second header line
     :type h2: str
     """
-    def __init__(self, h1:str, h2:str):
+    def __init__(self, h1:str, h2:str, ntr=False):
         super().__init__(name=h1)
         self._error = None
         self._hpo_label = None
         self._hpo_id = None
+        self._is_ntr = ntr
         if h1.endswith(" "):
             self._error = f"Error - HPO label ends with whitespace: \”{h1}\""
         elif h2.startswith("HP:") and len(h2) != 10:
@@ -80,23 +81,33 @@ class HpoEncoder(CellEncoder):
             self._hpo_label = h1
             self._hpo_id = h2
 
-    def is_data(self):
+    def is_data(self) -> bool:
         return False
 
-    def columntype(self):
-        return CellType.HPO
+    def columntype(self) -> "CellType":
+        if self._is_ntr:
+            return CellType.NTR
+        else:
+            return CellType.HPO
 
-    def needs_attention(self):
+    def is_ntr(self) -> bool:
         """
-        :returns: True iff there was a problem with this column
+        :returns: True if this is a new term request
         :rtype: bool
         """
-        return self._error is not None
+        return self._is_ntr
 
-    def get_error(self):
+    def needs_attention(self) -> bool:
+        """
+        :returns: True iff there was a problem with this column or if this is a new term request
+        :rtype: bool
+        """
+        return self._is_ntr or self._error is not None
+
+    def get_error(self) -> str:
         return self._error
 
-    def encode(self, cell_contents):
+    def encode(self, cell_contents) -> None:
         cell_contents = str(cell_contents)
         if cell_contents == "observed":
             return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)
@@ -188,6 +199,7 @@ class CaseTemplateEncoder:
             raise ValueError(f"argument \"df\" must be pandas DataFrame but was {type(df)}")
         self._individuals = []
         self._errors = []
+        self._ntr_set = set()
         header_1 = df.columns.values.tolist()
         header_2 = df.loc[0, :].values.tolist()
         if len(header_1) != len(header_2):
@@ -202,6 +214,7 @@ class CaseTemplateEncoder:
                 raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{REQUIRED_H1_FIELDS[idx]}\" but got \"{header_1[idx]}\"")
             if header_2[idx] != REQUIRED_H2_FIELDS[idx]:
                 raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{REQUIRED_H2_FIELDS[idx]}\" but got \"{header_2[idx]}\"")
+        self._header_fields_1 = header_1
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2,hpo_cr=hpo_cr)
         data_df = df.iloc[1:]
@@ -241,8 +254,12 @@ class CaseTemplateEncoder:
                 else:
                     raise ValueError(f"Malformed template header at column {i}: \"{h1}\"")
             elif in_hpo_range:
-                encoder = HpoEncoder(h1=h1, h2=h2)
-                if encoder.needs_attention():
+                ntr =  h2 == "NTR"
+                encoder = HpoEncoder(h1=h1, h2=h2, ntr=ntr)
+                if ntr:
+                    self._ntr_set.add(h1)
+                    index_to_decoder_d[i] = encoder
+                elif encoder.needs_attention():
                     self._errors.append(encoder.get_error())
                     index_to_decoder_d[i] = NullEncoder()
                 else:
@@ -250,6 +267,10 @@ class CaseTemplateEncoder:
         if not in_hpo_range:
             raise ValueError("Did not find HPO boundary column")
         print(f"Created encoders for {len(index_to_decoder_d)} fields")
+        if len(self._ntr_set) > 0:
+            print("[WARNING] Template contains new term requests (NTR). These columns will be ignored until they are replaced with HPO terms")
+            for ntr in self._ntr_set:
+                print("\tNTR: ", ntr)
         if len(self._errors) > 0:
             for e in self._errors:
                 print(f"ERROR: {e}")
@@ -268,9 +289,11 @@ class CaseTemplateEncoder:
             encoder = self._index_to_decoder.get(i)
             cell_contents = data[i]
             if encoder is None:
-                print(f"Encoder {i} was None for data {cell_contents}")
-                print(row)
-                raise ValueError(f"Encoder {i} was None for data {cell_contents}")
+                print(f"Encoder {i} was None for data \"{cell_contents}\"")
+                self._debug_row(i, row)
+                raise ValueError(f"Encoder {i} was None for data \"{cell_contents}\"")
+            elif encoder.columntype == CellType.NTR:
+                continue ## cannot be use yet because new term request.
             encoder_type = encoder.columntype()
             if encoder_type == CellType.DATA and encoder.name in DATA_ITEMS:
                 data_items[encoder.name] = encoder.encode(cell_contents)
@@ -326,6 +349,15 @@ class CaseTemplateEncoder:
                             age_at_last_encounter=encounter_age,
                             disease=disease)
 
+    def _debug_row(self, target_idx:int, row:pd.Series):
+        row_items = list(row)
+        for j in range(len(row_items)):
+            hdr = self._header_fields_1[j]
+            if j == target_idx:
+                print(f"[{j}] *** {hdr}={row_items[j]}  ***")
+            else:
+                print(f"[{j}] {hdr}={row_items[j]}")
+
     def get_individuals(self) -> List[Individual]:
         return self._individuals
 
@@ -373,7 +405,6 @@ class CaseTemplateEncoder:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
             ppkt_list.append(phenopckt)
         return ppkt_list
-
 
     def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets") -> None:
         """write a list of Individual objects to file in GA4GH Phenopacket format
