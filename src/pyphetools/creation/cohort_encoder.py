@@ -37,8 +37,10 @@ class CohortEncoder(AbstractEncoder):
     :type individual_column_name: str
     :param metadata: GA4GH MetaData object
     :type metadata: PPkt.MetaData
-    :param agemapper:Mapper for the Age column. Defaults to AgeColumnMapper.not_provided()
-    :type agemapper: pyphetools.creation.AgeColumnMapper
+    :param age_of_onset_mapper:Mapper for the Age of onset column. Defaults to AgeColumnMapper.not_provided()
+    :type age_of_onset_mapper: pyphetools.creation.AgeColumnMapper
+    :param age_at_last_encounter_mapper:Mapper for the Age at last clinical encounter column. Defaults to AgeColumnMapper.not_provided()
+    :type age_at_last_encounter_mapper: pyphetools.creation.AgeColumnMapper
     :param sexmapper: Mapper for the Sex column. Defaults to SexColumnMapper.not_provided().
     :type sexmapper: pyphetools.creation.SexColumnMapper
     :param variant_mapper: column mapper for HGVS-encoded variant column.
@@ -52,7 +54,8 @@ class CohortEncoder(AbstractEncoder):
                 column_mapper_list,
                 individual_column_name,
                 metadata,
-                agemapper=AgeColumnMapper.not_provided(),
+                age_of_onset_mapper=AgeColumnMapper.not_provided(),
+                age_at_last_encounter_mapper=AgeColumnMapper.not_provided(),
                 sexmapper=SexColumnMapper.not_provided(),
                 variant_mapper=None,
                 delimiter=None):
@@ -74,7 +77,8 @@ class CohortEncoder(AbstractEncoder):
         self._df = df.astype(str)
         self._column_mapper_list = column_mapper_list
         self._id_column_name = individual_column_name
-        self._age_mapper = agemapper
+        self._age_of_onset_mapper = age_of_onset_mapper
+        self._age_at_last_encounter_mapper = age_at_last_encounter_mapper
         self._sex_mapper = sexmapper
         self._disease = None
         self._variant_mapper = variant_mapper
@@ -93,7 +97,7 @@ class CohortEncoder(AbstractEncoder):
         """
         df = self._df.reset_index()  # make sure indexes pair with number of rows
         individuals = []
-        age_column_name = self._age_mapper.get_column_name()
+        age_column_name = self._age_of_onset_mapper.get_column_name()
         sex_column_name = self._sex_mapper.get_column_name()
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
@@ -141,6 +145,21 @@ class CohortEncoder(AbstractEncoder):
         self._disease_dictionary = disease_d
         self._disease = None
 
+
+    def _get_age(row:pd.Series, mapper:AgeColumnMapper):
+        column_name = mapper.get_column_name()
+        if column_name == Constants.NOT_PROVIDED:
+            return NoneAge("na")
+        else:
+            age_cell_contents = row[column_name]
+            try:
+                age = mapper.map_cell(age_cell_contents)
+            except Exception as ee:
+                print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
+                age = NoneAge("na")
+            return age
+
+
     def get_individuals(self) -> List[Individual]:
         """Get a list of all Individual objects in the cohort
 
@@ -151,7 +170,8 @@ class CohortEncoder(AbstractEncoder):
         if not self._df.index.name in self._df.columns:
             df = self._df.reset_index()
         individuals = []
-        age_column_name = self._age_mapper.get_column_name()
+        age_onset_column_name = self._age_of_onset_mapper.get_column_name()
+        age_last_encounter_column_name = self._age_at_last_encounter_mapper.get_column_name()
         sex_column_name = self._sex_mapper.get_column_name()
         if self._variant_mapper is None:
             variant_colname = None
@@ -161,15 +181,8 @@ class CohortEncoder(AbstractEncoder):
             genotype_colname = self._variant_mapper.get_genotype_colname()
         for index, row in df.iterrows():
             individual_id = row[self._id_column_name]
-            if age_column_name == Constants.NOT_PROVIDED:
-                age = NoneAge("na")
-            else:
-                age_cell_contents = row[age_column_name]
-                try:
-                    age = self._age_mapper.map_cell(age_cell_contents)
-                except Exception as ee:
-                    print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
-                    age = NoneAge("na")
+            age_of_onset = CohortEncoder._get_age(row, self._age_of_onset_mapper)
+            age_last_encounter = CohortEncoder._get_age(row, self._age_at_last_encounter_mapper)
             if sex_column_name == Constants.NOT_PROVIDED:
                 sex = self._sex_mapper.map_cell(Constants.NOT_PROVIDED)
             else:
@@ -204,7 +217,8 @@ class CohortEncoder(AbstractEncoder):
                 disease = self._disease_dictionary.get(individual_id)
                 indi = Individual(individual_id=individual_id,
                                 sex=sex,
-                                age_of_onset=age,
+                                age_of_onset=age_of_onset,
+                                age_at_last_encounter=age_last_encounter,
                                 hpo_terms=hpo_terms,
                                 citation=self._metadata.get_citation(),
                                 interpretation_list=interpretation_list,
@@ -212,7 +226,8 @@ class CohortEncoder(AbstractEncoder):
             elif self._disease_dictionary is None and self._disease is not None:
                 indi = Individual(individual_id=individual_id,
                                 sex=sex,
-                                age_of_onset=age,
+                                age_of_onset=age_of_onset,
+                                age_at_last_encounter=age_last_encounter,
                                 hpo_terms=hpo_terms,
                                 citation=self._metadata.get_citation(),
                                 interpretation_list=interpretation_list,
@@ -220,8 +235,10 @@ class CohortEncoder(AbstractEncoder):
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
             individuals.append(indi)
-        if self._age_mapper.has_error():
-            print(self._age_mapper.error_summary())
+        if self._age_of_onset_mapper.has_error():
+            print(self._age_of_onset_mapper.error_summary())
+        if self._age_at_last_encounter_mapper.has_error():
+            print(self._age_at_last_encounter_mapper.error_summary())
         if self._sex_mapper.has_error():
             print(self._sex_mapper.error_summary())
         return individuals
