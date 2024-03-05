@@ -32,7 +32,7 @@ jobs:
 
         - name: Install Jupyter and register current Python as kernel
           run: |
-            python3 -m pip install ipykernel
+            python3 -m pip install ipykernel notebook
             python3 -m ipykernel install --user --name pp_env --display-name "Pyphetools (Python 3)"
 
         - name: Check out phenopacket-store
@@ -44,6 +44,9 @@ jobs:
 
         - name: Generate phenopackets
           run: |
+            which jupyter
+            which jupyter-execute
+            
             pps_dir=$(dirname $(pwd))/phenopacket-store
             
             nb=${pps_dir}/notebooks/FBN1/Palz_Marfan_2000.ipynb
