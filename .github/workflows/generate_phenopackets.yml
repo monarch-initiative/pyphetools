@@ -1,0 +1,41 @@
+name: Generate phenopackets
+
+env:
+  # We generate the phenopackets from this state
+  # of the `phenopacket-store` repository.
+  PHENOPACKET_STORE_TAG: c06a52e0  # State from Mar 5th, 2024
+
+on:
+    push:
+      branches: [ develop ]
+    pull_request:
+      branches: [ main, develop ]
+
+jobs:
+    build:
+      runs-on: ubuntu-latest
+
+      strategy:
+        fail-fast: false
+
+      steps:
+        - uses: actions/checkout@v2
+
+        - name: Initialize Python 3.11
+          uses: actions/setup-python@v4.3.1
+          with:
+            python-version: "3.11"
+
+        - name: Install pyphetools & dependencies
+          run: |
+            pip install --editable .
+
+        - name: Check out phenopacket-store
+          run: |
+            cd ..
+            git clone https://github.com/monarch-initiative/phenopacket-store.git
+            git checkout $PHENOPACKET_STORE_TAG
+
+        - name: Generate phenopackets
+          run: |
+            ls ../phenopacket-store/
