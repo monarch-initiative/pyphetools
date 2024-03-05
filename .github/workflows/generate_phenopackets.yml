@@ -17,18 +17,24 @@ jobs:
 
       strategy:
         fail-fast: false
+        matrix:
 
       steps:
         - uses: actions/checkout@v2
 
-        - name: Initialize Python 3.11
+        - name: Initialize Python 3.8
           uses: actions/setup-python@v4.3.1
           with:
-            python-version: "3.11"
+            python-version: "3.8"
 
         - name: Install pyphetools & dependencies
           run: |
-            pip install --editable .
+            python3 -m pip install --editable .
+
+        - name: Install Jupyter and register current Python as kernel
+          run: |
+            python3 -m pip install ipykernel
+            python3 -m ipykernel install --user --name pp_env --display-name "Pyphetools (Python 3)"
 
         - name: Check out phenopacket-store
           run: |
@@ -39,4 +45,7 @@ jobs:
 
         - name: Generate phenopackets
           run: |
-            ls ../phenopacket-store/
+            pps_dir=$(dirname $(pwd))/phenopacket-store
+            
+            nb=${pps_dir}/notebooks/FBN1/Palz_Marfan_2000.ipynb
+            jupyter execute --kernel_name=pp_env ${nb}
