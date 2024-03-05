@@ -3,7 +3,8 @@ name: Generate phenopackets
 env:
   # We generate the phenopackets from this state
   # of the `phenopacket-store` repository.
-  PHENOPACKET_STORE_TAG: c06a52e0  # State from Mar 5th, 2024
+  PHENOPACKET_STORE_TAG: pyphe-ci-wip
+#  PHENOPACKET_STORE_TAG: c06a52e0  # State from Mar 5th, 2024
 
 on:
     push:
@@ -14,9 +15,6 @@ on:
 jobs:
     build:
       runs-on: ubuntu-latest
-
-      strategy:
-        fail-fast: false
 
       steps:
         - uses: actions/checkout@v2
@@ -44,10 +42,24 @@ jobs:
 
         - name: Generate phenopackets
           run: |
-            which jupyter
-            which jupyter-execute
-            
+            # phenopacket-store folder
             pps_dir=$(dirname $(pwd))/phenopacket-store
             
-            nb=${pps_dir}/notebooks/FBN1/Palz_Marfan_2000.ipynb
-            jupyter execute --kernel_name=pp_env ${nb}
+            # Prepare the notebooks to run
+            declare -a fbn1_notebooks=(
+              "FBN1/Comeglio_isolated_ectopia_lentis.ipynb" 
+              "FBN1/FBN1_lipodystrophy_Lin_2020.ipynb"
+              "FBN1/Katzke_2002_Marfan.ipynb"
+              "FBN1/LeGoff_FBN1_acromicric_and_geleophysic_dysplasia.ipynb"
+              "FBN1/Loeys2010_stiff_skin_syndrome.ipynb"
+              "FBN1/Palz_Marfan_2000.ipynb"
+              "FBN1/Tiecke_2001_Marfan.ipynb"
+            )
+            
+            # Run the notebooks
+            for nb in ${fbn1_notebooks[@]} 
+            do
+              nb_path=${pps_dir}/notebooks/${nb}
+              printf "Running %s\n" ${nb_path} 
+              jupyter execute --kernel_name=pp_env ${nb_path}
+            done
