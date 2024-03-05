@@ -56,9 +56,9 @@ version = { attr = "pyphetools.__version__" }
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["notebooks", "test"]
-[tool.setuptools.package-data]
-pyphetools = ["creation/data/thresholds.tsv"]
 
+# See MANIFEST.in for the list of the data files
+# being included in the package.
 
 
 [tool.yapf]
