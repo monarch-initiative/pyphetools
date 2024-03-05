@@ -1,3 +1,5 @@
+import typing
+
 import hpotk
 import os
 from typing import Dict
@@ -13,16 +15,20 @@ class HpoParser:
     """
     Class to retrieve and parse the HPO JSON file using the HPO-Toolkit
 
-    Users probably will want to pass the path to the hp.json file, but if not, the hp.json file
-    will be downloadede each time the constructor is run
+    Users probably will want to pass the path to the hp.json file, but if not, the `hp.json` corresponding to
+    the last HPO release will be downloaded each time the constructor is run.
 
-    :param hpo_json_file: path to the hp.json file
+    `hpo_json_file` can be a URL pointing to a remote `hp.json` file.
+    Only `http` and `https` protocols are supported (no `file`).
+    Use absolute or relative path to use a local `hp.json` file.
+
+    :param hpo_json_file: path or URL to the hp.json file
     :type hpo_json_file: str, optional
     """
 
-    def __init__(self, hpo_json_file:str=None):
+    def __init__(self, hpo_json_file: typing.Optional[str] = None):
         if hpo_json_file is not None:
-            if not os.path.isfile(hpo_json_file):
+            if not hpo_json_file.startswith('http') and not os.path.isfile(hpo_json_file):
                 raise FileNotFoundError(f"Could not find hp.json file at {hpo_json_file}")
             self._ontology = hpotk.load_ontology(hpo_json_file)
         else:
