@@ -34,6 +34,7 @@ jobs:
           run: |
             cd ..
             git clone https://github.com/monarch-initiative/phenopacket-store.git
+            cd phenopacket-store
             git checkout $PHENOPACKET_STORE_TAG
 
         - name: Generate phenopackets
