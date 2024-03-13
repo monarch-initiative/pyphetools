@@ -1,3 +1,3 @@
 # Disease
 
-::: src.pyphetools.creation.Disease
+::: pyphetools.creation.Disease

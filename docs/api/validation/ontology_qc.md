@@ -1,6 +1,3 @@
 # OntologyQC
 
-::: src.pyphetools.validation.OntologyQC
-
-
-
+::: pyphetools.validation.OntologyQC

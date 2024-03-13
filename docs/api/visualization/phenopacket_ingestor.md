@@ -1,3 +1,3 @@
 # PhenopacketIngestor
 
-::: src.pyphetools.visualization.PhenopacketIngestor
+::: pyphetools.visualization.PhenopacketIngestor

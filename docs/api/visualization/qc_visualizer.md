@@ -1,3 +1,3 @@
 # QcVisualizer
 
-::: src.pyphetools.visualization.QcVisualizer
+::: pyphetools.visualization.QcVisualizer

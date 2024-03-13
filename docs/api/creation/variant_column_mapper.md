@@ -1,4 +1,4 @@
 # VariantColumnMapper
 
-::: src.pyphetools.creation.VariantColumnMapper
+::: pyphetools.creation.VariantColumnMapper
 

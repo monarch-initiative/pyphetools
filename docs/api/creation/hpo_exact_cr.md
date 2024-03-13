@@ -1,3 +1,3 @@
 # HpoExactConceptRecognizer
 
-::: src.pyphetools.creation.HpoExactConceptRecognizer
+::: pyphetools.creation.HpoExactConceptRecognizer

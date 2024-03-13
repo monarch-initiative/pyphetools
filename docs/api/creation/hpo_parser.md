@@ -1,3 +1,3 @@
 # HpoParser
 
-::: src.pyphetools.creation.HpoParser
+::: pyphetools.creation.HpoParser

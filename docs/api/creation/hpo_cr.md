@@ -1,3 +1,3 @@
 # HpoConceptRecognizer
 
-::: src.pyphetools.creation.HpoConceptRecognizer
+::: pyphetools.creation.HpoConceptRecognizer

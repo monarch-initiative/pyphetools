@@ -1,3 +1,3 @@
 # SexColumnMapper
 
-::: src.pyphetools.creation.SexColumnMapper
+::: pyphetools.creation.SexColumnMapper

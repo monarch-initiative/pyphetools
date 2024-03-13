@@ -1,3 +1,3 @@
 # HpTerm
 
-::: src.pyphetools.creation.HpTerm
+::: pyphetools.creation.HpTerm

@@ -1,2 +1,3 @@
 # VariantManager
-::: src.pyphetools.creation.VariantManager
+
+::: pyphetools.creation.VariantManager

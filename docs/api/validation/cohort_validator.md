@@ -1,6 +1,4 @@
-
 # CohortValidator
 
-
-::: src.pyphetools.validation.CohortValidator
+::: pyphetools.validation.CohortValidator
 
