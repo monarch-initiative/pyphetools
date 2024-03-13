@@ -103,6 +103,14 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          # TODO: I am not sure if `import` takes a list of inventories. In principle, it *should* take a list,
+          # but I was not able to find an example that takes multiple inventories. Investigate..
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://thejacksonlaboratory.github.io/hpo-toolkit/stable/objects.inv
+            - https://pandas.pydata.org/docs/objects.inv
+            - https://matplotlib.org/stable/objects.inv
+            - https://docs.python-requests.org/en/stable/objects.inv
           options:
             docstring_style: sphinx
 
@@ -133,7 +141,7 @@ markdown_extensions:
   - md_in_html
   - tables
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
 copyright: |
