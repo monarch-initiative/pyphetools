@@ -1,61 +1,69 @@
-import os
-import unittest
+import hpotk
+import pytest
 
-from src.pyphetools.creation import Individual, HpTerm, HpoParser
-from src.pyphetools.validation import CohortValidator
-from src.pyphetools.validation.validation_result import ErrorLevel, Category
+from pyphetools.creation import Individual, HpTerm
+from pyphetools.validation import CohortValidator
 
-HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 
 # The API requires us to pass a column name but the column name will not be used in the tests
 TEST_COLUMN = "test"
 
-HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 
-class TestCohortValidator(unittest.TestCase):
+class TestCohortValidator:
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        individual_A = Individual(individual_id="A")
-        individual_A.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
-        individual_A.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
-        individual_A.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
-        individual_B = Individual(individual_id="B")
-        individual_B.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
-        individual_B.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
-        cls._individual_A = individual_A
-        cls._individual_B = individual_B
-        parser = HpoParser(hpo_json_file=HP_JSON_FILENAME)
-        cls.hpo_cr = parser.get_hpo_concept_recognizer()
+    @pytest.fixture
+    def ind_a(self) -> Individual:
+        i = Individual(individual_id="A")
+        i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        i.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
+        i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        return i
 
+    @pytest.fixture
+    def ind_b(self) -> Individual:
+        i = Individual(individual_id="B")
+        i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        i.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
+        return i
 
-    def test_redundant_term(self):
-        cohort = [self._individual_A]
-        hpo_ontology = self.hpo_cr.get_hpo_ontology()
-        cvalidator = CohortValidator(cohort=cohort, ontology=hpo_ontology, min_hpo=1)
+    def test_redundant_term(
+            self,
+            hpo: hpotk.Ontology,
+            ind_a: Individual,
+    ):
+        cohort = [ind_a]
+        cvalidator = CohortValidator(cohort=cohort, ontology=hpo, min_hpo=1)
         validated_individuals = cvalidator.get_validated_individual_list()
-        self.assertEqual(1, len(validated_individuals))
+        assert len(validated_individuals) == 1
+
         vindindividualA = validated_individuals[0]
-        self.assertTrue(vindindividualA.has_error())
+        assert vindindividualA.has_error()
+
         errors = vindindividualA.get_validation_errors()
-        self.assertEqual(1, len(errors))
+        assert len(errors) == 1
+
         error = errors[0]
-        self.assertEqual("WARNING", error.error_level)
-        self.assertEqual("DUPLICATE", error.category)
-        self.assertEqual("<b>Deeply set eye</b> is listed multiple times", error.message)
-        self.assertEqual("HP:0000490", error.term.id)
-        self.assertEqual("Deeply set eye", error.term.label)
+        assert error.error_level == "WARNING"
+        assert error.category == "DUPLICATE"
+        assert error.message == "<b>Deeply set eye</b> is listed multiple times"
+        assert error.term.id == "HP:0000490"
+        assert error.term.label == "Deeply set eye"
 
-    def test_no_redundant_term(self):
-        cohort = [self._individual_B]
-        hpo_ontology = self.hpo_cr.get_hpo_ontology()
-        cvalidator = CohortValidator(cohort=cohort, ontology=hpo_ontology, min_hpo=1)
+    def test_no_redundant_term(
+            self,
+            hpo: hpotk.Ontology,
+            ind_b: Individual,
+    ):
+        cohort = [ind_b]
+        cvalidator = CohortValidator(cohort=cohort, ontology=hpo, min_hpo=1)
+
         validated_individuals = cvalidator.get_validated_individual_list()
-        self.assertEqual(1, len(validated_individuals))
-        vindindividualB = validated_individuals[0]
-        self.assertFalse(vindindividualB.has_error())
+        assert len(validated_individuals) == 1
 
-    def test_redundant_in_hierarchy(self):
+        vindindividualB = validated_individuals[0]
+        assert not vindindividualB.has_error()
+
+    def test_redundant_in_hierarchy(self, hpo: hpotk.Ontology):
         """
         0358596_patientA.json,ERROR,HpoAncestryValidator,Violation of the annotation propagation rule,
         "Phenotypic features of PMID_20358596_patient_A must not contain both an
@@ -66,15 +74,17 @@ class TestCohortValidator(unittest.TestCase):
         individual_C.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
         individual_C.add_hpo_term(HpTerm(hpo_id="HP:0430025", label="Bilateral facial palsy"))
         individual_C.add_hpo_term(HpTerm(hpo_id="HP:0010628", label="Facial palsy"))
-        cohort = [individual_C]
-        hpo_ontology = self.hpo_cr.get_hpo_ontology()
-        cvalidator = CohortValidator(cohort=cohort, ontology=hpo_ontology, min_hpo=1)
-        validated_individuals = cvalidator.get_validated_individual_list()
-        self.assertEqual(1, len(validated_individuals))
-        individual_C = validated_individuals[0]
-        self.assertTrue(individual_C.has_error())
-        errors = individual_C.get_validation_errors()
-        self.assertEqual(1, len(errors))
-        error = errors[0]
-        self.assertEqual("<b>Facial palsy</b> is redundant because of <b>Bilateral facial palsy</b>", error.message)
 
+        cohort = [individual_C]
+        cvalidator = CohortValidator(cohort=cohort, ontology=hpo, min_hpo=1)
+        validated_individuals = cvalidator.get_validated_individual_list()
+        assert len(validated_individuals) == 1
+
+        individual_C = validated_individuals[0]
+        assert individual_C.has_error()
+
+        errors = individual_C.get_validation_errors()
+        assert len(errors) == 1
+
+        error = errors[0]
+        assert error.message == "<b>Facial palsy</b> is redundant because of <b>Bilateral facial palsy</b>"

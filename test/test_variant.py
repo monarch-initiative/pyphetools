@@ -1,5 +1,5 @@
 import unittest
-from src.pyphetools.creation import HgvsVariant
+from pyphetools.creation import HgvsVariant
 
 # The following dictionary has the same structure as a subelement of the response from Variant Validator
 VCF_DICTIONARY =  {'alt': 'C', 'chr': '16', 'pos': '1756403', 'ref': 'CG'}

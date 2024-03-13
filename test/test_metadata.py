@@ -2,7 +2,7 @@ import unittest
 
 import pytest
 
-from src.pyphetools.creation import MetaData, Citation
+from pyphetools.creation import MetaData, Citation
 
 
 class TestMetaData(unittest.TestCase):
