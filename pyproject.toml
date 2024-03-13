@@ -27,7 +27,7 @@ keywords = [
     "GA4GH",
     "HPO"]
 dependencies = [
-    "hpo-toolkit>=0.3.0",
+    "hpo-toolkit>=0.5.0",
     "matplotlib>=3.2.0,<4.0",
     "pandas[excel]>=2.0.0,<3.0.0",  # We want to parse Excel files.
     "phenopackets>=2.0.2",
