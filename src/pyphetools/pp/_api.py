@@ -100,12 +100,12 @@ def write_msg_to_dict(
         dest[key] = out
 
 
-MM = typing.TypeVar('MM', bound=MessageMixin)
+MessageMixinOrSubclass = typing.TypeVar('MessageMixinOrSubclass', bound=MessageMixin)
 
 
 def extract_message_mixin(
         key: str,
-        cls: typing.Type[MM],
+        cls: typing.Type[MessageMixinOrSubclass],
         vals: typing.Mapping[str, typing.Any],
-) -> typing.Optional[MM]:
+) -> typing.Optional[MessageMixinOrSubclass]:
     return cls.from_dict(vals[key]) if key in vals else None
