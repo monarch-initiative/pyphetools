@@ -1,8 +1,9 @@
 import typing
 
-from .._api import MessageMixin, extract_message_mixin
 from ._individual import Individual
 from ._meta_data import MetaData
+from .._api import MessageMixin
+from ..parse import extract_message_mixin
 
 
 class Phenopacket(MessageMixin):

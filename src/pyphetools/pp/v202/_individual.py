@@ -1,7 +1,8 @@
 import typing
 
 from ._base import TimeElement
-from .._api import MessageMixin, extract_message_mixin
+from .._api import MessageMixin
+from ..parse import extract_message_mixin
 
 
 class Individual(MessageMixin):
@@ -15,7 +16,7 @@ class Individual(MessageMixin):
     ):
         # TODO: validate
         self._id = id
-        self._alt_ids = tuple(alternate_ids)
+        self._alt_ids = None if alternate_ids is None else tuple(alternate_ids)
         self._time_at_last_encounter = time_at_last_encounter
 
     @property

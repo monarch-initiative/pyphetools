@@ -1,11 +1,10 @@
-from . import v202
+"""
+A package with strongly typed Phenopacket Schema types and the code for I/O and validation.
+"""
 
-from ._api import MessageMixin
-from ._api import Serializer, Deserializer, Serializable, Deserializable
-from ._json import JsonSerializer
+from . import parse
+from . import v202
 
 __all__ = [
     'v202',
-    'MessageMixin', 'Serializer', 'Deserializer', 'Serializable', 'Deserializable',
-    'JsonSerializer',
 ]

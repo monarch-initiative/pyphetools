@@ -1,3 +1,7 @@
+"""
+A package with types corresponding to the `v2.0.2` release of the Phenopacket Schema.
+"""
+
 # The private package members structure mimic the structure of the protobuf files of the `phenopacket-schema`.
 
 from ._base import GestationalAge, Age, AgeRange, TimeElement
