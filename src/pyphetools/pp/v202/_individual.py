@@ -2,7 +2,7 @@ import typing
 
 from ._base import TimeElement
 from .._api import MessageMixin
-from ..parse import extract_message_mixin
+from ..parse import extract_message_scalar
 
 
 class Individual(MessageMixin):
@@ -48,7 +48,7 @@ class Individual(MessageMixin):
         return Individual(
             id=values['id'],
             alternate_ids=MessageMixin._extract_optional_field('alternate_ids', values),
-            time_at_last_encounter=extract_message_mixin('time_at_last_encounter', TimeElement, values),
+            time_at_last_encounter=extract_message_scalar('time_at_last_encounter', TimeElement, values),
         )
 
     def __eq__(self, other):

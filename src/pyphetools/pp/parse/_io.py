@@ -131,12 +131,27 @@ A type that is subclass of :class:`Deserializable`.
 """
 
 
-def extract_message_mixin(
+def extract_message_scalar(
         key: str,
         cls: typing.Type[D],
         vals: typing.Mapping[str, typing.Any],
 ) -> typing.Optional[D]:
     return cls.from_dict(vals[key]) if key in vals else None
+
+
+def extract_message_sequence(
+        key: str,
+        cls: typing.Type[D],
+        vals: typing.Mapping[str, typing.Any],
+) -> typing.Optional[typing.Sequence[D]]:
+    if key in vals:
+        val = vals[key]
+        if not isinstance(val, typing.Sequence):
+            raise ValueError('Bug')  # TODO: improve error handling
+        else:
+            return [cls.from_dict(item) for item in val]
+    else:
+        return None
 
 
 class Deserializer(metaclass=abc.ABCMeta):

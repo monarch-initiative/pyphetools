@@ -1,7 +1,7 @@
 import typing
 
 from .._api import MessageMixin
-from ..parse import extract_message_mixin
+from ..parse import extract_message_scalar
 
 
 class Timestamp(MessageMixin):
@@ -188,8 +188,8 @@ class Evidence(MessageMixin):
     def from_dict(values: typing.Mapping[str, typing.Any]):
         if 'evidence_code' in values:
             return Evidence(
-                evidence_code=extract_message_mixin('evidence_code', OntologyClass, values),
-                reference=extract_message_mixin('reference', ExternalReference, values),
+                evidence_code=extract_message_scalar('evidence_code', OntologyClass, values),
+                reference=extract_message_scalar('reference', ExternalReference, values),
             )
         else:
             raise ValueError(f'Blaa')  # TODO: reword
@@ -377,8 +377,8 @@ class TimeInterval(MessageMixin):
     def from_dict(values: typing.Mapping[str, typing.Any]):
         if 'start' in values and 'end' in values:
             return TimeInterval(
-                start=extract_message_mixin('start', Timestamp, values),
-                end=extract_message_mixin('end', Timestamp, values),
+                start=extract_message_scalar('start', Timestamp, values),
+                end=extract_message_scalar('end', Timestamp, values),
             )
 
     def __eq__(self, other):
@@ -580,9 +580,9 @@ class Procedure(MessageMixin):
     def from_dict(values: typing.Mapping[str, typing.Any]):
         if 'code' in values:
             return Procedure(
-                code=extract_message_mixin('code', OntologyClass, values),
-                body_site=extract_message_mixin('body_site', OntologyClass, values),
-                performed=extract_message_mixin('performed', TimeElement, values),
+                code=extract_message_scalar('code', OntologyClass, values),
+                body_site=extract_message_scalar('body_site', OntologyClass, values),
+                performed=extract_message_scalar('performed', TimeElement, values),
             )
         else:
             raise ValueError('Bug')  # TODO: reword

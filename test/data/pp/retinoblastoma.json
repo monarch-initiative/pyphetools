@@ -420,7 +420,18 @@
   "files": [{
     "uri": "file://data/germlineWgs.vcf.gz",
     "individualToFileIdentifiers": {
-      "proband A": "sample1"
+      "proband A": "sample1",
+      "proband B": "sample2"
+    },
+    "fileAttributes": {
+      "genomeAssembly": "GRCh38",
+      "fileFormat": "VCF"
+    }
+  }, {
+    "uri": "file://data/somaticWgs.vcf.gz",
+    "individualToFileIdentifiers": {
+      "proband A": "sample1",
+      "proband B": "sample2"
     },
     "fileAttributes": {
       "genomeAssembly": "GRCh38",

@@ -1,3 +1,5 @@
+import typing
+
 import pytest
 
 from pyphetools.pp.v202 import *
@@ -6,6 +8,7 @@ from pyphetools.pp.v202 import *
 @pytest.fixture(scope='package')
 def retinoblastoma(
         individual: Individual,
+        files: typing.Sequence[File],
         meta_data: MetaData,
 ) -> Phenopacket:
     """
@@ -14,6 +17,7 @@ def retinoblastoma(
     return Phenopacket(
         id='arbitrary.id',
         subject=individual,
+        files=files,
         meta_data=meta_data,
     )
 
@@ -31,6 +35,34 @@ def individual() -> Individual:
                 iso8601duration='P6M',
             )
         )
+    )
+
+
+@pytest.fixture(scope='package')
+def files() -> typing.Sequence[File]:
+    return (
+        File(
+            uri='file://data/germlineWgs.vcf.gz',
+            individual_to_file_identifiers={
+                'proband A': 'sample1',
+                'proband B': 'sample2'
+            },
+            file_attributes={
+                'genomeAssembly': 'GRCh38',
+                'fileFormat': 'VCF',
+            },
+        ),
+        File(
+            uri='file://data/somaticWgs.vcf.gz',
+            individual_to_file_identifiers={
+                'proband A': 'sample1',
+                'proband B': 'sample2'
+            },
+            file_attributes={
+                'genomeAssembly': 'GRCh38',
+                'fileFormat': 'VCF',
+            },
+        ),
     )
 
 
