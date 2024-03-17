@@ -4,4 +4,4 @@ This module contains code for validating phenopackets created by pyphetools. The
 are provided for convenience. We recommend using
 [phenopacket-tools](https://github.com/monarch-initiative/pyphetools) to validate phenopackets.
 
-::: src.pyphetools.validation
+::: pyphetools.validation

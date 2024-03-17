@@ -1,3 +1,3 @@
 # Variant
 
-::: src.pyphetools.creation.Variant
+::: pyphetools.creation.Variant

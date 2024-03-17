@@ -1,3 +1,3 @@
 # HgvsVariant
 
-::: src.pyphetools.creation.HgvsVariant
+::: pyphetools.creation.HgvsVariant

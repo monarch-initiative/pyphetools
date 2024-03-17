@@ -1,5 +1,5 @@
 # MetaData
 
-::: src.pyphetools.creation.MetaData
+::: pyphetools.creation.MetaData
 
 

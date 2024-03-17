@@ -1,3 +1,3 @@
 # VariantValidator
 
-::: src.pyphetools.creation.VariantValidator
+::: pyphetools.creation.VariantValidator

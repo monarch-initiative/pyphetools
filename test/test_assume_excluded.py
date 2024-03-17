@@ -1,6 +1,7 @@
-import unittest
 import os
-from src.pyphetools.creation import HpoParser, OptionColumnMapper
+import unittest
+
+from pyphetools.creation import HpoParser, OptionColumnMapper
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 

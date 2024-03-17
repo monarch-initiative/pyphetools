@@ -1,4 +1,3 @@
 # Thresholder
 
-
-::: src.pyphetools.creation.Thresholder
+::: pyphetools.creation.Thresholder

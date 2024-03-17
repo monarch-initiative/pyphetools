@@ -325,7 +325,10 @@ class Individual:
             php.interpretations.append(interpretation)
         if self._citation is not None:
             # overrides the "general" setting of the external reference for the entire cohort
-            metadata.external_references.clear()
+            while len(metadata.external_references) > 0:
+                # `protobuf` devs must have removed `clear()` method
+                # This is a workaround to clear the list of external references.
+                _ = metadata.external_references.pop()
             extref = PPKt.ExternalReference()
             extref.id = self._citation.pmid
             pm = self._citation.pmid.replace("PMID:", "")

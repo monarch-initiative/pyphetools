@@ -1,5 +1,4 @@
 # DiseaseIdColumnMapper
 
-
-::: src.pyphetools.creation.DiseaseIdColumnMapper
+::: pyphetools.creation.DiseaseIdColumnMapper
 

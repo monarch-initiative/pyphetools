@@ -1,8 +1,8 @@
 import unittest
 import os
 import phenopackets as PPkt
-from src.pyphetools.visualization import SimpleVariant
-from src.pyphetools.creation import StructuralVariant
+from pyphetools.visualization import SimpleVariant
+from pyphetools.creation import StructuralVariant
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 

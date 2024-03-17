@@ -1,5 +1,5 @@
 import unittest
-from src.pyphetools.creation import AgeOfDeathColumnMapper, Individual, MetaData
+from pyphetools.creation import AgeOfDeathColumnMapper, Individual, MetaData
 import phenopackets as PPKt
 
 

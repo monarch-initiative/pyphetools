@@ -1,6 +1,6 @@
 import unittest
 
-from src.pyphetools.creation import HpTerm, HpTermBuilder, IsoAge
+from pyphetools.creation import HpTerm, HpTermBuilder, IsoAge
 
 
 class TestHpTerm(unittest.TestCase):

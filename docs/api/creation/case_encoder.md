@@ -1,3 +1,3 @@
 # CaseEncoder
 
-::: src.pyphetools.creation.CaseEncoder
+::: pyphetools.creation.CaseEncoder

@@ -50,7 +50,7 @@ class CohortEncoder(AbstractEncoder):
 
     def __init__(self,
                 df,
-                hpo_cr,
+                hpo_cr: HpoConceptRecognizer,
                 column_mapper_list,
                 individual_column_name,
                 metadata,
@@ -84,9 +84,6 @@ class CohortEncoder(AbstractEncoder):
         self._variant_mapper = variant_mapper
         self._disease_dictionary = None
         self._delimiter = delimiter
-        ontology = hpo_cr.get_hpo_ontology()
-        if ontology is None:
-            raise ValueError("ontology cannot be None")
 
     def preview_dataframe(self):
         """

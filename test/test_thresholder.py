@@ -1,5 +1,5 @@
 import unittest
-from src.pyphetools.creation import Thresholder
+from pyphetools.creation import Thresholder
 
 
 

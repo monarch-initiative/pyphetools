@@ -1,3 +1,3 @@
 # OnsetCalculator
 
-::: src.pyphetools.visualization.onset_calculator.OnsetCalculator
+::: pyphetools.visualization.onset_calculator.OnsetCalculator

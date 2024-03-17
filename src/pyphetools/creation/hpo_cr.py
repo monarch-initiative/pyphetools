@@ -9,9 +9,6 @@ class HpoConceptRecognizer(metaclass=abc.ABCMeta):
     This abstract class acts as an interface for classes that implement parse_cell to perform HPO-based concept recognition.
     """
 
-    def __init__(self):
-        pass
-
     @abc.abstractmethod
     def parse_cell(self, cell_contents, custom_d=None) -> List[HpTerm]:
         """
@@ -61,13 +58,5 @@ class HpoConceptRecognizer(metaclass=abc.ABCMeta):
     def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
         """
         Create a dictionary of SimpleColumnMappers
-        """
-        pass
-
-    @abc.abstractmethod
-    def get_hpo_ontology(self):
-        """
-        :returns: a reference to the HPO-toolkit Ontology object for the HPO
-        :rtype: hpotk.MinimalOntology
         """
         pass

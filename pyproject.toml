@@ -6,12 +6,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyphetools"
-# version in __init__
 requires-python = ">=3.8"
 description = "Generate and work with GA4GH phenopackets"
 readme = "README.md"
 authors = [
-    {name = "Peter Robinson", email="peter.robinson@jax.org"},
+    {name = "Peter Robinson", email="peter.robinson@bih-charite.de"},
+    {name = "Daniel Danis", email="daniel.gordon.danis@protonmail.com"},
 ]
 license = { file = "LICENSE" }
 classifiers = [
@@ -26,18 +26,28 @@ keywords = [
     "Human Phenotype Ontology",
     "GA4GH",
     "HPO"]
-dependencies = [
-    "hpo-toolkit>=0.3.0",
-    "matplotlib",
-    "openpyxl",
-    "pandas",
-    "phenopackets",
-    "protobuf",
-    "requests"
-]
+
+# version in __init__
 dynamic = ["version"]
+
+dependencies = [
+    "hpo-toolkit>=0.5.0,<0.6.0",
+    "matplotlib>=3.2.0,<4.0",
+    "pandas[excel]>=2.0.0,<3.0.0",  # We want to parse Excel files.
+    "phenopackets>=2.0.2",
+    "protobuf>=3.15.0,<4.0.0",
+    "requests>=2.25.0,<3.0",
+]
+
 [project.optional-dependencies]
-test = ["pytest"]
+test = ["pytest>=7.0.0,<8.0.0"]
+docs = [
+    'mkdocs-material[imaging]>=9.5.10,<10',
+    'mkdocs-material-extensions>=1.3,<2.0',
+    'mkdocstrings[python]>=0.22,<1.0',
+    'pillow',
+    'cairosvg',
+]
 
 
 [project.urls]
@@ -47,19 +57,16 @@ documentation = "https://github.com/monarch-initiative/pyphetools"
 bugtracker = "https://github.com/monarch-initiative/pyphetools/issues"
 
 
-
-
 [tool.setuptools]
-package-dir = { "" = "." }
+package-dir = { "" = "src" }
 zip-safe = false
+
 [tool.setuptools.dynamic]
 version = { attr = "pyphetools.__version__" }
-[tool.setuptools.packages.find]
-where = ["src"]
-exclude = ["notebooks", "test"]
-[tool.setuptools.package-data]
-pyphetools = ["creation/data/thresholds.tsv"]
 
+
+# See MANIFEST.in for the list of the data files
+# being included in the package.
 
 
 [tool.yapf]

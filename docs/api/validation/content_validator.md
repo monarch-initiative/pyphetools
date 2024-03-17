@@ -1,4 +1,3 @@
 # ContentValidator
 
-
-::: src.pyphetools.validation.ContentValidator
+::: pyphetools.validation.ContentValidator

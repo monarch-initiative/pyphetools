@@ -73,9 +73,7 @@ class CaseEncoder:
         else:
             print(f"Warning: did not recognize sex symbol \"{sex}\"")
             sex_symbol = Constants.UNKNOWN_SEX_SYMBOL
-        ontology = hpo_cr.get_hpo_ontology()
-        if ontology is None:
-            raise ValueError("ontology cannot be None")
+
         self._individual = Individual(individual_id=individual_id, sex=sex_symbol, age_of_onset=age_of_onset,
                                     age_at_last_encounter=age_at_last_exam)
         if disease is not None:

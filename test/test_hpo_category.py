@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.pyphetools.visualization import HpoCategorySet
+from pyphetools.visualization import HpoCategorySet
 
 from hpotk.ontology.load.obographs import load_ontology
 

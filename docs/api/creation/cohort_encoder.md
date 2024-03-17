@@ -1,3 +1,3 @@
 # CohortEncoder
 
-::: src.pyphetools.creation.CohortEncoder
+::: pyphetools.creation.CohortEncoder

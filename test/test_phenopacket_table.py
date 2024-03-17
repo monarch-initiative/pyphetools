@@ -1,6 +1,6 @@
 import unittest
 import os
-from src.pyphetools.visualization import PhenopacketTable
+from pyphetools.visualization import PhenopacketTable
 
 HP_JSON_FILENAME = os.path.join(os.path.dirname(__file__), 'data', 'hp.json')
 

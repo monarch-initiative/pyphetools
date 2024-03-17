@@ -1,4 +1,3 @@
 # ThresholdedColumnMapper
 
-
-::: src.pyphetools.creation.ThresholdedColumnMapper
+::: pyphetools.creation.ThresholdedColumnMapper
