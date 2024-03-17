@@ -5,9 +5,11 @@ pyphetools is a Python package for creating [GA4GH phenopackets](https://phenopa
 from tabular data such as databases or supplemental files found in the medical literature.
 
 
-### Feedback
-
-
+- **GitHub**:
+Source code is available at the [pyphetools GitHub repository](https://github.com/monarch-initiative/pyphetools){:target="\_blank"}.
+- **PyPI**:
+pyphetools has been released as a Python package as. See its [PyPI project page](https://pypi.org/project/pyphetools/).
+- **Feedback**:
 The best place to leave feedback, ask questions, and report bugs is the
 [Pyphetools Issue Tracker](https://github.com/monarch-initiative/pyphetools/issues){:target="\_blank"}.
 

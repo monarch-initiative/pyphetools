@@ -12,6 +12,7 @@ import os
 import re
 import pandas as pd
 from google.protobuf.json_format import MessageToJson
+import hpotk
 import phenopackets as PPKt
 
 
@@ -166,18 +167,20 @@ class NullEncoder(CellEncoder):
         return CellType.NULL
 
 EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "disease_label",
-                    "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
+                    "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2",
+                    "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
 
-DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "transcript",
-                            "allele_1", "allele_2",  "age_of_onset","age_at_last_encounter", "sex"}
+DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "HGNC_id",
+                "gene_symbol", "transcript", "allele_1", "allele_2",  "age_of_onset",
+                "age_at_last_encounter", "sex"}
 
 # note that the allele_2 field is option
 REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id", "disease_label",
-                        "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
+                    "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
 ALLELE_2_IDX = 8
 
-REQUIRED_H2_FIELDS = ["str", "str",	"str", "optional", "str", "str", "str",	"str", "optional",
-                        "str", "age", "age", "M:F:O:U", "na"]
+REQUIRED_H2_FIELDS = ["CURIE", "str",	"str", "optional", "CURIE", "str", "CURIE",	"str",
+                        "optional", "str", "age", "age", "M:F:O:U", "na"]
 
 class CaseTemplateEncoder:
     """Class to encode data from user-provided Excel template.
@@ -192,7 +195,7 @@ class CaseTemplateEncoder:
 
     HPO_VERSION = None
 
-    def __init__(self, df:pd.DataFrame, hpo_cr:HpoConceptRecognizer, created_by:str) -> None:
+    def __init__(self, df:pd.DataFrame, hpo_cr:HpoConceptRecognizer, created_by:str, hpo_ontology:hpotk.MinimalOntology) -> None:
         """constructor
         """
         if not isinstance(df, pd.DataFrame):
@@ -216,7 +219,7 @@ class CaseTemplateEncoder:
                 raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{REQUIRED_H2_FIELDS[idx]}\" but got \"{header_2[idx]}\"")
         self._header_fields_1 = header_1
         self._n_columns = len(header_1)
-        self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2,hpo_cr=hpo_cr)
+        self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
         data_df = df.iloc[1:]
         self._is_biallelic = "allele_2" in header_1
         self._allele1_d = {}
@@ -227,7 +230,7 @@ class CaseTemplateEncoder:
             self._allele1_d[individual.id] = row["allele_1"]
             if self._is_biallelic:
                 self._allele2_d[individual.id] = row["allele_2"]
-        CaseTemplateEncoder.HPO_VERSION = hpo_cr.get_hpo_ontology().version
+        CaseTemplateEncoder.HPO_VERSION = hpo_ontology.version
         self._created_by = created_by
         self._metadata_d = {}
         for i in self._individuals:
@@ -236,7 +239,7 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
 
-    def  _process_header(self, header_1:List, header_2:List, hpo_cr:HpoConceptRecognizer, ) -> Dict[int, CellEncoder]:
+    def  _process_header(self, header_1:List, header_2:List, hpo_cr:HpoConceptRecognizer) -> Dict[int, CellEncoder]:
         index_to_decoder_d = {}
         in_hpo_range = False
         for i in range(self._n_columns):

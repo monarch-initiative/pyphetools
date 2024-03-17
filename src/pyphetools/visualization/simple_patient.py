@@ -33,13 +33,18 @@ class SimplePatient:
         subj = ppack.subject
         if not subj.HasField("id"):
             raise ValueError("Phenopacket subjects must have an id field to be used with this package")
+            self._subject_id = self._phenopacket_id
         else:
             self._subject_id = subj.id
         self._time_at_last_encounter = None
         if subj.HasField("time_at_last_encounter"):
-            time_at_last_encounter = subj.time_at_last_encounter.
+            time_at_last_encounter = phenopackets.TimeElement()
+            time_at_last_encounter.CopyFrom(subj.time_at_last_encounter)
             if time_at_last_encounter.HasField("age"):
                 self._time_at_last_encounter = time_at_last_encounter.age.iso8601duration
+            elif time_at_last_encounter.HasField("ontology_class"):
+                clz = time_at_last_encounter.ontology_class
+                self._time_at_last_encounter = f"{clz.label} ({clz.id})"
         if ppack.subject.sex == phenopackets.MALE:
             self._sex = "MALE"
         elif ppack.subject.sex == phenopackets.FEMALE:
