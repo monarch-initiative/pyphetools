@@ -28,18 +28,18 @@ class SimplePatient:
         excluded_hpo_terms = defaultdict(HpTerm)
         self._by_age_dictionary = defaultdict(list)
         self._phenopacket_id = ppack.id
-        if ppack.subject is None:
+        if not ppack.HasField("subject"):
             raise ValueError("Phenopackets must have a subject message to be used with this package")
         subj = ppack.subject
-        if subj.id is None:
+        if not subj.HasField("id"):
             raise ValueError("Phenopacket subjects must have an id field to be used with this package")
         else:
             self._subject_id = subj.id
-        if subj.time_at_last_encounter is None or subj.time_at_last_encounter.age.iso8601duration is None:
-            print("Warning: No age found for phenopacket")
-            self._time_at_last_encounter = None
-        else:
-            self._time_at_last_encounter = subj.time_at_last_encounter.age.iso8601duration
+        self._time_at_last_encounter = None
+        if subj.HasField("time_at_last_encounter"):
+            time_at_last_encounter = subj.time_at_last_encounter.
+            if time_at_last_encounter.HasField("age"):
+                self._time_at_last_encounter = time_at_last_encounter.age.iso8601duration
         if ppack.subject.sex == phenopackets.MALE:
             self._sex = "MALE"
         elif ppack.subject.sex == phenopackets.FEMALE:
@@ -118,23 +118,20 @@ class SimplePatient:
         return SimplePatient(ga4gh_phenopacket=ppack)
 
 
-    def get_phenopacket_id(self):
+    def get_phenopacket_id(self) -> str:
         return self._phenopacket_id
 
-    def get_subject_id(self):
+    def get_subject_id(self) -> str:
         return self._subject_id
 
     def get_sex(self):
         return self._sex
 
-    def get_age(self):
-        return self._time_at_last_encounter
+    def get_age(self)-> str:
+        return self._time_at_last_encounter or "n/a"
 
-    def get_disease(self):
-        if self._disease is None:
-            return "n/a"
-        else:
-            return self._disease
+    def get_disease(self) -> str:
+        return self._disease or "n/a"
 
     def get_observed_hpo_d(self):
         """
