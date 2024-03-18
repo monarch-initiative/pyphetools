@@ -1,5 +1,9 @@
 import typing
 
+import phenopackets as pp202
+from google.protobuf.message import Message
+from google.protobuf.timestamp_pb2 import Timestamp as PbTimestamp
+
 from .._api import MessageMixin
 from ..parse import extract_message_scalar
 
@@ -15,6 +19,24 @@ class Timestamp(MessageMixin):
     @staticmethod
     def from_dict(values: typing.Mapping[str, typing.Any]):
         return Timestamp()
+
+    def to_message(self) -> Message:
+        # ts = PbTimestamp()
+        # # TODO:
+        # return ts
+        raise NotImplementedError()
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return PbTimestamp
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, PbTimestamp):
+            # TODO: implement
+            raise NotImplementedError()
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
         return isinstance(other, Timestamp)
@@ -74,6 +96,26 @@ class OntologyClass(MessageMixin):
                 id=values['id'],
                 label=values['label'],
             )
+
+    def to_message(self) -> Message:
+        return pp202.OntologyClass(
+            id=self._id,
+            label=self._label,
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.OntologyClass
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.OntologyClass):
+            return OntologyClass(
+                id=msg.id,
+                label=msg.label,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
         return isinstance(other, OntologyClass) \
@@ -140,6 +182,28 @@ class ExternalReference(MessageMixin):
             description=MessageMixin._extract_optional_field('description', values),
         )
 
+    def to_message(self) -> Message:
+        return pp202.ExternalReference(
+            id=self._id,
+            reference=self._reference,
+            description=self._description,
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.ExternalReference
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.ExternalReference):
+            return ExternalReference(
+                id=msg.id,
+                reference=msg.reference,
+                description=msg.description,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, ExternalReference) \
             and self._id == other._id \
@@ -155,7 +219,7 @@ class Evidence(MessageMixin):
     def __init__(
             self,
             evidence_code: OntologyClass,
-            reference: typing.Optional[ExternalReference],
+            reference: typing.Optional[ExternalReference] = None,
     ):
         self._evidence_code = evidence_code
         self._reference = reference
@@ -194,6 +258,26 @@ class Evidence(MessageMixin):
         else:
             raise ValueError(f'Blaa')  # TODO: reword
 
+    def to_message(self) -> Message:
+        return pp202.Evidence(
+            evidence_code=self._evidence_code.to_message(),
+            reference=self._reference.to_message(),
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Evidence
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.Evidence):
+            return Evidence(
+                evidence_code=OntologyClass.from_message(msg.evidence_code),
+                reference=ExternalReference.from_message(msg.reference),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, Evidence) \
             and self._evidence_code == other._evidence_code \
@@ -208,7 +292,7 @@ class GestationalAge(MessageMixin):
     def __init__(
             self,
             weeks: int,
-            days: typing.Optional[int],
+            days: typing.Optional[int] = None,
     ):
         # TODO: validate
         self._weeks = weeks
@@ -250,6 +334,26 @@ class GestationalAge(MessageMixin):
         else:
             raise ValueError('Bug')  # TODO: better message
 
+    def to_message(self) -> Message:
+        return pp202.GestationalAge(
+            weeks=self._weeks,
+            days=self._days,
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.GestationalAge
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.GestationalAge):
+            return GestationalAge(
+                weeks=msg.weeks,
+                days=msg.days,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, GestationalAge) \
             and self._weeks == other._weeks \
@@ -285,6 +389,24 @@ class Age(MessageMixin):
             return Age(iso8601duration=values['iso8601duration'])
         else:
             raise ValueError('Cannot deserialize')  # TODO: wording
+
+    def to_message(self) -> Message:
+        return pp202.Age(
+            iso8601duration=self._iso8601duration,
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Age
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.Age):
+            return Age(
+                iso8601duration=msg.iso8601duration,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
         return isinstance(other, Age) \
@@ -334,6 +456,26 @@ class AgeRange(MessageMixin):
         else:
             raise ValueError('Cannot deserialize')  # TODO: wording
 
+    def to_message(self) -> Message:
+        return pp202.AgeRange(
+            start=self._start.to_message(),
+            end=self._end.to_message(),
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.AgeRange
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.AgeRange):
+            return AgeRange(
+                start=Age.from_message(msg.start),
+                end=Age.from_message(msg.end),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, AgeRange) \
             and self._start == other._start \
@@ -381,6 +523,26 @@ class TimeInterval(MessageMixin):
                 end=extract_message_scalar('end', Timestamp, values),
             )
 
+    def to_message(self) -> Message:
+        return pp202.TimeInterval(
+            start=self._start.to_message(),
+            end=self._end.to_message(),
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.TimeInterval
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.TimeInterval):
+            return TimeInterval(
+                start=Timestamp.from_message(msg.start),
+                end=Timestamp.from_message(msg.end),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, TimeInterval) \
             and self._start == other._start \
@@ -391,6 +553,11 @@ class TimeInterval(MessageMixin):
 
 
 class TimeElement(MessageMixin):
+    """
+    TODO: better description
+
+    **Important**: `TimeElement` must be provided with exactly one argument: either `gestational_age`, `age`, ..., or `interval`.
+    """
 
     def __init__(
             self,
@@ -401,11 +568,13 @@ class TimeElement(MessageMixin):
             timestamp: typing.Optional[Timestamp] = None,
             interval: typing.Optional[TimeInterval] = None,
     ):
-        # exactly one one-of field must be set!
+        # Exactly one of the one-of fields must be set!
         one_ofs = (gestational_age, age, age_range, ontology_class, timestamp, interval)
         if sum(1 for arg in one_ofs if arg is not None) != 1:
-            # TODO - better error
-            raise ValueError('Some error happened here!')
+            cnt = sum(1 for arg in one_ofs if arg is not None)
+            raise ValueError(
+                f'Time element must be provided with exactly 1 argument but {cnt} arguments were provided!')
+
         if gestational_age is not None:
             self._discriminant = 6
             self._val = gestational_age
@@ -504,6 +673,50 @@ class TimeElement(MessageMixin):
         else:
             raise ValueError('Bug')  # TODO: better message
 
+    def to_message(self) -> Message:
+        msg = pp202.TimeElement()
+        val = self._val.to_message()
+        if self._discriminant == 1:
+            msg.age.CopyFrom(val)
+        elif self._discriminant == 2:
+            msg.age_range.CopyFrom(val)
+        elif self._discriminant == 3:
+            msg.ontology_class.CopyFrom(val)
+        elif self._discriminant == 4:
+            msg.timestamp.CopyFrom(val)
+        elif self._discriminant == 5:
+            msg.interval.CopyFrom(val)
+        elif self._discriminant == 6:
+            msg.gestational_age.CopyFrom(val)
+        else:
+            raise ValueError(f'Invalid discriminant {self._discriminant}')
+        return msg
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.TimeElement
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.TimeElement):
+            case = msg.WhichOneof('element')
+            if case == 'gestational_age':
+                return TimeElement(gestational_age=GestationalAge.from_message(msg.gestational_age))
+            elif case == 'age':
+                return TimeElement(age=Age.from_message(msg.age))
+            elif case == 'age_range':
+                return TimeElement(age_range=AgeRange.from_message(msg.age_range))
+            elif case == 'ontology_class':
+                return TimeElement(ontology_class=OntologyClass.from_message(msg.ontology_class))
+            elif case == 'timestamp':
+                return TimeElement(timestamp=Timestamp.from_message(msg.timestamp))
+            elif case == 'interval':
+                return TimeElement(interval=TimeInterval.from_message(msg.interval))
+            else:
+                raise ValueError(f'Unknown one of field set {case}')
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, TimeElement) \
             and self._discriminant == other._discriminant \
@@ -533,8 +746,8 @@ class Procedure(MessageMixin):
     def __init__(
             self,
             code: OntologyClass,
-            body_site: typing.Optional[OntologyClass],
-            performed: typing.Optional[TimeElement],
+            body_site: typing.Optional[OntologyClass] = None,
+            performed: typing.Optional[TimeElement] = None,
     ):
         self._code = code
         self._body_site = body_site
@@ -587,6 +800,28 @@ class Procedure(MessageMixin):
         else:
             raise ValueError('Bug')  # TODO: reword
 
+    def to_message(self) -> Message:
+        return pp202.Procedure(
+            code=self._code.to_message(),
+            body_site=self._body_site.to_message(),
+            performed=self._performed.to_message()
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Procedure
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.Procedure):
+            return Procedure(
+                code=OntologyClass.from_message(msg.code),
+                body_site=OntologyClass.from_message(msg.body_site),
+                performed=TimeElement.from_message(msg.performed),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, Procedure) \
             and self._code == other._code \
@@ -602,13 +837,14 @@ class File(MessageMixin):
     def __init__(
             self,
             uri: str,
-            individual_to_file_identifiers: typing.Optional[typing.Mapping[str, str]],
-            file_attributes: typing.Optional[typing.Mapping[str, str]],
+            individual_to_file_identifiers: typing.Optional[typing.Mapping[str, str]] = None,
+            file_attributes: typing.Optional[typing.Mapping[str, str]] = None,
     ):
         self._uri = uri
-        self._individual_to_file_identifiers = None if individual_to_file_identifiers is None else dict(
-            individual_to_file_identifiers)
-        self._file_attributes = None if file_attributes is None else dict(file_attributes)
+        self._individual_to_file_identifiers = dict() \
+            if individual_to_file_identifiers is None \
+            else dict(individual_to_file_identifiers)
+        self._file_attributes = dict() if file_attributes is None else dict(file_attributes)
 
     @property
     def uri(self) -> str:
@@ -619,11 +855,11 @@ class File(MessageMixin):
         self._uri = value
 
     @property
-    def individual_to_file_identifiers(self) -> typing.Mapping[str, str]:
+    def individual_to_file_identifiers(self) -> typing.MutableMapping[str, str]:
         return self._individual_to_file_identifiers
 
     @property
-    def file_attributes(self) -> typing.Mapping[str, str]:
+    def file_attributes(self) -> typing.MutableMapping[str, str]:
         return self._file_attributes
 
     @staticmethod
@@ -641,6 +877,31 @@ class File(MessageMixin):
         else:
             raise ValueError('Bug')  # TODO: reword
 
+    def to_message(self) -> Message:
+        file = pp202.File(uri=self._uri)
+        for k, v in self._individual_to_file_identifiers.items():
+            file.individual_to_file_identifiers[k] = v
+
+        for k, v in self._file_attributes.items():
+            file.file_attributes[k] = v
+
+        return file
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.File
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.File):
+            return File(
+                uri=msg.uri,
+                individual_to_file_identifiers=msg.individual_to_file_identifiers,
+                file_attributes=msg.file_attributes,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
     def __eq__(self, other):
         return isinstance(other, File) and self._uri == other._uri \
             and self._individual_to_file_identifiers == other._individual_to_file_identifiers \
@@ -649,5 +910,5 @@ class File(MessageMixin):
     def __repr__(self):
         return 'File(' \
                f'uri={self._uri},' \
-               f' individual_to_file_identifiers={self._individual_to_file_identifiers}, ' \
+               f' individual_to_file_identifiers={self._individual_to_file_identifiers},' \
                f' file_attributes={self._file_attributes})'

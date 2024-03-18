@@ -1,6 +1,7 @@
 import abc
 
-from .parse import Serializable, Deserializable
+from .parse import Serializable, Deserializable, FromProtobuf, ToProtobuf
+
 
 # TODO:
 # - There is a problem with map<string, string> because it is represented as a JSON object
@@ -8,7 +9,8 @@ from .parse import Serializable, Deserializable
 # - We do not validate the values, just their presence and type
 
 
-class MessageMixin(Serializable, Deserializable, metaclass=abc.ABCMeta):
+class MessageMixin(Serializable, Deserializable, FromProtobuf, ToProtobuf,
+                   metaclass=abc.ABCMeta):
 
     # MANDATORY
     @abc.abstractmethod

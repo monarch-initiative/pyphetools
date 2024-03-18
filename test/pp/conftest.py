@@ -15,7 +15,7 @@ def retinoblastoma(
     Phenopacket with the same values that we can find in `test/data/pp/retinoblastoma.json`.
     """
     return Phenopacket(
-        id='arbitrary.id',
+        id='example.retinoblastoma.phenopacket.id',
         subject=individual,
         files=files,
         meta_data=meta_data,

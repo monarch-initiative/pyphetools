@@ -15,7 +15,7 @@ class TestMessageMixin:
         individual = Individual.from_dict(payload)
 
         assert individual.id == 'example'
-        assert individual.alternate_ids == ('other', 'yet', 'something')
+        assert individual.alternate_ids == ['other', 'yet', 'something']
         assert individual.time_at_last_encounter.age.iso8601duration == 'P11Y6M'
 
     def test_round_trip(self, retinoblastoma: Phenopacket):
@@ -24,4 +24,4 @@ class TestMessageMixin:
 
         other = Phenopacket.from_dict(out)
 
-        assert retinoblastoma == other
+        assert other == retinoblastoma

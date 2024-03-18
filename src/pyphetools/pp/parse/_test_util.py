@@ -1,6 +1,7 @@
 import pytest
 
 from ._util import CaseConverter
+# from ._util import HierarchicalKeyMapper
 
 
 class TestCaseConverter:
@@ -54,3 +55,52 @@ class TestCaseConverter:
         actual = converter.snake_to_camel(payload)
 
         assert actual == expected
+
+
+# class TestHierarchicalKeyMapper:
+#
+#     @pytest.fixture
+#     def payload(self) -> typing.Mapping[str, typing.Any]:
+#         payload = """
+#         {
+#           "files": [
+#             {
+#               "uri": "file://data/germlineWgs.vcf.gz",
+#               "individual_to_file_identifiers": {
+#                 "proband A": "sample1",
+#                 "proband B": "sample2"
+#               },
+#               "file_attributes": {
+#                 "genome_assembly": "GRCh38",
+#                 "file_format": "VCF"
+#               }
+#             }, {
+#               "uri": "file://data/somaticWgs.vcf.gz",
+#               "individual_to_file_identifiers": {
+#                 "proband A": "sample1",
+#                 "proband B": "sample2"
+#               },
+#               "file_attributes": {
+#                 "genome_assembly": "GRCh38",
+#                 "file_format": "VCF"
+#               }
+#             }
+#           ]
+#         }
+#         """
+#         return json.loads(payload)
+#
+#
+#     @pytest.fixture
+#     def case_converter(self) -> CaseConverter:
+#         return CaseConverter()
+#
+#     def test_remap(
+#             self,
+#             payload: typing.Mapping[str, typing.Any],
+#             case_converter: CaseConverter,
+#     ):
+#         mapper = HierarchicalKeyMapper(blacklist=('individual_to_file_identifiers',))
+#
+#         remapped = mapper.remap(case_converter.snake_to_camel, payload)
+#         print(remapped)

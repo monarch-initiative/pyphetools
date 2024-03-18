@@ -1,10 +1,14 @@
 import typing
 
+import phenopackets as pp202
+
+from google.protobuf.message import Message
+
 from ._base import File
 from ._individual import Individual
 from ._meta_data import MetaData
 from .._api import MessageMixin
-from ..parse import extract_message_scalar, extract_message_sequence
+from ..parse import extract_message_scalar, extract_message_sequence, extract_pb_message_scalar, extract_pb_message_seq
 
 
 class Phenopacket(MessageMixin):
@@ -19,7 +23,7 @@ class Phenopacket(MessageMixin):
     ):
         self._id = id
         self._subject = subject
-        self._files = None if files is None else list(files)
+        self._files = [] if files is None else list(files)
         self._meta_data = meta_data
 
     @property
@@ -39,7 +43,7 @@ class Phenopacket(MessageMixin):
         self._subject = value
 
     @property
-    def files(self) -> typing.Optional[typing.MutableSequence[File]]:
+    def files(self) -> typing.MutableSequence[File]:
         return self._files
 
     @property
@@ -66,6 +70,30 @@ class Phenopacket(MessageMixin):
             )
         else:
             raise ValueError('Bug')  # TODO: better name
+
+    def to_message(self) -> Message:
+        return pp202.Phenopacket(
+            id=self._id,
+            subject=self._subject.to_message(),
+            files=(f.to_message() for f in self._files),
+            meta_data=self._meta_data.to_message(),
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Phenopacket
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, pp202.Phenopacket):
+            return Phenopacket(
+                id=msg.id,
+                subject=extract_pb_message_scalar('subject', Individual, msg),
+                files=extract_pb_message_seq('files', File, msg),
+                meta_data=extract_pb_message_scalar('meta_data', MetaData, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
         return isinstance(other, Phenopacket) \

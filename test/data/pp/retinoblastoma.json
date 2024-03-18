@@ -1,5 +1,5 @@
 {
-  "id": "arbitrary.id",
+  "id": "example.retinoblastoma.phenopacket.id",
   "subject": {
     "id": "proband A",
     "alternateIds": ["some", "other", "identifiers"],

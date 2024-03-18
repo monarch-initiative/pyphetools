@@ -127,7 +127,7 @@ class Deserializable(metaclass=abc.ABCMeta):
 
 D = typing.TypeVar('D', bound=Deserializable)
 """
-A type that is subclass of :class:`Deserializable`.
+A type that is a subclass of :class:`Deserializable`.
 """
 
 
