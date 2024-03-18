@@ -31,8 +31,8 @@ class SimplePatient:
         if not ppack.HasField("subject"):
             raise ValueError("Phenopackets must have a subject message to be used with this package")
         subj = ppack.subject
-        if not subj.HasField("id"):
-            raise ValueError("Phenopacket subjects must have an id field to be used with this package")
+        if not subj.id:
+            # This means the subject identifier was not set. This should never happen but is not critical.
             self._subject_id = self._phenopacket_id
         else:
             self._subject_id = subj.id
