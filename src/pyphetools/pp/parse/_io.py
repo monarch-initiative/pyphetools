@@ -1,4 +1,5 @@
 import abc
+import enum
 import io
 import typing
 
@@ -60,8 +61,10 @@ class Serializable(metaclass=abc.ABCMeta):
             val = {}
             field.to_dict(val)
             out[name] = val
+        elif isinstance(field, enum.Enum):
+            out[name] = field.name
         else:
-            raise ValueError('Unexpected field')
+            raise ValueError(f'Unexpected field {field}')
 
     @staticmethod
     def _put_field_to_sequence(
@@ -83,9 +86,11 @@ class Serializable(metaclass=abc.ABCMeta):
             for k, v in field.items():
                 Serializable._put_field_to_mapping(k, v, val)
             out.append(val)
+        elif isinstance(field, enum.Enum):
+            out.append(field.name)
         else:
             # We should not have to process a sequence within a sequence.
-            raise ValueError('Unexpected field')
+            raise ValueError(f'Unexpected field {field}')
 
 
 class Serializer(metaclass=abc.ABCMeta):
@@ -105,6 +110,12 @@ class Serializer(metaclass=abc.ABCMeta):
         Serialize a value `val` into the provided IO object `fp`.
         """
         pass
+
+
+E = typing.TypeVar('E', bound=enum.Enum)
+"""
+A type that is a subclass of :class:`enumEnum`.
+"""
 
 
 class Deserializable(metaclass=abc.ABCMeta):
@@ -127,6 +138,14 @@ class Deserializable(metaclass=abc.ABCMeta):
             vals: typing.Mapping[str, typing.Any],
     ) -> typing.Optional[typing.Any]:
         return vals[key] if key in vals else None
+
+    @staticmethod
+    def _extract_enum_field(
+            key: str,
+            clz: typing.Type[E],
+            vals: typing.Mapping[str, typing.Any],
+    ) -> typing.Optional[E]:
+        return clz[vals[key]] if key in vals else None
 
 
 D = typing.TypeVar('D', bound=Deserializable)

@@ -9,7 +9,24 @@
       }
     },
     "sex": "FEMALE",
-    "karyotypicSex": "XX"
+    "karyotypicSex": "XX",
+    "vitalStatus": {
+      "status": "DECEASED",
+      "timeOfDeath": {
+        "age": {
+          "iso8601duration": "P1Y"
+        }
+      },
+      "causeOfDeath": {
+        "id": "NCIT:C7541",
+        "label": "Retinoblastoma"
+      },
+      "survivalTimeInDays": 180
+    },
+    "taxonomy": {
+        "id": "NCBITaxon:9606",
+        "label": "Homo sapiens"
+      }
   },
   "phenotypicFeatures": [{
     "type": {

@@ -34,7 +34,16 @@ def individual() -> Individual:
             age=Age(
                 iso8601duration='P6M',
             )
-        )
+        ),
+        vital_status=VitalStatus(
+            status=VitalStatus.Status.DECEASED,
+            time_of_death=TimeElement(age=Age(iso8601duration='P1Y')),
+            cause_of_death=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+            survival_time_in_days=180,
+        ),
+        sex=Sex.FEMALE,
+        karyotypic_sex=KaryotypicSex.XX,
+        taxonomy=OntologyClass(id='NCBITaxon:9606', label='Homo sapiens')
     )
 
 
