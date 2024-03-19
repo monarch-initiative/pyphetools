@@ -40,48 +40,52 @@ class Serializable(metaclass=abc.ABCMeta):
     def _put_field_to_mapping(
             name: str,
             field: typing.Optional[typing.Any],
-            out: typing.Union[typing.MutableMapping[str, typing.Any], typing.MutableSequence[typing.Any]],
+            out: typing.MutableMapping[str, typing.Any],
     ):
         if field is None:
             pass
-
         elif type(field) in Serializable._PRIMITIVES:
-            if isinstance(out, typing.MutableMapping):
-                out[name] = field
-            elif isinstance(out, typing.MutableSequence):
-                out.append(field)
-            else:
-                raise ValueError('Bug')
-
+            out[name] = field
         elif isinstance(field, typing.Sequence):
             seq = []
             for subfield in field:
-                Serializable._put_field_to_mapping(name, subfield, seq)
-            if isinstance(out, typing.MutableMapping):
-                out[name] = seq
-            else:
-                raise ValueError('Bug')
-
+                Serializable._put_field_to_sequence(subfield, seq)
+            out[name] = seq
         elif isinstance(field, typing.Mapping):
-            # I'm not sure if this should be turned into an object or something else.
-            raise NotImplementedError('Implement me!')  # TODO: implement!
-
+            val = {}
+            for k, v in field.items():
+                Serializable._put_field_to_mapping(k, v, val)
+            out[name] = val
         elif isinstance(field, Serializable):
-            write_msg_to_dict(name, field, out)
-
+            val = {}
+            field.to_dict(val)
+            out[name] = val
         else:
             raise ValueError('Unexpected field')
 
-
-def write_msg_to_dict(
-        key: str,
-        val: typing.Optional[Serializable],
-        dest: typing.MutableMapping[str, typing.Any],
-):
-    if val is not None:
-        out = {}
-        val.to_dict(out)
-        dest[key] = out
+    @staticmethod
+    def _put_field_to_sequence(
+            field: typing.Optional[typing.Any],
+            out: typing.MutableSequence[typing.Any],
+    ):
+        if field is None:
+            pass
+        elif type(field) in Serializable._PRIMITIVES:
+            out.append(field)
+        elif isinstance(field, Serializable):
+            val = {}
+            for field_name in field.field_names():
+                sub = getattr(field, field_name)
+                Serializable._put_field_to_mapping(field_name, sub, val)
+            out.append(val)
+        elif isinstance(field, typing.Mapping):
+            val = {}
+            for k, v in field.items():
+                Serializable._put_field_to_mapping(k, v, val)
+            out.append(val)
+        else:
+            # We should not have to process a sequence within a sequence.
+            raise ValueError('Unexpected field')
 
 
 class Serializer(metaclass=abc.ABCMeta):
