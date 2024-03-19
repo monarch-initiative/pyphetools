@@ -3,7 +3,7 @@ import json
 import typing
 
 from .._io import Serializer, Serializable, Deserializer, D
-from .._util import CaseConverter
+from .._util import CaseConverter, HierarchicalKeyMapper
 
 _PRIMITIVES = {
     bool, int, float, str,
@@ -41,6 +41,11 @@ class JsonSerializer(Serializer):
     """
     A serializer to format :class:`Serializable` objects into JSON format.
 
+    The serializer will convert the field names from snake case used in Python into camel case
+    (e.g. `file_attributes` -> `fileAttributes`).
+    For the purpose of working with Phenopacket Schema, the serializer will not convert the map keys,
+    (e.g. keys of `file_attributes` map).
+
     See :func:`json.dump` for the accepted keyword arguments.
     """
 
@@ -50,21 +55,26 @@ class JsonSerializer(Serializer):
     ):
         self._kwargs = kwargs
         self._case_converter = CaseConverter()
+        self._key_mapper = HierarchicalKeyMapper.ps_v202_mapper()
 
     def serialize(self, val: Serializable, fp: typing.IO):
         out = {}
         val.to_dict(out)
-        mapped = map_dict_keys_case(self._case_converter.snake_to_camel, out)
+        mapped = self._key_mapper.remap_mapping(self._case_converter.snake_to_camel, out)
         json.dump(mapped, fp, **self._kwargs)
 
 
 class JsonDeserializer(Deserializer):
     """
     A deserializer to load :class:`Deserializable` objects from JSON format.
+
+    The deserializer supports reading a JSON with keys
+    in both *snake case* (e.g. `file_attributes`) and *camel case* (e.g. `fileAttributes`).
     """
 
     def __init__(self):
         self._case_converter = CaseConverter()
+        self._key_mapper = HierarchicalKeyMapper.ps_v202_mapper()
 
     def deserialize(
             self,
@@ -72,7 +82,7 @@ class JsonDeserializer(Deserializer):
             clz: typing.Type[D]) -> D:
         val = self._decode_json_content(fp)
 
-        mapped = map_dict_keys_case(self._case_converter.camel_to_snake, val)
+        mapped = self._key_mapper.remap_mapping(self._case_converter.camel_to_snake, val)
         return clz.from_dict(mapped)
 
     @staticmethod
