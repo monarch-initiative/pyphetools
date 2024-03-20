@@ -81,4 +81,52 @@ def meta_data() -> MetaData:
     `MetaData` from the `retinoblastoma` phenopacket.
     """
     return MetaData(
+        created=Timestamp.from_str('2021-05-14T10:35:00Z'),
+        created_by='anonymous biocurator',
+        submitted_by=None,
+        resources=(
+            Resource(
+                id='hp', name='human phenotype ontology',
+                url='http://purl.obolibrary.org/obo/hp.owl',
+                version='2021-08-02', namespace_prefix='HP',
+                iri_prefix='http://purl.obolibrary.org/obo/HP_'
+            ),
+            Resource(
+                id='geno', name='Genotype Ontology',
+                url='http://purl.obolibrary.org/obo/geno.owl',
+                version='2020-03-08', namespace_prefix='GENO',
+                iri_prefix='http://purl.obolibrary.org/obo/GENO_'
+            ),
+            Resource(
+                id='ncit', name='NCI Thesaurus',
+                url='http://purl.obolibrary.org/obo/ncit.owl',
+                version='VERSION', namespace_prefix='NCIT',
+                iri_prefix='http://purl.obolibrary.org/obo/NCIT_'
+            ),
+            Resource(
+                id='uberon', name='Uber-anatomy ontology',
+                url='http://purl.obolibrary.org/obo/uberon.owl',
+                version='VERSION', namespace_prefix='UBERON',
+                iri_prefix='http://purl.obolibrary.org/obo/UBERON_'
+            ),
+            Resource(
+                id='loinc', name='Logical Observation Identifiers Names and Codes',
+                url='https://loinc.org',
+                version='VERSION', namespace_prefix='LOINC',
+                iri_prefix='https://loinc.org'
+            ),
+            Resource(
+                id='drugcentral', name='Drug Central',
+                url='https://drugcentral.org/',
+                version='VERSION', namespace_prefix='DrugCentral',
+                iri_prefix='https://drugcentral.org/drugcard'
+            ),
+            Resource(
+                id='ucum', name='Unified Code for Units of Measure',
+                url='https://ucum.org',
+                version='2.1', namespace_prefix='UCUM',
+                iri_prefix='https://ucum.org/'
+            ),
+        ),
+        phenopacket_schema_version='2.0.0',
     )

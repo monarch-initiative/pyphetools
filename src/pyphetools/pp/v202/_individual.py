@@ -4,8 +4,9 @@ import typing
 import phenopackets as pp202
 from google.protobuf.message import Message
 
-from ._base import TimeElement, Timestamp, OntologyClass
+from ._base import TimeElement, OntologyClass
 from .._api import MessageMixin
+from .._timestamp import Timestamp
 from ..parse import extract_message_scalar, extract_pb_message_scalar
 
 
@@ -43,7 +44,7 @@ class Sex(enum.Enum):
 
 
 class KaryotypicSex(enum.Enum):
-    
+
     # The `int` values correspond to protobuf fields in Phenopacket Schema.
     UNKNOWN_KARYOTYPE = 0
     XX = 1

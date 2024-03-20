@@ -2,47 +2,10 @@ import typing
 
 import phenopackets as pp202
 from google.protobuf.message import Message
-from google.protobuf.timestamp_pb2 import Timestamp as PbTimestamp
 
 from .._api import MessageMixin
+from .._timestamp import Timestamp
 from ..parse import extract_message_scalar
-
-
-class Timestamp(MessageMixin):
-    # TODO: implement!
-    # '%Y-%m-%dT%H:%M:%S.%fZ'
-
-    @staticmethod
-    def field_names() -> typing.Iterable[str]:
-        return ()
-
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        return Timestamp()
-
-    def to_message(self) -> Message:
-        # ts = PbTimestamp()
-        # # TODO:
-        # return ts
-        raise NotImplementedError()
-
-    @classmethod
-    def message_type(cls) -> typing.Type[Message]:
-        return PbTimestamp
-
-    @classmethod
-    def from_message(cls, msg: Message):
-        if isinstance(msg, PbTimestamp):
-            # TODO: implement
-            raise NotImplementedError()
-        else:
-            cls.complain_about_incompatible_msg_type(msg)
-
-    def __eq__(self, other):
-        return isinstance(other, Timestamp)
-
-    def __repr__(self):
-        return f'Timestamp()'
 
 
 class OntologyClass(MessageMixin):
@@ -519,8 +482,8 @@ class TimeInterval(MessageMixin):
     def from_dict(values: typing.Mapping[str, typing.Any]):
         if 'start' in values and 'end' in values:
             return TimeInterval(
-                start=extract_message_scalar('start', Timestamp, values),
-                end=extract_message_scalar('end', Timestamp, values),
+                start=Timestamp.from_str(values['start']),
+                end=Timestamp.from_str(values['end']),
             )
 
     def to_message(self) -> Message:
@@ -667,7 +630,7 @@ class TimeElement(MessageMixin):
         elif 'ontology_class' in values:
             return TimeElement(ontology_class=OntologyClass.from_dict(values['ontology_class']))
         elif 'timestamp' in values:
-            return TimeElement(timestamp=Timestamp.from_dict(values['timestamp']))
+            return TimeElement(timestamp=Timestamp.from_str(values['timestamp']))
         elif 'interval' in values:
             return TimeElement(interval=TimeInterval.from_dict(values['interval']))
         else:

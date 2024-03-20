@@ -63,6 +63,9 @@ class Serializable(metaclass=abc.ABCMeta):
             out[name] = val
         elif isinstance(field, enum.Enum):
             out[name] = field.name
+        elif hasattr(field, 'seconds') and hasattr(field, 'nanos') and hasattr(field, 'as_str') and callable(field.as_str):
+            # This quack *exactly* as a Timestamp!
+            out[name] = field.as_str()
         else:
             raise ValueError(f'Unexpected field {field}')
 
@@ -88,6 +91,9 @@ class Serializable(metaclass=abc.ABCMeta):
             out.append(val)
         elif isinstance(field, enum.Enum):
             out.append(field.name)
+        elif hasattr(field, 'seconds') and hasattr(field, 'nanos') and hasattr(field, 'as_str') and callable(field.as_str):
+            # This quack *exactly* as a Timestamp!
+            out.append(field.as_str())
         else:
             # We should not have to process a sequence within a sequence.
             raise ValueError(f'Unexpected field {field}')

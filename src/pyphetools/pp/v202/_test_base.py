@@ -22,10 +22,3 @@ class TestBase:
             )
 
         assert ve.value.args[0] == 'Time element must be provided with exactly 1 argument but 2 arguments were provided!'
-
-
-class TestTimestamp:
-
-    def test_timestamp(self):
-        # TODO: test!
-        pass
