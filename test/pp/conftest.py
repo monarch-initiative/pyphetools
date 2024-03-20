@@ -10,6 +10,7 @@ def retinoblastoma(
         individual: Individual,
         phenotypic_features: typing.Sequence[PhenotypicFeature],
         diseases: typing.Sequence[Disease],
+        biosamples: typing.Sequence[Biosample],
         files: typing.Sequence[File],
         meta_data: MetaData,
 ) -> Phenopacket:
@@ -21,6 +22,7 @@ def retinoblastoma(
         subject=individual,
         phenotypic_features=phenotypic_features,
         diseases=diseases,
+        biosamples=biosamples,
         files=files,
         meta_data=meta_data,
     )
@@ -86,6 +88,39 @@ def diseases() -> typing.Sequence[Disease]:
             disease_stage=(OntologyClass(id='LOINC:LA24739-7', label='Group E'),),
             clinical_tnm_finding=(OntologyClass(id='NCIT:C140678', label='Retinoblastoma cM0 TNM Finding v8'),),
             primary_site=OntologyClass(id='UBERON:0004548', label='left eye'),
+        ),
+    )
+
+
+@pytest.fixture(scope='package')
+def biosamples() -> typing.Sequence[Biosample]:
+    return (
+        Biosample(
+            id='biosample.1',
+            sampled_tissue=OntologyClass(id='UBERON:0000970', label='eye'),
+            phenotypic_features=(
+                PhenotypicFeature(type=OntologyClass(id='NCIT:C35941', label='Flexner-Wintersteiner Rosette Formation')),
+                PhenotypicFeature(type=OntologyClass(id='NCIT:C132485', label='Apoptosis and Necrosis')),
+            ),
+            # measurements=(), # TODO: add after implementing Measurement
+            tumor_progression=OntologyClass(id='NCIT:C8509', label='Primary Neoplasm'),
+            pathological_tnm_finding=(
+                OntologyClass(id='NCIT:C140720', label='Retinoblastoma pT3 TNM Finding v8'),
+                OntologyClass(id='NCIT:C140711', label='Retinoblastoma pN0 TNM Finding v8'),
+            ),
+            # procedure=,  # TODO: add after implementing Procedure
+            files=(
+                File(
+                    uri='file://data/fileSomaticWgs.vcf.gz',
+                    individual_to_file_identifiers={
+                        'biosample.1': 'specimen.1',
+                    },
+                    file_attributes={
+                        'fileFormat': 'VCF',
+                        'genomeAssembly': 'GRCh38',
+                    },
+                ),
+            ),
         ),
     )
 

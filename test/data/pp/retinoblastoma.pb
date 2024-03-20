@@ -34,7 +34,21 @@ HP:0000541Retinal detachment*
 
 HP:0012835Left2
 
-P6M:’
+P6M*ü
+biosample.1*
+UBERON:0000970eye:86
+NCIT:C35941'Flexner-Wintersteiner Rosette Formation:(&
+NCIT:C132485Apoptosis and Necrosisb
+
+NCIT:C8509Primary Neoplasmz1
+NCIT:C140720!Retinoblastoma pT3 TNM Finding v8z1
+NCIT:C140711!Retinoblastoma pN0 TNM Finding v8’k
+!file://data/fileSomaticWgs.vcf.gz
+biosample.1
+specimen.1
+genomeAssemblyGRCh38
+
+fileFormatVCF:’
 
 
 NCIT:C7541Retinoblastoma
@@ -44,17 +58,17 @@ NCIT:C7541Retinoblastoma
 NCIT:C140678!Retinoblastoma cM0 TNM Finding v8:
 UBERON:0004548left eyeRy
 file://data/germlineWgs.vcf.gz
-	proband Bsample2
-	proband Asample1
+	proband Asample1
+	proband Bsample2
 genomeAssemblyGRCh38
 
 fileFormatVCFRx
 file://data/somaticWgs.vcf.gz
-	proband Asample1
-	proband Bsample2
+	proband Bsample2
+	proband Asample1
+genomeAssemblyGRCh38
 
-fileFormatVCF
-genomeAssemblyGRCh38ZÑ
+fileFormatVCFZÑ
 Ô¤ù„anonymous biocurator"y
 hphuman phenotype ontology%http://purl.obolibrary.org/obo/hp.owl"
 2021-08-02*HP2"http://purl.obolibrary.org/obo/HP_"z

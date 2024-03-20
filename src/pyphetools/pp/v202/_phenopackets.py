@@ -5,6 +5,7 @@ import phenopackets as pp202
 from google.protobuf.message import Message
 
 from ._base import File
+from ._biosample import Biosample
 from ._individual import Individual
 from ._phenotypic_feature import PhenotypicFeature
 from ._disease import Disease
@@ -21,6 +22,7 @@ class Phenopacket(MessageMixin):
             meta_data: MetaData,
             phenotypic_features: typing.Optional[typing.Iterable[PhenotypicFeature]] = None,
             diseases: typing.Optional[typing.Iterable[Disease]] = None,
+            biosamples: typing.Optional[typing.Iterable[Biosample]] = None,
             subject: typing.Optional[Individual] = None,
             files: typing.Optional[typing.Iterable[File]] = None,
     ):
@@ -28,6 +30,7 @@ class Phenopacket(MessageMixin):
         self._subject = subject
         self._phenotypic_features = [] if phenotypic_features is None else list(phenotypic_features)
         self._diseases = [] if diseases is None else list(diseases)
+        self._biosamples = [] if biosamples is None else list(biosamples)
         self._files = [] if files is None else list(files)
         self._meta_data = meta_data
 
@@ -60,6 +63,10 @@ class Phenopacket(MessageMixin):
         return self._diseases
 
     @property
+    def biosamples(self) -> typing.MutableSequence[Biosample]:
+        return self._biosamples
+
+    @property
     def files(self) -> typing.MutableSequence[File]:
         return self._files
 
@@ -73,7 +80,7 @@ class Phenopacket(MessageMixin):
 
     @staticmethod
     def field_names() -> typing.Iterable[str]:
-        return 'id', 'subject', 'phenotypic_features', 'diseases', 'files', 'meta_data'
+        return 'id', 'subject', 'phenotypic_features', 'diseases', 'biosamples', 'files', 'meta_data'
 
     @staticmethod
     def from_dict(values: typing.Mapping[str, typing.Any]):
@@ -83,6 +90,7 @@ class Phenopacket(MessageMixin):
                 subject=extract_message_scalar('subject', Individual, values),
                 phenotypic_features=extract_message_sequence('phenotypic_features', PhenotypicFeature, values),
                 diseases=extract_message_sequence('diseases', Disease, values),
+                biosamples=extract_message_sequence('biosamples', Biosample, values),
                 files=extract_message_sequence('files', File, values),
                 # TODO: add the rest
                 meta_data=MetaData.from_dict(values['meta_data']),
@@ -96,6 +104,7 @@ class Phenopacket(MessageMixin):
             subject=self._subject.to_message(),
             phenotypic_features=(pf.to_message() for pf in self._phenotypic_features),
             diseases=(d.to_message() for d in self._diseases),
+            biosamples=(b.to_message() for b in self._biosamples),
             files=(f.to_message() for f in self._files),
             meta_data=self._meta_data.to_message(),
         )
@@ -112,6 +121,7 @@ class Phenopacket(MessageMixin):
                 subject=extract_pb_message_scalar('subject', Individual, msg),
                 phenotypic_features=extract_pb_message_seq('phenotypic_features', PhenotypicFeature, msg),
                 diseases=extract_pb_message_seq('diseases', Disease, msg),
+                biosamples=extract_pb_message_seq('biosamples', Biosample, msg),
                 files=extract_pb_message_seq('files', File, msg),
                 meta_data=extract_pb_message_scalar('meta_data', MetaData, msg),
             )
@@ -124,6 +134,7 @@ class Phenopacket(MessageMixin):
             and self._subject == other._subject \
             and self._phenotypic_features == other._phenotypic_features \
             and self._diseases == other._diseases \
+            and self._biosamples == other._biosamples \
             and self._files == other._files \
             and self._meta_data == other._meta_data
 
@@ -133,5 +144,6 @@ class Phenopacket(MessageMixin):
                f'subject={self._subject}, ' \
                f'phenotypic_features={self._phenotypic_features}, ' \
                f'diseases={self._diseases}, ' \
+               f'biosamples={self._biosamples}, ' \
                f'files={self._files}, ' \
                f'meta_data={self._meta_data})'
