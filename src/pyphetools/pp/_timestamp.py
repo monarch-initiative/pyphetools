@@ -10,11 +10,14 @@ from .parse import ToProtobuf, FromProtobuf
 
 class Timestamp(ToProtobuf, FromProtobuf):
     """
-    A Timestamp represents a point in time independent of any time zone or local
-    calendar, encoded as a count of seconds and fractions of seconds at
-    nanosecond resolution. The count is relative to an epoch at UTC midnight on
-    January 1, 1970, in the proleptic Gregorian calendar which extends the
-    Gregorian calendar backwards to year one.
+    This `Timestamp` implementation is functionally equivalent to protobuf's timestamp.
+
+    Per protobuf API documentation, *A Timestamp represents a point in time
+    independent of any time zone or local calendar, encoded as a count of seconds
+    and fractions of seconds at nanosecond resolution.
+    The count is relative to an epoch at UTC midnight on January 1, 1970,
+    in the proleptic Gregorian calendar which extends the Gregorian calendar
+    backwards to year one.*
 
     Consult the `Phenopacket Schema <https://phenopacket-schema.readthedocs.io/en/latest/timestamp.html>`_ documentation
     for more information.
@@ -40,7 +43,7 @@ class Timestamp(ToProtobuf, FromProtobuf):
     >>> ts_local = Timestamp.from_str('1969-12-31T20:00:30-04:00')
     >>> assert ts_local == ts
 
-    We can create Timestamp from a datetime object:
+    We can also create timestamp from a datetime object:
 
     >>> from datetime import datetime, date, time, timezone
     >>> d = date(1970, 1, 1)
@@ -49,7 +52,7 @@ class Timestamp(ToProtobuf, FromProtobuf):
     >>> ts_dt = Timestamp.from_datetime(dt)
     >>> assert ts_dt == ts
 
-    Last, we can create a timestamp directly from seconds and nanoseconds:
+    Last, we can create timestamp directly from seconds and nanoseconds:
 
     >>> ts_raw = Timestamp(30, 0)
     >>> assert ts_raw == ts
