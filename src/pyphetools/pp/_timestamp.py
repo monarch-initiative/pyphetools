@@ -1,6 +1,6 @@
 import math
 import typing
-from datetime import datetime
+from datetime import datetime, timezone
 
 from google.protobuf.message import Message
 from google.protobuf.timestamp_pb2 import Timestamp as PbTimestamp
@@ -27,27 +27,37 @@ class Timestamp(ToProtobuf, FromProtobuf):
 
     Let's create a timestamp from a date time string:
 
-    >>> ts = Timestamp.from_str('2021-05-14T10:35:00Z')
+    >>> ts = Timestamp.from_str('1970-01-01T00:00:30Z')
     >>> ts.seconds, ts.nanos
-    (1621002900, 0)
+    (30, 0)
+
+    Note, we indicate that the timestamp is in UTC by adding `Z` suffix.
+
+    We can also create a timestamp from a local time.
+    Let's create the same `Timestamp` but now in Eastern Daylight Time (EDT)
+    which is 4 hours behind UTC:
+
+    >>> ts_local = Timestamp.from_str('1969-12-31T20:00:30-04:00')
+    >>> assert ts_local == ts
 
     We can create Timestamp from a datetime object:
 
-    >>> from datetime import datetime, date, time
-    >>> d = date(2021, 5, 14)
-    >>> t = time(10, 35, 00)
-    >>> dt = datetime.combine(d, t)
-    >>> ts = Timestamp.from_datetime(dt)
-    >>> ts.seconds, ts.nanos
-    (1621002900, 0)
-
-    and we get the same timestamp as above.
+    >>> from datetime import datetime, date, time, timezone
+    >>> d = date(1970, 1, 1)
+    >>> t = time(0, 0, 30)
+    >>> dt = datetime.combine(d, t, tzinfo=timezone.utc)
+    >>> ts_dt = Timestamp.from_datetime(dt)
+    >>> assert ts_dt == ts
 
     Last, we can create a timestamp directly from seconds and nanoseconds:
 
-    >>> ts = Timestamp(1_621_002_900, 1)
-    >>> ts.seconds, ts.nanos
-    (1621002900, 1)
+    >>> ts_raw = Timestamp(30, 0)
+    >>> assert ts_raw == ts
+
+    and we can convert the timestamp to a UTC date time string:
+
+    >>> ts_raw.as_str()
+    '1970-01-01T00:00:30Z'
     """
 
     def __init__(
@@ -55,8 +65,10 @@ class Timestamp(ToProtobuf, FromProtobuf):
             seconds: int,
             nanos: int,
     ):
+        # Seconds can be positive or negative,
+        # The negative seconds represent the timestamps prior the UNIX epoch.
         self._seconds = seconds
-        self._nanos = nanos
+        self._nanos = nanos  # TODO: check that nanos is a positive `int`
 
     @property
     def seconds(self) -> int:
@@ -74,6 +86,30 @@ class Timestamp(ToProtobuf, FromProtobuf):
     def nanos(self, value: int):
         self._nanos = value
 
+    def as_datetime(self) -> datetime:
+        """
+        Convert timestamp into Python's datetime object.
+
+        The datetime is always in UTC.
+
+        **Example**
+
+        >>> from pyphetools.pp import Timestamp
+        >>> ts = Timestamp(10, 500)
+        >>> dt = ts.as_datetime()
+
+        Now we can access the datetime components:
+
+        >>> dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second
+        (1970, 1, 1, 0, 0, 10)
+
+        including the time zone:
+
+        >>> dt.tzname()
+        'UTC'
+        """
+        return datetime.fromtimestamp(self._seconds + (self._nanos / 10 ** 9), tz=timezone.utc)
+
     def as_str(self, fmt: str = '%Y-%m-%dT%H:%M:%SZ') -> str:
         """
         Convert timestamp into a date time string.
@@ -81,28 +117,27 @@ class Timestamp(ToProtobuf, FromProtobuf):
         **Example**
 
         >>> from pyphetools.pp import Timestamp
-        >>> ts = Timestamp(123_456, 111_222)
+        >>> ts = Timestamp(0, 500_000)
         >>> ts.as_str()
-        '1970-01-02T05:17:36Z'
+        '1970-01-01T00:00:00Z'
 
         We can use different formatting:
 
-        >>> ts.as_str('%Y-%m-%dT%H:%M:%S.%fZ')
-        '1970-01-02T05:17:36.111222Z'
+        >>> ts.as_str('%Y-%m-%dT%H:%M:%S.%f%Z')
+        '1970-01-01T00:00:00.000500UTC'
         """
-
-        dt = datetime.fromtimestamp(self._seconds + (self._nanos / 1_000_000))
-        return dt.strftime(fmt)
+        return self.as_datetime().strftime(fmt)
 
     @staticmethod
-    def from_str(val: str, fmt: str = '%Y-%m-%dT%H:%M:%SZ'):
+    def from_str(val: str, fmt: str = '%Y-%m-%dT%H:%M:%S%z'):
         """
         Create `Timestamp` from a date time string.
 
         :param val: the date time `str`.
         :param fmt: the date time format string.
         """
-        return Timestamp.from_datetime(datetime.strptime(val, fmt))
+        dt = datetime.strptime(val, fmt)
+        return Timestamp.from_datetime(dt)
 
     @staticmethod
     def from_datetime(dt: datetime):

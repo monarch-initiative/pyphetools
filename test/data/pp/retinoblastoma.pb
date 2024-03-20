@@ -15,12 +15,12 @@ NCIT:C7541Retinoblastoma ´08J
 
 fileFormatVCFRx
 file://data/somaticWgs.vcf.gz
-	proband Bsample2
-	proband Asample1
+	proband Asample1
+	proband Bsample2
 genomeAssemblyGRCh38
 
 fileFormatVCFZÑ
-”•ú„anonymous biocurator"y
+Ô¤ù„anonymous biocurator"y
 hphuman phenotype ontology%http://purl.obolibrary.org/obo/hp.owl"
 2021-08-02*HP2"http://purl.obolibrary.org/obo/HP_"z
 genoGenotype Ontology'http://purl.obolibrary.org/obo/geno.owl"

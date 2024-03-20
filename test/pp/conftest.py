@@ -57,8 +57,8 @@ def files() -> typing.Sequence[File]:
                 'proband B': 'sample2'
             },
             file_attributes={
-                'genomeAssembly': 'GRCh38',
                 'fileFormat': 'VCF',
+                'genomeAssembly': 'GRCh38',
             },
         ),
         File(
@@ -68,8 +68,8 @@ def files() -> typing.Sequence[File]:
                 'proband B': 'sample2'
             },
             file_attributes={
-                'genomeAssembly': 'GRCh38',
                 'fileFormat': 'VCF',
+                'genomeAssembly': 'GRCh38',
             },
         ),
     )
