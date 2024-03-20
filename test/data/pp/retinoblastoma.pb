@@ -34,19 +34,27 @@ HP:0000541Retinal detachment*
 
 HP:0012835Left2
 
-P6MRy
-file://data/germlineWgs.vcf.gz
-	proband Asample1
-	proband Bsample2
-genomeAssemblyGRCh38
+P6M:’
+
 
-fileFormatVCFRx
-file://data/somaticWgs.vcf.gz
+NCIT:C7541Retinoblastoma
+
+P4M*
+LOINC:LA24739-7Group E21
+NCIT:C140678!Retinoblastoma cM0 TNM Finding v8:
+UBERON:0004548left eyeRy
+file://data/germlineWgs.vcf.gz
 	proband Bsample2
 	proband Asample1
 genomeAssemblyGRCh38
 
-fileFormatVCFZÑ
+fileFormatVCFRx
+file://data/somaticWgs.vcf.gz
+	proband Asample1
+	proband Bsample2
+
+fileFormatVCF
+genomeAssemblyGRCh38ZÑ
 Ô¤ù„anonymous biocurator"y
 hphuman phenotype ontology%http://purl.obolibrary.org/obo/hp.owl"
 2021-08-02*HP2"http://purl.obolibrary.org/obo/HP_"z

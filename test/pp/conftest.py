@@ -9,6 +9,7 @@ from pyphetools.pp.v202 import *
 def retinoblastoma(
         individual: Individual,
         phenotypic_features: typing.Sequence[PhenotypicFeature],
+        diseases: typing.Sequence[Disease],
         files: typing.Sequence[File],
         meta_data: MetaData,
 ) -> Phenopacket:
@@ -19,6 +20,7 @@ def retinoblastoma(
         id='example.retinoblastoma.phenopacket.id',
         subject=individual,
         phenotypic_features=phenotypic_features,
+        diseases=diseases,
         files=files,
         meta_data=meta_data,
     )
@@ -71,6 +73,19 @@ def phenotypic_features() -> typing.Sequence[PhenotypicFeature]:
             type=OntologyClass(id='HP:0000541', label='Retinal detachment'),
             modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
             onset=TimeElement(age=Age(iso8601duration='P6M')),
+        ),
+    )
+
+
+@pytest.fixture(scope='package')
+def diseases() -> typing.Sequence[Disease]:
+    return (
+        Disease(
+            term=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+            onset=TimeElement(age=Age(iso8601duration='P4M')),
+            disease_stage=(OntologyClass(id='LOINC:LA24739-7', label='Group E'),),
+            clinical_tnm_finding=(OntologyClass(id='NCIT:C140678', label='Retinoblastoma cM0 TNM Finding v8'),),
+            primary_site=OntologyClass(id='UBERON:0004548', label='left eye'),
         ),
     )
 

@@ -9,13 +9,14 @@ from ._base import OntologyClass, ExternalReference, Evidence, Procedure
 from ._base import GestationalAge, Age, AgeRange, TimeInterval, TimeElement, Timestamp, File
 from ._individual import Individual, KaryotypicSex, Sex, VitalStatus
 from ._phenotypic_feature import PhenotypicFeature
+from ._disease import Disease
 from ._meta_data import MetaData, Resource, Update
 from ._phenopackets import Phenopacket
 
 __all__ = [
     'Phenopacket',
     'Individual', 'VitalStatus', 'Sex', 'KaryotypicSex',
-    'PhenotypicFeature',
+    'PhenotypicFeature', 'Disease',
     'MetaData', 'Resource', 'Update',
     'OntologyClass', 'ExternalReference', 'Evidence', 'Procedure', 'GestationalAge', 'Age', 'AgeRange', 'TimeInterval',
     'TimeElement', 'Timestamp', 'File',
