@@ -7,7 +7,34 @@
 P1Y
 
 NCIT:C7541Retinoblastoma ´08J
-NCBITaxon:9606Homo sapiensRy
+NCBITaxon:9606Homo sapiens:
+
+HP:0030084Clinodactyly*
+
+HP:0012834Right2
+
+P3M7
+
+HP:0000555
+Leukocoria*
+
+HP:0012835Left2
+
+P4M:
+
+HP:0000486
+Strabismus*
+
+HP:0012835Left2
+
+
+P5M15D? 
+
+HP:0000541Retinal detachment*
+
+HP:0012835Left2
+
+P6MRy
 file://data/germlineWgs.vcf.gz
 	proband Asample1
 	proband Bsample2
@@ -15,8 +42,8 @@ NCIT:C7541Retinoblastoma ´08J
 
 fileFormatVCFRx
 file://data/somaticWgs.vcf.gz
-	proband Asample1
-	proband Bsample2
+	proband Bsample2
+	proband Asample1
 genomeAssemblyGRCh38
 
 fileFormatVCFZÑ

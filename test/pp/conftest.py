@@ -8,6 +8,7 @@ from pyphetools.pp.v202 import *
 @pytest.fixture(scope='package')
 def retinoblastoma(
         individual: Individual,
+        phenotypic_features: typing.Sequence[PhenotypicFeature],
         files: typing.Sequence[File],
         meta_data: MetaData,
 ) -> Phenopacket:
@@ -17,6 +18,7 @@ def retinoblastoma(
     return Phenopacket(
         id='example.retinoblastoma.phenopacket.id',
         subject=individual,
+        phenotypic_features=phenotypic_features,
         files=files,
         meta_data=meta_data,
     )
@@ -44,6 +46,32 @@ def individual() -> Individual:
         sex=Sex.FEMALE,
         karyotypic_sex=KaryotypicSex.XX,
         taxonomy=OntologyClass(id='NCBITaxon:9606', label='Homo sapiens')
+    )
+
+
+@pytest.fixture(scope='package')
+def phenotypic_features() -> typing.Sequence[PhenotypicFeature]:
+    return (
+        PhenotypicFeature(
+            type=OntologyClass(id='HP:0030084', label='Clinodactyly'),
+            modifiers=(OntologyClass(id='HP:0012834', label='Right'),),
+            onset=TimeElement(age=Age(iso8601duration='P3M')),
+        ),
+        PhenotypicFeature(
+            type=OntologyClass(id='HP:0000555', label='Leukocoria'),
+            modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
+            onset=TimeElement(age=Age(iso8601duration='P4M')),
+        ),
+        PhenotypicFeature(
+            type=OntologyClass(id='HP:0000486', label='Strabismus'),
+            modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
+            onset=TimeElement(age=Age(iso8601duration='P5M15D')),
+        ),
+        PhenotypicFeature(
+            type=OntologyClass(id='HP:0000541', label='Retinal detachment'),
+            modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
+            onset=TimeElement(age=Age(iso8601duration='P6M')),
+        ),
     )
 
 

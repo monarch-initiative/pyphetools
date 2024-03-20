@@ -8,12 +8,14 @@ from ._base import OntologyClass, ExternalReference, Evidence, Procedure
 # We re-export Timestamp
 from ._base import GestationalAge, Age, AgeRange, TimeInterval, TimeElement, Timestamp, File
 from ._individual import Individual, KaryotypicSex, Sex, VitalStatus
+from ._phenotypic_feature import PhenotypicFeature
 from ._meta_data import MetaData, Resource, Update
 from ._phenopackets import Phenopacket
 
 __all__ = [
     'Phenopacket',
     'Individual', 'VitalStatus', 'Sex', 'KaryotypicSex',
+    'PhenotypicFeature',
     'MetaData', 'Resource', 'Update',
     'OntologyClass', 'ExternalReference', 'Evidence', 'Procedure', 'GestationalAge', 'Age', 'AgeRange', 'TimeInterval',
     'TimeElement', 'Timestamp', 'File',
