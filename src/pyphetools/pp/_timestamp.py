@@ -28,7 +28,7 @@ class Timestamp(ToProtobuf, FromProtobuf):
     Let's create a timestamp from a date time string:
 
     >>> ts = Timestamp.from_str('2021-05-14T10:35:00Z')
-    >>> ts.seconds, ts.nanos  # doctest: +SKIP
+    >>> ts.seconds, ts.nanos
     (1621002900, 0)
 
     We can create Timestamp from a datetime object:
@@ -38,7 +38,7 @@ class Timestamp(ToProtobuf, FromProtobuf):
     >>> t = time(10, 35, 00)
     >>> dt = datetime.combine(d, t)
     >>> ts = Timestamp.from_datetime(dt)
-    >>> ts.seconds, ts.nanos  # doctest: +SKIP
+    >>> ts.seconds, ts.nanos
     (1621002900, 0)
 
     and we get the same timestamp as above.
@@ -46,7 +46,7 @@ class Timestamp(ToProtobuf, FromProtobuf):
     Last, we can create a timestamp directly from seconds and nanoseconds:
 
     >>> ts = Timestamp(1_621_002_900, 1)
-    >>> ts.seconds, ts.nanos  # doctest: +SKIP
+    >>> ts.seconds, ts.nanos
     (1621002900, 1)
     """
 
@@ -82,12 +82,12 @@ class Timestamp(ToProtobuf, FromProtobuf):
 
         >>> from pyphetools.pp import Timestamp
         >>> ts = Timestamp(123_456, 111_222)
-        >>> ts.as_str()  # doctest: +SKIP
+        >>> ts.as_str()
         '1970-01-02T05:17:36Z'
 
         We can use different formatting:
 
-        >>> ts.as_str('%Y-%m-%dT%H:%M:%S.%fZ')  # doctest: +SKIP
+        >>> ts.as_str('%Y-%m-%dT%H:%M:%S.%fZ')
         '1970-01-02T05:17:36.111222Z'
         """
 
