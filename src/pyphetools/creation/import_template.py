@@ -1,13 +1,10 @@
-from argparse import ArgumentParser
 import os, sys
 import pandas as pd
 from collections import defaultdict
 import typing
-from IPython.display import display, HTML
-pd.set_option('display.max_colwidth', None) # show entire column contents, important!
+import phenopackets as PPKt
 
-
-def _get_data_from_template(df:pd.DataFrame):
+def _get_data_from_template(df:pd.DataFrame) -> typing.Tuple[str,str,str,str,str]:
     """Check that the template (dataframe) has the columns
     "HGNC_id", "gene_symbol", "transcript",
     If each row has the same value for these columns, then the template is valid
@@ -15,13 +12,14 @@ def _get_data_from_template(df:pd.DataFrame):
 
     :param df: the template with data about a cohort
     :type df: pd.DataFrame
+    :returns: Tuple of 5 strings-disease_id, disease_label, HGNC_id, gene_symbol, transcript
+    :rtype: typing.Tuple[str,str,str,str,str]
     """
-
     contents_d = defaultdict(set)
     for item in ["disease_id", "disease_label", "HGNC_id", "gene_symbol", "transcript"]:
         if item not in df.columns:
             raise ValueError(f"Invalid template -- could not find the \"{item}\" column")
-    ## We need to skip the first row, which has the datatypes
+    ## We need to skip the first row (second row of excel file), which has the datatypes
     for _, row in df.iloc[1: , :].iterrows():
         contents_d["disease_id"].add(row["disease_id"])
         contents_d["disease_label"].add(row["disease_label"])
@@ -34,7 +32,8 @@ def _get_data_from_template(df:pd.DataFrame):
             all_items = "; ".join(contents_d.get(item))
             raise ValueError(f"invalid item set for {item}: {all_items}")
     # If we get here, the data are complete and consistent
-    # we know there is only one element, which we get with "pop"
+    # Note that the values of contents_d are sets of strings.
+    # We also know there is only one element per set, which we get with "pop"
     disease_id = contents_d.get("disease_id").pop()
     disease_label = contents_d.get("disease_label").pop()
     HGNC_id = contents_d.get("HGNC_id").pop()
@@ -43,10 +42,64 @@ def _get_data_from_template(df:pd.DataFrame):
     return disease_id, disease_label, HGNC_id, gene_symbol, transcript
 
 
-def import_phenopackets_from_template(template:str, hp_json:str,
-                                      deletions:typing.Set[str]=set(),
-                                      duplications:typing.Set[str]=set(),
-                                      inversions:typing.Set[str]=set(),):
+def _get_allelic_requirement(df:pd.DataFrame):
+    """Determine allelic requirement
+    Note that we always expect the column allele_1 to have content.
+    If each row of allele_2 is "na", then the allelic requirement is MONO_ALLELIC
+    If each row of allele_2 is not "na" and contains a variant string, then the
+    requirement is BI_ALLELIC.
+    Mixtures of MONO and BI ALLELIC are not allowed by this script, and more involved
+    Python scripts will be needed to ingest the data.
+
+    :param df: DataFrame with cohort data
+    :type df: pd.DataFrame
+    """
+    from pyphetools.creation import AllelicRequirement
+    total_row_count = 0
+    total_allele_2_na_count = 0
+    for _, row in df.iloc[1: , :].iterrows():
+        a1 = row["allele_1"]
+        a2 = row["allele_2"]
+        if a1 == "na":
+            raise ValueError(f"Invalid row with na allele_1: {row}")
+        if a2 != "na":
+            total_allele_2_na_count += 1
+        elif len(a2) == 0:
+            raise ValueError(f"Invalid row with empty allele_2: {row}")
+        total_row_count += 1
+    if total_allele_2_na_count == 0:
+        return AllelicRequirement.MONO_ALLELIC
+    elif total_allele_2_na_count == total_row_count:
+        return AllelicRequirement.BI_ALLELIC
+    else:
+        raise ValueError(f"Error: {total_allele_2_na_count} rows with two alleles but {total_row_count} total rows")
+
+
+
+def import_phenopackets_from_template(template:str,
+                                    hp_json:str,
+                                    deletions:typing.Set[str]=set(),
+                                    duplications:typing.Set[str]=set(),
+                                    inversions:typing.Set[str]=set()):
+    """Import the data from an Excel template and create a collection of Phenopackets
+
+    Note that things will be completely automatic if the template just has HGNC encoding variants
+    If there are structural variants, we need to encode them by hand by passing them as
+    elements of the sets of deletions, duplications, or inversions. Note that other Structural Variant types may be added later as required.
+
+    :param template: path to the Excel template file
+    :type template: str
+    :param hp_json: path to the hp.json file
+    :type hp_json: str
+    :param deletions: Strings (identical to entries in the templates) that represent deletions.
+    :type deletions: (typing.Set[str], optional
+    :param duplications: Strings (identical to entries in the templates) that represent duplications.
+    :type duplications: (typing.Set[str], optional
+    :param inversions: Strings (identical to entries in the templates) that represent inversions.
+    :type inversions: (typing.Set[str], optional
+    :returns: tuple with individual list and CohortValidator that optionally can be used to display in a notebook
+    :rtype: typing.Tuple[typing.List[pyphetools.creation.Individual], pyphetools.validation.CohortValidator]
+    """
     from pyphetools.creation  import HpoParser
     from pyphetools.creation import CaseTemplateEncoder, AllelicRequirement
     from pyphetools.creation import VariantManager
@@ -89,7 +142,8 @@ def import_phenopackets_from_template(template:str, hp_json:str,
         print("Fix this error and then try again!")
         sys.exit(1)
     vman.add_variants_to_individuals(individuals)
-    cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=AllelicRequirement.MONO_ALLELIC)
+    all_req = _get_allelic_requirement(df)
+    cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
     ef_individuals = cvalidator.get_error_free_individual_list()
     encoder.output_individuals_as_phenopackets(individual_list=ef_individuals)
     return individuals, cvalidator
@@ -97,9 +151,50 @@ def import_phenopackets_from_template(template:str, hp_json:str,
 
 
 
+def check_disease_entries(ppkt_list:typing.List[PPKt.Phenopacket]) -> None:
+    disease_count_d = defaultdict(int)
+    for ppkt in ppkt_list:
+        # Each phenopacket must have one disease
+        if len(ppkt.diseases) == 0:
+            error_msg = f"Phenopackt {ppkt.id} did not have a disease entry."
+            print(error_msg)
+            raise ValueError(error_msg)
+        elif len(ppkt.diseases) > 1:
+            # multiple disease per phenopacket are not allowed in this script
+            diseases = ppkt.diseases
+            disease_str = "; ".join([f"{d.term.label} ({d.term.id})" for d in diseases])
+            error_msg = f"Phenopackt {ppkt.id} had multiple disease entries: {disease_str}."
+            print(error_msg)
+            raise ValueError(error_msg)
+        d = ppkt.diseases[0]
+        d_str = f"{d.term.label} ({d.term.id})"
+        disease_count_d[d_str] += 1
+    # The cohort is only allowed to have one and the same disease
+    if len(disease_count_d) > 1:
+        print(f"[ERROR] Multiple diseases found in cohort")
+        for k, v in disease_count_d.items():
+            print(f"\t{k}: n={v}")
+        print("Only a single disease allowed to create HPOA files.")
+        print("Consider using \"target\" argument in create_hpoa_from_phenopackets")
+        sys.exit(1)
+    else:
+        # all is good, print out the disease and number of individuals
+        for k, v in disease_count_d.items():
+            print(f"\t{k}: n={v}")
 
 
-def create_hpoa_from_phenopackets(pmid:str, moi:str, ppkt_dir:str="phenopackets") -> pd.DataFrame:
+def filter_diseases(disease_id, ppkt_list):
+    target_list = list()
+    for ppkt in ppkt_list:
+        for d in ppkt.diseases:
+            if d.term.id == disease_id:
+                target_list.append(ppkt)
+                break
+    print(f"[INFO] Extracted {(len(target_list))} from {(len(ppkt_list))} phenopackets with {disease_id}\n")
+    return target_list
+
+
+def create_hpoa_from_phenopackets(pmid:str, moi:str, ppkt_dir:str="phenopackets", target:str=None) -> pd.DataFrame:
     from pyphetools.visualization import PhenopacketIngestor
     from pyphetools.visualization import HpoaTableBuilder
     if not os.path.isdir(ppkt_dir):
@@ -107,6 +202,9 @@ def create_hpoa_from_phenopackets(pmid:str, moi:str, ppkt_dir:str="phenopackets"
     ingestor = PhenopacketIngestor(indir=ppkt_dir)
     ppkt_d = ingestor.get_phenopacket_dictionary()
     ppkt_list = list(ppkt_d.values())
+    if target is not None:
+        ppkt_list = filter_diseases(target, ppkt_list)
+    check_disease_entries(ppkt_list)
     builder = HpoaTableBuilder(phenopacket_list=ppkt_list)
     if moi == "Autosomal dominant":
         builder.autosomal_dominant(pmid)

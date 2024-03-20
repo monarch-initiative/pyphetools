@@ -76,6 +76,7 @@ nav:
       - SimpleColumnMapper: "api/creation/simple_column_mapper.md"
       - SimpleColumnMapperGenerator: "api/creation/simple_column_mapper_generator.md"
       - StructuralVariant: "api/creation/structural_variant.md"
+      - TemplateCreator: "api/creation/create_template.md"
       - Thresholder: "api/creation/thresholder.md"
       - ThresholdedColumnMapper: "api/creation/thresholded_column_mapper.md"
       - VariantColumnMapper: "api/creation/variant_column_mapper.md"

@@ -8,6 +8,7 @@ from .citation import Citation
 from .cohort_encoder import CohortEncoder
 from .column_mapper import ColumnMapper
 from .constant_column_mapper import ConstantColumnMapper
+from .create_template import TemplateCreator
 from .disease import Disease
 from .disease_id_column_mapper import DiseaseIdColumnMapper
 from .hgvs_variant import HgvsVariant
@@ -64,6 +65,7 @@ __all__ = [
     "SimpleColumnMapper",
     "SimpleColumnMapperGenerator",
     "StructuralVariant",
+    "TemplateCreator",
     "ThresholdedColumnMapper",
     "Thresholder",
     "Variant",

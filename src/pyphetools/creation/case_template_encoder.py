@@ -180,7 +180,7 @@ REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id",
 ALLELE_2_IDX = 8
 
 REQUIRED_H2_FIELDS = ["CURIE", "str",	"str", "optional", "CURIE", "str", "CURIE",	"str",
-                        "optional", "str", "age", "age", "M:F:O:U", "na"]
+                    "str","str","str","optional",  "age", "age", "M:F:O:U", "na"]
 
 class CaseTemplateEncoder:
     """Class to encode data from user-provided Excel template.
