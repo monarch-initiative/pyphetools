@@ -109,6 +109,10 @@ class HpoEncoder(CellEncoder):
         return self._error
 
     def encode(self, cell_contents) -> None:
+        """
+        Parses one cell from the template. Valid entries are observed, excluded, na, and ISO8601 age strings.
+        Any other entry will lead to raising an Exception, probably the user entered something erroneous.
+        """
         cell_contents = str(cell_contents)
         if cell_contents == "observed":
             return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)
@@ -117,10 +121,12 @@ class HpoEncoder(CellEncoder):
         elif cell_contents == "na" or cell_contents == "nan" or len(cell_contents) == 0:
             return None
         elif len(cell_contents) > 0:
-            onset = PyPheToolsAge.get_age(cell_contents)
-            if onset.is_valid():
-            # iso8601 age
-                return  HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=onset)
+            try:
+                onset = PyPheToolsAge.get_age(cell_contents)
+                if onset.is_valid(): # valid OSO8601 age of onset
+                    return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=onset)
+            except Exception as parse_error:
+                raise ValueError(f"Could not parse HPO column cell_contents: \”{str(parse_error)}\"")
             # if we cannot parse successfully, there is probably an error in the format. Drop down to end of function to warn user
         else:
             raise ValueError(f"Could not parse HPO column cell_contents: \”{cell_contents}\"")
@@ -301,9 +307,14 @@ class CaseTemplateEncoder:
             if encoder_type == CellType.DATA and encoder.name in DATA_ITEMS:
                 data_items[encoder.name] = encoder.encode(cell_contents)
             elif encoder_type == CellType.HPO:
-                hpoterm = encoder.encode(cell_contents)
-                if hpoterm is not None:
-                    hpo_terms.append(hpoterm)
+                try:
+                    hpoterm = encoder.encode(cell_contents)
+                    if hpoterm is not None:
+                        hpo_terms.append(hpoterm)
+                except Exception as hpo_parse_exception:
+                    errr = f"Could not parse contents of HPO column {encoder.name}: {cell_contents} because of {str(hpo_parse_exception)}"
+                    print(errr)
+                    raise ValueError(errr)
             elif encoder_type == CellType.MISC:
                 term_list = encoder.encode(cell_contents=cell_contents)
                 for trm in term_list:

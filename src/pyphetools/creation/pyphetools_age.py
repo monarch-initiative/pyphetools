@@ -110,7 +110,7 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         else:
             # only warn if the user did not enter na=not available
             if age_string != 'na':
-                print(f"[WARNING] Could not parse {age_string} as age.")
+                raise ValueError(f"Could not parse \"{age_string}\" as age.")
             return NoneAge(age_string=age_string)
 
 

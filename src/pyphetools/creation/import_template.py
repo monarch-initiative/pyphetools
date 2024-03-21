@@ -78,6 +78,7 @@ def _get_allelic_requirement(df:pd.DataFrame):
 
 def import_phenopackets_from_template(template:str,
                                     hp_json:str,
+                                    created_by:str,
                                     deletions:typing.Set[str]=set(),
                                     duplications:typing.Set[str]=set(),
                                     inversions:typing.Set[str]=set()):
@@ -111,7 +112,6 @@ def import_phenopackets_from_template(template:str,
     parser = HpoParser(hpo_json_file=hp_json)
     hpo_cr = parser.get_hpo_concept_recognizer()
     hpo_ontology = parser.get_ontology()
-    created_by="ORCID:0000-0002-0736-9199"
     print(f"HPO version {hpo_ontology.version}")
     df = pd.read_excel(template)
     encoder = CaseTemplateEncoder(df=df, hpo_cr=hpo_cr, created_by=created_by, hpo_ontology=hpo_ontology)

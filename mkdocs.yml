@@ -31,6 +31,12 @@ theme:
 
 nav:
   - Home: 'index.md'
+  - Data Entry Template:
+    - 'user-guide/template.md'
+    - 'user-guide/excel.md'
+    - 'user-guide/python_notebook.md'
+    - 'user-guide/tips_for_curation.md'
+    - 'user-guide/variant_notation.md'
   - Developers:
     - For developers: 'developers/developers.md'
     - Installation: 'developers/installation.md'
@@ -48,7 +54,6 @@ nav:
       - Cohort encoder: 'user-guide/cohort_encoder.md'
       - Validation: 'user-guide/validation.md'
       - Visualization: 'user-guide/visualization.md'
-  - Data Entry Template: 'user-guide/template.md'
   - API:
     - Overview: 'api/overview.md'
     - creation:
