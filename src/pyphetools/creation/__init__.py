@@ -16,7 +16,7 @@ from .hpo_cr import HpoConceptRecognizer
 from .hpo_exact_cr import HpoExactConceptRecognizer
 from .hpo_parser import HpoParser
 from .hp_term import HpTerm, HpTermBuilder
-from .import_template import import_phenopackets_from_template, create_hpoa_from_phenopackets
+from .import_template import TemplateImporter
 from .individual import Individual
 from .metadata import MetaData
 from .mixed_cohort_encoder import MixedCohortEncoder
@@ -54,8 +54,6 @@ __all__ = [
     "HpoParser",
     "HpTerm",
     "HpTermBuilder",
-    "import_phenopackets_from_template",
-    "create_hpoa_from_phenopackets"
     "Individual",
     "MetaData",
     "MixedCohortEncoder",
@@ -66,6 +64,7 @@ __all__ = [
     "SimpleColumnMapperGenerator",
     "StructuralVariant",
     "TemplateCreator",
+    "TemplateImporter",
     "ThresholdedColumnMapper",
     "Thresholder",
     "Variant",
