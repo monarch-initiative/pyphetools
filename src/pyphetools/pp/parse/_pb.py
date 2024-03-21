@@ -120,10 +120,10 @@ A type that is a subclass of :class:`FromProtobuf`.
 def extract_pb_message_scalar(
         key: str,
         cls: typing.Type[FP],
-        parent: Message,
+        msg: Message,
 ) -> typing.Optional[FP]:
-    if parent.HasField(key):
-        return cls.from_message(getattr(parent, key))
+    if msg.HasField(key):
+        return cls.from_message(getattr(msg, key))
     else:
         return None
 
@@ -131,6 +131,6 @@ def extract_pb_message_scalar(
 def extract_pb_message_seq(
         key: str,
         cls: typing.Type[FP],
-        parent: Message,
+        msg: Message,
 ) -> typing.Iterable[FP]:
-    return (cls.from_message(i) for i in getattr(parent, key))
+    return (cls.from_message(i) for i in getattr(msg, key))

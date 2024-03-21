@@ -147,12 +147,20 @@ class VitalStatus(MessageMixin):
             raise ValueError('Bug')  # TODO: reword
 
     def to_message(self) -> Message:
-        return pp202.VitalStatus(
+        vs = pp202.VitalStatus(
             status=pp202.VitalStatus.Status.Value(self._status.name),
-            time_of_death=self._time_of_death.to_message(),
-            cause_of_death=self._cause_of_death.to_message(),
-            survival_time_in_days=self._survival_time_in_days,
         )
+
+        if self._time_of_death is not None:
+            vs.time_of_death.CopyFrom(self._time_of_death.to_message())
+
+        if self._cause_of_death is not None:
+            vs.cause_of_death.CopyFrom(self._cause_of_death.to_message())
+
+        if self._survival_time_in_days is not None:
+            vs.survival_time_in_days = self._survival_time_in_days
+
+        return vs
 
     @classmethod
     def message_type(cls) -> typing.Type[Message]:
@@ -163,9 +171,9 @@ class VitalStatus(MessageMixin):
         if isinstance(msg, pp202.VitalStatus):
             return VitalStatus(
                 status=VitalStatus.Status(msg.status),
-                time_of_death=TimeElement.from_message(msg.time_of_death),
-                cause_of_death=OntologyClass.from_message(msg.cause_of_death),
-                survival_time_in_days=msg.survival_time_in_days,
+                time_of_death=extract_pb_message_scalar('time_of_death', TimeElement, msg),
+                cause_of_death=extract_pb_message_scalar('cause_of_death', OntologyClass, msg),
+                survival_time_in_days=msg.survival_time_in_days if msg.HasField('survival_time_in_days') else None,
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
