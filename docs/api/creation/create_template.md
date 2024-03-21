@@ -1,0 +1,3 @@
+# TemplateCreator
+
+::: pyphetools.creation.ConstantColumnMapper

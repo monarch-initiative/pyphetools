@@ -3,7 +3,7 @@ site_name: pyphetools
 theme:
   name: "material"
   features:
-    #- navigation.tabs
+    - navigation.tabs
     - navigation.sections
     - toc.integrate
     - navigation.top
@@ -31,6 +31,12 @@ theme:
 
 nav:
   - Home: 'index.md'
+  - Data Entry Template:
+    - 'user-guide/template.md'
+    - 'user-guide/excel.md'
+    - 'user-guide/python_notebook.md'
+    - 'user-guide/tips_for_curation.md'
+    - 'user-guide/variant_notation.md'
   - Developers:
     - For developers: 'developers/developers.md'
     - Installation: 'developers/installation.md'
@@ -48,7 +54,6 @@ nav:
       - Cohort encoder: 'user-guide/cohort_encoder.md'
       - Validation: 'user-guide/validation.md'
       - Visualization: 'user-guide/visualization.md'
-  - Data Entry Template: 'user-guide/template.md'
   - API:
     - Overview: 'api/overview.md'
     - creation:
@@ -76,6 +81,7 @@ nav:
       - SimpleColumnMapper: "api/creation/simple_column_mapper.md"
       - SimpleColumnMapperGenerator: "api/creation/simple_column_mapper_generator.md"
       - StructuralVariant: "api/creation/structural_variant.md"
+      - TemplateCreator: "api/creation/create_template.md"
       - Thresholder: "api/creation/thresholder.md"
       - ThresholdedColumnMapper: "api/creation/thresholded_column_mapper.md"
       - VariantColumnMapper: "api/creation/variant_column_mapper.md"
@@ -119,8 +125,6 @@ extra:
   social:
     - icon: fontawesome/brands/github-alt
       link: https://github.com/pnrobinson
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/pnrobins
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/peter-n-robinson-b7833811/
 
@@ -145,5 +149,5 @@ markdown_extensions:
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
 copyright: |
-  &copy; 2023 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
+  &copy; 2023-2024 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
 

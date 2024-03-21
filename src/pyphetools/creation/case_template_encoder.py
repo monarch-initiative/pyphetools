@@ -12,6 +12,7 @@ import os
 import re
 import pandas as pd
 from google.protobuf.json_format import MessageToJson
+import hpotk
 import phenopackets as PPKt
 
 
@@ -108,6 +109,10 @@ class HpoEncoder(CellEncoder):
         return self._error
 
     def encode(self, cell_contents) -> None:
+        """
+        Parses one cell from the template. Valid entries are observed, excluded, na, and ISO8601 age strings.
+        Any other entry will lead to raising an Exception, probably the user entered something erroneous.
+        """
         cell_contents = str(cell_contents)
         if cell_contents == "observed":
             return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)
@@ -116,10 +121,12 @@ class HpoEncoder(CellEncoder):
         elif cell_contents == "na" or cell_contents == "nan" or len(cell_contents) == 0:
             return None
         elif len(cell_contents) > 0:
-            onset = PyPheToolsAge.get_age(cell_contents)
-            if onset.is_valid():
-            # iso8601 age
-                return  HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=onset)
+            try:
+                onset = PyPheToolsAge.get_age(cell_contents)
+                if onset.is_valid(): # valid OSO8601 age of onset
+                    return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=onset)
+            except Exception as parse_error:
+                raise ValueError(f"Could not parse HPO column cell_contents: \”{str(parse_error)}\"")
             # if we cannot parse successfully, there is probably an error in the format. Drop down to end of function to warn user
         else:
             raise ValueError(f"Could not parse HPO column cell_contents: \”{cell_contents}\"")
@@ -166,18 +173,20 @@ class NullEncoder(CellEncoder):
         return CellType.NULL
 
 EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "disease_label",
-                    "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
+                    "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2",
+                    "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
 
-DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "transcript",
-                            "allele_1", "allele_2",  "age_of_onset","age_at_last_encounter", "sex"}
+DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "HGNC_id",
+                "gene_symbol", "transcript", "allele_1", "allele_2",  "age_of_onset",
+                "age_at_last_encounter", "sex"}
 
 # note that the allele_2 field is option
 REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id", "disease_label",
-                        "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
+                    "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
 ALLELE_2_IDX = 8
 
-REQUIRED_H2_FIELDS = ["str", "str",	"str", "optional", "str", "str", "str",	"str", "optional",
-                        "str", "age", "age", "M:F:O:U", "na"]
+REQUIRED_H2_FIELDS = ["CURIE", "str",	"str", "optional", "CURIE", "str", "CURIE",	"str",
+                    "str","str","str","optional",  "age", "age", "M:F:O:U", "na"]
 
 class CaseTemplateEncoder:
     """Class to encode data from user-provided Excel template.
@@ -192,7 +201,7 @@ class CaseTemplateEncoder:
 
     HPO_VERSION = None
 
-    def __init__(self, df:pd.DataFrame, hpo_cr:HpoConceptRecognizer, created_by:str) -> None:
+    def __init__(self, df:pd.DataFrame, hpo_cr:HpoConceptRecognizer, created_by:str, hpo_ontology:hpotk.MinimalOntology) -> None:
         """constructor
         """
         if not isinstance(df, pd.DataFrame):
@@ -216,7 +225,7 @@ class CaseTemplateEncoder:
                 raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{REQUIRED_H2_FIELDS[idx]}\" but got \"{header_2[idx]}\"")
         self._header_fields_1 = header_1
         self._n_columns = len(header_1)
-        self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2,hpo_cr=hpo_cr)
+        self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
         data_df = df.iloc[1:]
         self._is_biallelic = "allele_2" in header_1
         self._allele1_d = {}
@@ -227,7 +236,7 @@ class CaseTemplateEncoder:
             self._allele1_d[individual.id] = row["allele_1"]
             if self._is_biallelic:
                 self._allele2_d[individual.id] = row["allele_2"]
-        CaseTemplateEncoder.HPO_VERSION = hpo_cr.get_hpo_ontology().version
+        CaseTemplateEncoder.HPO_VERSION = hpo_ontology.version
         self._created_by = created_by
         self._metadata_d = {}
         for i in self._individuals:
@@ -236,7 +245,7 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
 
-    def  _process_header(self, header_1:List, header_2:List, hpo_cr:HpoConceptRecognizer, ) -> Dict[int, CellEncoder]:
+    def  _process_header(self, header_1:List, header_2:List, hpo_cr:HpoConceptRecognizer) -> Dict[int, CellEncoder]:
         index_to_decoder_d = {}
         in_hpo_range = False
         for i in range(self._n_columns):
@@ -298,9 +307,14 @@ class CaseTemplateEncoder:
             if encoder_type == CellType.DATA and encoder.name in DATA_ITEMS:
                 data_items[encoder.name] = encoder.encode(cell_contents)
             elif encoder_type == CellType.HPO:
-                hpoterm = encoder.encode(cell_contents)
-                if hpoterm is not None:
-                    hpo_terms.append(hpoterm)
+                try:
+                    hpoterm = encoder.encode(cell_contents)
+                    if hpoterm is not None:
+                        hpo_terms.append(hpoterm)
+                except Exception as hpo_parse_exception:
+                    errr = f"Could not parse contents of HPO column {encoder.name}: {cell_contents} because of {str(hpo_parse_exception)}"
+                    print(errr)
+                    raise ValueError(errr)
             elif encoder_type == CellType.MISC:
                 term_list = encoder.encode(cell_contents=cell_contents)
                 for trm in term_list:
