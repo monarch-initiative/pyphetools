@@ -25,13 +25,15 @@ class TemplateImporter:
         :param created_by: ORCID identifier of the biocurator
         :type created_by: str
         """
+        if "ORCID" in created_by.upper():
+            created_by = created_by.replace("ORCID:", "")
         match = re.search(TemplateImporter.ORCID_regex, created_by)
         if not match:
             if "http" in created_by:
                 raise ValueError(f"Invalid ORCID {created_by} -- do not use URL! Only the ORCID number")
             else:
                 raise ValueError(f"Invalid ORCID {created_by}")
-        self._created_by = created_by
+        self._created_by = f"ORCID:{created_by}
         if not os.path.isfile(template):
             raise FileNotFoundError(f"Could not find Excel template at {template}")
         if not os.path.isfile(hp_json):
