@@ -357,14 +357,17 @@ class Biosample(MessageMixin):
             cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
+        # TODO:
+        # and self._measurements == other._measurements \
+        # and self._procedure == other._procedure \
         return isinstance(other, Biosample) \
             and self._id == other._id \
             and self._individual_id == other._individual_id \
             and self._derived_from_id == other._derived_from_id \
             and self._description == other._description \
             and self._sampled_tissue == other._sampled_tissue \
+            and self._sample_type == other._sample_type \
             and self._phenotypic_features == other._phenotypic_features \
-            and self._measurements == other._measurements \
             and self._taxonomy == other._taxonomy \
             and self._time_of_collection == other._time_of_collection \
             and self._histological_diagnosis == other._histological_diagnosis \
@@ -373,8 +376,31 @@ class Biosample(MessageMixin):
             and self._pathological_stage == other._pathological_stage \
             and self._pathological_tnm_finding == other._pathological_tnm_finding \
             and self._diagnostic_markers == other._diagnostic_markers \
-            and self._procedure == other._procedure \
             and self._files == other._files \
             and self._material_sample == other._material_sample \
             and self._sample_processing == other._sample_processing \
             and self._sample_storage == other._sample_storage
+
+    def __repr__(self):
+        # f'measurements={self._measurements}, ' \
+        # f'procedure={self._procedure}, ' \
+        return f'Biosample(' \
+               f'id={self._id}, ' \
+               f'individual_id={self._individual_id}, ' \
+               f'derived_from_id={self._derived_from_id}, ' \
+               f'description={self._description}, ' \
+               f'sampled_tissue={self._sampled_tissue}, ' \
+               f'sample_type={self._sample_type}, ' \
+               f'phenotypic_features={self._phenotypic_features}, ' \
+               f'taxonomy={self._taxonomy}, ' \
+               f'time_of_collection={self._time_of_collection}, ' \
+               f'histological_diagnosis={self._histological_diagnosis}, ' \
+               f'tumor_progression={self._tumor_progression}, ' \
+               f'tumor_grade={self._tumor_grade}, ' \
+               f'pathological_stage={self._pathological_stage}, ' \
+               f'pathological_tnm_finding={self._pathological_tnm_finding}, ' \
+               f'diagnostic_markers={self._diagnostic_markers}, ' \
+               f'files={self._files}, ' \
+               f'material_sample={self._material_sample}, ' \
+               f'sample_processing={self._sample_processing}, ' \
+               f'sample_storage={self._sample_storage})'

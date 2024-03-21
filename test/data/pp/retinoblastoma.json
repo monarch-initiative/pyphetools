@@ -209,8 +209,8 @@
         "biosample.1": "specimen.1"
       },
       "fileAttributes": {
-        "genomeAssembly": "GRCh38",
-        "fileFormat": "VCF"
+        "fileFormat": "VCF",
+        "genomeAssembly": "GRCh38"
       }
     }]
   }],
@@ -298,7 +298,7 @@
             "vcfRecord": {
               "genomeAssembly": "GRCh38",
               "chrom": "NC_000013.11",
-              "pos": "48367512",
+              "pos": 48367512,
               "ref": "C",
               "alt": "T"
             },
@@ -441,8 +441,8 @@
       "proband B": "sample2"
     },
     "fileAttributes": {
-      "genomeAssembly": "GRCh38",
-      "fileFormat": "VCF"
+      "fileFormat": "VCF",
+      "genomeAssembly": "GRCh38"
     }
   }, {
     "uri": "file://data/somaticWgs.vcf.gz",
@@ -451,8 +451,8 @@
       "proband B": "sample2"
     },
     "fileAttributes": {
-      "genomeAssembly": "GRCh38",
-      "fileFormat": "VCF"
+      "fileFormat": "VCF",
+      "genomeAssembly": "GRCh38"
     }
   }],
   "metaData": {

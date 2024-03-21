@@ -104,7 +104,7 @@ class GeneDescriptor(MessageMixin):
             return GeneDescriptor(
                 value_id=msg.value_id,
                 symbol=msg.symbol,
-                description=msg.description if msg.HasField('description') else None,
+                description=None if msg.description == '' else msg.description,
                 alternate_ids=msg.alternate_ids,
                 xrefs=msg.xrefs,
                 alternate_symbols=msg.alternate_symbols,

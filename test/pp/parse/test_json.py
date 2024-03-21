@@ -27,7 +27,6 @@ class TestJsonSerializers:
 
         assert pp == retinoblastoma
 
-
     def test_round_trip(
             self,
             retinoblastoma: Phenopacket,

@@ -45,10 +45,25 @@ NCIT:C8509Primary Neoplasmz1
 NCIT:C140711!Retinoblastoma pN0 TNM Finding v8ík
 !file://data/fileSomaticWgs.vcf.gz
 biosample.1
-specimen.1
-genomeAssemblyGRCh38
+specimen.1
 
-fileFormatVCF:í
+fileFormatVCF
+genomeAssemblyGRCh382Í
+interpretation.id“
+
+
+NCIT:C7541Retinoblastoma8
+	proband A")#
+example-cnvR
+	mosaicism40.0%X˜
+biosample.1"Âﬁ
+rs121913300RB1 c.958C>T (p.Arg320Ter)*
+	HGNC:9884RB12
+hgvs.cNM_000321.2:c.958C>T2#
+transcript_referenceNM_000321.2:!
+GRCh38NC_000013.11òèà*C2TR
+allele-frequency25.0%Xr
+GENO:0000135heterozygous:í
 
 
 NCIT:C7541Retinoblastoma
@@ -58,17 +73,17 @@ NCIT:C7541Retinoblastoma
 NCIT:C140678!Retinoblastoma cM0 TNM Finding v8:
 UBERON:0004548left eyeRy
 file://data/germlineWgs.vcf.gz
-	proband Asample1
-	proband Bsample2
-genomeAssemblyGRCh38
+	proband Bsample2
+	proband Asample1
 
-fileFormatVCFRx
+fileFormatVCF
+genomeAssemblyGRCh38Rx
 file://data/somaticWgs.vcf.gz
 	proband Bsample2
-	proband Asample1
-genomeAssemblyGRCh38
+	proband Asample1
 
-fileFormatVCFZ—
+fileFormatVCF
+genomeAssemblyGRCh38Z—
 ‘§˘Ñanonymous biocurator"y
 hphuman phenotype ontology%http://purl.obolibrary.org/obo/hp.owl"
 2021-08-02*HP2"http://purl.obolibrary.org/obo/HP_"z

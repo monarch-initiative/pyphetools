@@ -187,16 +187,137 @@ class VcfRecord(MessageMixin):
         self._filter = filter
         self._info = info
 
+    @property
+    def genome_assembly(self) -> str:
+        return self._genome_assembly
+
+    @genome_assembly.setter
+    def genome_assembly(self, value: str):
+        self._genome_assembly = value
+
+    @property
+    def chrom(self) -> str:
+        return self._chrom
+
+    @chrom.setter
+    def chrom(self, value: str):
+        self._chrom = value
+
+    @property
+    def pos(self) -> int:
+        return self._pos
+
+    @pos.setter
+    def pos(self, value: int):
+        self._pos = value
+
+    @property
+    def ref(self) -> str:
+        return self._ref
+
+    @ref.setter
+    def ref(self, value: str):
+        self._ref = value
+
+    @property
+    def alt(self) -> str:
+        return self._alt
+
+    @alt.setter
+    def alt(self, value: str):
+        self._alt = value
+
+    @property
+    def id(self) -> typing.Optional[str]:
+        return self._id
+
+    @id.setter
+    def id(self, value: str):
+        self._id = value
+
+    @id.deleter
+    def id(self):
+        self._id = None
+
+    @property
+    def qual(self) -> typing.Optional[str]:
+        return self._qual
+
+    @qual.setter
+    def qual(self, value: str):
+        self._qual = value
+
+    @qual.deleter
+    def qual(self):
+        self._qual = None
+
+    @property
+    def filter(self) -> typing.Optional[str]:
+        return self._filter
+
+    @filter.setter
+    def filter(self, value: str):
+        self._filter = value
+
+    @filter.deleter
+    def filter(self):
+        self._filter = None
+
+    @property
+    def info(self) -> typing.Optional[str]:
+        return self._info
+
+    @info.setter
+    def info(self, value: str):
+        self._info = value
+
+    @info.deleter
+    def info(self):
+        self._info = None
+
     @staticmethod
     def field_names() -> typing.Iterable[str]:
-        pass
+        return 'genome_assembly', 'chrom', 'pos', 'ref', 'alt', 'id', 'qual', 'filter', 'info'
 
     @staticmethod
     def from_dict(values: typing.Mapping[str, typing.Any]):
-        pass
+        if all(field in values for field in ('genome_assembly', 'chrom', 'pos', 'ref', 'alt')):
+            return VcfRecord(
+                genome_assembly=values['genome_assembly'],
+                chrom=values['chrom'],
+                pos=values['pos'],
+                ref=values['ref'],
+                alt=values['alt'],
+                id=MessageMixin._extract_optional_field('id', values),
+                qual=MessageMixin._extract_optional_field('qual', values),
+                filter=MessageMixin._extract_optional_field('filter', values),
+                info=MessageMixin._extract_optional_field('info', values),
+            )
+        else:
+            raise ValueError(f'Missing one of the required fields in {values}')
 
     def to_message(self) -> Message:
-        pass
+        vcf = pp202.VcfRecord(
+            genome_assembly=self._genome_assembly,
+            chrom=self._chrom,
+            pos=self._pos,
+            ref=self._ref,
+            alt=self._alt,
+        )
+
+        if self._id is not None:
+            vcf.id = self._id
+
+        if self._qual is not None:
+            vcf.qual = self._qual
+
+        if self._filter is not None:
+            vcf.filter = self._filter
+
+        if self._info is not None:
+            vcf.info = self._info
+
+        return vcf
 
     @classmethod
     def message_type(cls) -> typing.Type[Message]:
@@ -204,13 +325,43 @@ class VcfRecord(MessageMixin):
 
     @classmethod
     def from_message(cls, msg: Message):
-        pass
+        if isinstance(msg, cls.message_type()):
+            return VcfRecord(
+                genome_assembly=msg.genome_assembly,
+                chrom=msg.chrom,
+                pos=msg.pos,
+                ref=msg.ref,
+                alt=msg.alt,
+                id=None if msg.id == '' else msg.id,
+                qual=None if msg.qual == '' else msg.qual,
+                filter=None if msg.filter == '' else msg.filter,
+                info=None if msg.info == '' else msg.info,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
-        pass
+        return isinstance(other, VcfRecord) \
+            and self._genome_assembly == other._genome_assembly \
+            and self._chrom == other._chrom \
+            and self._pos == other._pos \
+            and self._ref == other._ref \
+            and self._alt == other._alt \
+            and self._id == other._id \
+            and self._qual == other._qual \
+            and self._filter == other._filter \
+            and self._info == other._info
 
     def __repr__(self):
-        pass
+        return f'VcfRecord(genome_assembly={self._genome_assembly}, ' \
+               f'chrom={self._chrom}, ' \
+               f'pos={self._pos}, ' \
+               f'ref={self._ref}, ' \
+               f'alt={self._alt}, ' \
+               f'id={self._id}, ' \
+               f'qual={self._qual}, ' \
+               f'filter={self._filter}, ' \
+               f'info={self._info})'
 
 
 class MoleculeContext(enum.Enum):
@@ -236,7 +387,7 @@ class VariationDescriptor(MessageMixin):
             alternate_labels: typing.Optional[typing.Iterable[str]] = None,
             extensions: typing.Optional[typing.Iterable[Extension]] = None,
             structural_type: typing.Optional[OntologyClass] = None,
-            vrs_ref_allele_string: typing.Optional[str] = None,
+            vrs_ref_allele_seq: typing.Optional[str] = None,
             allelic_state: typing.Optional[OntologyClass] = None,
     ):
         self._id = id
@@ -250,7 +401,7 @@ class VariationDescriptor(MessageMixin):
         self._alternate_labels = [] if alternate_labels is None else list(alternate_labels)
         self._extensions = [] if extensions is None else list(extensions)
         self._structural_type = structural_type
-        self._vrs_ref_allele_string = vrs_ref_allele_string
+        self._vrs_ref_allele_seq = vrs_ref_allele_seq
         self._allelic_state = allelic_state
 
     @property
@@ -346,16 +497,16 @@ class VariationDescriptor(MessageMixin):
         self._structural_type = None
 
     @property
-    def vrs_ref_allele_string(self) -> typing.Optional[str]:
-        return self._vrs_ref_allele_string
+    def vrs_ref_allele_seq(self) -> typing.Optional[str]:
+        return self._vrs_ref_allele_seq
 
-    @vrs_ref_allele_string.setter
-    def vrs_ref_allele_string(self, value: str):
-        self._vrs_ref_allele_string = value
+    @vrs_ref_allele_seq.setter
+    def vrs_ref_allele_seq(self, value: str):
+        self._vrs_ref_allele_seq = value
 
-    @vrs_ref_allele_string.deleter
-    def vrs_ref_allele_string(self):
-        self._vrs_ref_allele_string = None
+    @vrs_ref_allele_seq.deleter
+    def vrs_ref_allele_seq(self):
+        self._vrs_ref_allele_seq = None
 
     @property
     def allelic_state(self) -> typing.Optional[OntologyClass]:
@@ -384,7 +535,7 @@ class VariationDescriptor(MessageMixin):
                 alternate_labels=values.get('alternate_labels', None),
                 extensions=extract_message_sequence('extensions', Extension, values),
                 structural_type=extract_message_scalar('structural_type', OntologyClass, values),
-                vrs_ref_allele_string=values.get('vrs_ref_allele_string', None),
+                vrs_ref_allele_seq=values.get('vrs_ref_allele_seq', None),
                 allelic_state=extract_message_scalar('allelic_state', OntologyClass, values),
             )
         else:
@@ -417,8 +568,8 @@ class VariationDescriptor(MessageMixin):
         if self._structural_type is not None:
             vd.structural_type.CopyFrom(self._structural_type.to_message())
 
-        if self._vrs_ref_allele_string is not None:
-            self.vrs_ref_allele_string = self._vrs_ref_allele_string
+        if self._vrs_ref_allele_seq is not None:
+            self.vrs_ref_allele_seq = self._vrs_ref_allele_seq
 
         if self._allelic_state is not None:
             vd.allelic_state.CopyFrom(self._allelic_state.to_message())
@@ -435,8 +586,8 @@ class VariationDescriptor(MessageMixin):
             return VariationDescriptor(
                 id=msg.id,
                 molecule_context=MoleculeContext(msg.molecule_context),
-                label=msg.label if msg.HasField('label') else None,
-                description=msg.description if msg.HasField('description') else None,
+                label=None if msg.label == '' else msg.label,
+                description=None if msg.description == '' else msg.description,
                 gene_context=extract_pb_message_scalar('gene_context', GeneDescriptor, msg),
                 expressions=extract_pb_message_seq('expressions', Expression, msg),
                 vcf_record=extract_pb_message_scalar('vcf_record', VcfRecord, msg),
@@ -444,7 +595,7 @@ class VariationDescriptor(MessageMixin):
                 alternate_labels=msg.alternate_labels,
                 extensions=extract_pb_message_seq('extensions', Extension, msg),
                 structural_type=extract_pb_message_scalar('structural_type', OntologyClass, msg),
-                vrs_ref_allele_string=msg.vrs_ref_allele_string if msg.HasField('vrs_ref_allele_string') else None,
+                vrs_ref_allele_seq=None if msg.vrs_ref_allele_seq == '' else msg.vrs_ref_allele_seq,
                 allelic_state=extract_pb_message_scalar('allelic_state', OntologyClass, msg),
             )
         else:
@@ -454,7 +605,7 @@ class VariationDescriptor(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return (
             'id', 'molecule_context', 'label', 'description', 'gene_context', 'expressions', 'vcf_record', 'xrefs',
-            'alternate_labels', 'extensions', 'structural_type', 'vrs_ref_allele_string', 'allelic_state',
+            'alternate_labels', 'extensions', 'structural_type', 'vrs_ref_allele_seq', 'allelic_state',
         )
 
     def __eq__(self, other):
@@ -470,21 +621,21 @@ class VariationDescriptor(MessageMixin):
             and self._alternate_labels == other._alternate_labels \
             and self._extensions == other._extensions \
             and self._structural_type == other._structural_type \
-            and self._vrs_ref_allele_string == other._vrs_ref_allele_string \
+            and self._vrs_ref_allele_seq == other._vrs_ref_allele_seq \
             and self._allelic_state == other._allelic_state
 
     def __repr__(self):
         return 'VariationDescriptor(' \
-               f'id{self._id}, ' \
-               f'molecule_context{self._molecule_context}, ' \
-               f'label{self._label}, ' \
-               f'description{self._description}, ' \
-               f'gene_context{self._gene_context}, ' \
-               f'expressions{self._expressions}, ' \
-               f'vcf_record{self._vcf_record}, ' \
-               f'xrefs{self._xrefs}, ' \
-               f'alternate_labels{self._alternate_labels}, ' \
-               f'extensions{self._extensions}, ' \
-               f'structural_type{self._structural_type}, ' \
-               f'vrs_ref_allele_string{self._vrs_ref_allele_string}, ' \
-               f'allelic_state{self._allelic_state})'
+               f'id={self._id}, ' \
+               f'molecule_context={self._molecule_context}, ' \
+               f'label={self._label}, ' \
+               f'description={self._description}, ' \
+               f'gene_context={self._gene_context}, ' \
+               f'expressions={self._expressions}, ' \
+               f'vcf_record={self._vcf_record}, ' \
+               f'xrefs={self._xrefs}, ' \
+               f'alternate_labels={self._alternate_labels}, ' \
+               f'extensions={self._extensions}, ' \
+               f'structural_type={self._structural_type}, ' \
+               f'vrs_ref_allele_seq={self._vrs_ref_allele_seq}, ' \
+               f'allelic_state={self._allelic_state})'

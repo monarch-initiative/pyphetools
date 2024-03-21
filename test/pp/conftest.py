@@ -9,8 +9,9 @@ from pyphetools.pp.v202 import *
 def retinoblastoma(
         individual: Individual,
         phenotypic_features: typing.Sequence[PhenotypicFeature],
-        diseases: typing.Sequence[Disease],
         biosamples: typing.Sequence[Biosample],
+        interpretations: typing.Sequence[Interpretation],
+        diseases: typing.Sequence[Disease],
         files: typing.Sequence[File],
         meta_data: MetaData,
 ) -> Phenopacket:
@@ -21,8 +22,9 @@ def retinoblastoma(
         id='example.retinoblastoma.phenopacket.id',
         subject=individual,
         phenotypic_features=phenotypic_features,
-        diseases=diseases,
         biosamples=biosamples,
+        interpretations=interpretations,
+        diseases=diseases,
         files=files,
         meta_data=meta_data,
     )
@@ -88,6 +90,67 @@ def diseases() -> typing.Sequence[Disease]:
             disease_stage=(OntologyClass(id='LOINC:LA24739-7', label='Group E'),),
             clinical_tnm_finding=(OntologyClass(id='NCIT:C140678', label='Retinoblastoma cM0 TNM Finding v8'),),
             primary_site=OntologyClass(id='UBERON:0004548', label='left eye'),
+        ),
+    )
+
+
+@pytest.fixture(scope='package')
+def interpretations() -> typing.Sequence[Interpretation]:
+    return (
+        Interpretation(
+            id='interpretation.id',
+            progress_status=Interpretation.ProgressStatus.SOLVED,
+            diagnosis=Diagnosis(
+                disease=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+                genomic_interpretations=(
+                    GenomicInterpretation(
+                        subject_or_biosample_id='proband A',
+                        interpretation_status=GenomicInterpretation.InterpretationStatus.CAUSATIVE,
+                        variant_interpretation=VariantInterpretation(
+                            acmg_pathogenicity_classification=AcmgPathogenicityClassification.PATHOGENIC,
+                            therapeutic_actionability=TherapeuticActionability.ACTIONABLE,
+                            variation_descriptor=VariationDescriptor(
+                                id='example-cnv',
+                                molecule_context=MoleculeContext.genomic,
+                                # TODO: variation
+                                extensions=(
+                                    Extension(name='mosaicism', value='40.0%'),
+                                ),
+                            )
+                        )
+                    ),
+                    GenomicInterpretation(
+                        subject_or_biosample_id='biosample.1',
+                        interpretation_status=GenomicInterpretation.InterpretationStatus.CAUSATIVE,
+                        variant_interpretation=VariantInterpretation(
+                            acmg_pathogenicity_classification=AcmgPathogenicityClassification.PATHOGENIC,
+                            therapeutic_actionability=TherapeuticActionability.ACTIONABLE,
+                            variation_descriptor=VariationDescriptor(
+                                id='rs121913300',
+                                molecule_context=MoleculeContext.genomic,
+                                # TODO: variation
+                                label='RB1 c.958C>T (p.Arg320Ter)',
+                                gene_context=GeneDescriptor(value_id='HGNC:9884', symbol='RB1'),
+                                expressions=(
+                                    Expression(syntax='hgvs.c', value='NM_000321.2:c.958C>T'),
+                                    Expression(syntax='transcript_reference', value='NM_000321.2'),
+                                ),
+                                vcf_record=VcfRecord(
+                                    genome_assembly="GRCh38",
+                                    chrom="NC_000013.11",
+                                    pos=48367512,
+                                    ref="C",
+                                    alt="T",
+                                ),
+                                extensions=(
+                                    Extension(name='allele-frequency', value='25.0%'),
+                                ),
+                                allelic_state=OntologyClass(id='GENO:0000135', label='heterozygous'),
+                            )
+                        )
+                    )
+                ),
+            ),
         ),
     )
 
