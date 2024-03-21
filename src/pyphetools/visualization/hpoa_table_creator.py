@@ -110,7 +110,7 @@ class HpoaTableCreator:
     These should be tab separated fields.
 
     """
-    def __init__(self, phenopacket_list, onset_term_d,  moi_d) -> None:
+    def __init__(self, phenopacket_list, onset_term_d,  moi_d, created_by:str=None) -> None:
         """Constructor
 
         :param phenopacket_list: List of GA4GH phenopackets
@@ -126,6 +126,7 @@ class HpoaTableCreator:
         self._biocurator_d = self._get_biocurator_d()
         self._onset_rows = self._add_age_of_onset_terms(onset_term_d)
         self._moi_rows = self._add_moi_rows(moi_d)
+        self._created_by = created_by
 
     def _get_all_hpos(self) -> Dict[str,HpTerm]:
         """Get a dictionary of HpTerms, with key being HPO id and the value the corresponding HpTerm
@@ -234,6 +235,10 @@ class HpoaTableCreator:
         moi_rows = list()
         for pmid, hpterm_list in moi_d.items():
             biocurator = self._biocurator_d.get(pmid)
+            # If we add an MOI outside of the template, then it will not have a PMID
+            # the template builder requires a created_by field which is designed for this.
+            if biocurator is None:
+                biocurator = self._created_by
             for hpterm in hpterm_list:
                 row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=pmid, biocurator=biocurator)
                 moi_rows.append(row)
@@ -276,7 +281,7 @@ class HpoaTableCreator:
 
 class HpoaTableBuilder:
 
-    def __init__(self, indir=None, phenopacket_list=None) -> None:
+    def __init__(self, indir=None, phenopacket_list=None, created_by:str=None) -> None:
         if indir is not None:
             if not os.path.isdir(indir):
                 raise ValueError(f"indir argument {indir} must be directory!")
@@ -296,6 +301,7 @@ class HpoaTableBuilder:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)
         self._moi_d = defaultdict(list)
+        self._created_by = created_by
         onset_calc = OnsetCalculator(self._phenopackets)
         pmid_onset_d = onset_calc.get_pmid_to_onset_d()
         for pmid, onset_list in pmid_onset_d.items():
@@ -331,7 +337,7 @@ class HpoaTableBuilder:
 
 
     def build(self):
-        return HpoaTableCreator(phenopacket_list=self._phenopackets, onset_term_d=self._onset_term_d, moi_d=self._moi_d)
+        return HpoaTableCreator(phenopacket_list=self._phenopackets, onset_term_d=self._onset_term_d, moi_d=self._moi_d, created_by=self._created_by)
 
     @staticmethod
     def from_individuals(individual_list:List[Individual], created_by:str):
@@ -341,13 +347,15 @@ class HpoaTableBuilder:
 
         :param individual_list: List of individuals to be summarized in HPOA format
         :type individual_list: List[Individual]
+        :param created_by: the ORCID id of the person who biocurated the data
+        :type created_by: str
         :returns: HPOA table builder object
         :rtype: HpoaTableBuilder
         """
         ppkt_list = list()
         for i in individual_list:
             cite = i.get_citation()
-            metadata = MetaData(created_by="ORCID:0000-0002-0736-9199", citation=cite)
+            metadata = MetaData(created_by=created_by, citation=cite)
             ppkt = i.to_ga4gh_phenopacket(metadata=metadata)
             ppkt_list.append(ppkt)
         return HpoaTableBuilder(phenopacket_list=ppkt_list)
