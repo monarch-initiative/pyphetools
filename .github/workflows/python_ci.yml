@@ -26,11 +26,11 @@ jobs:
         - name: Install pyphetools
           run: |
             echo "Installing"
-            git branch
+            git rev-parse HEAD
             python3 -m pip install .[test]
 
         - name: Run all tests
           run: |
             echo "Testing"
-            git branch
+            git rev-parse HEAD
             python3 -m pytest
