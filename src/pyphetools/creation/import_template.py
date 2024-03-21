@@ -33,7 +33,7 @@ class TemplateImporter:
                 raise ValueError(f"Invalid ORCID {created_by} -- do not use URL! Only the ORCID number")
             else:
                 raise ValueError(f"Invalid ORCID {created_by}")
-        self._created_by = f"ORCID:{created_by}
+        self._created_by = f"ORCID:{created_by}"
         if not os.path.isfile(template):
             raise FileNotFoundError(f"Could not find Excel template at {template}")
         if not os.path.isfile(hp_json):
