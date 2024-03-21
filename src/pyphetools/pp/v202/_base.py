@@ -5,7 +5,7 @@ from google.protobuf.message import Message
 
 from .._api import MessageMixin
 from .._timestamp import Timestamp
-from ..parse import extract_message_scalar
+from ..parse import extract_message_scalar, extract_pb_message_scalar
 
 
 class OntologyClass(MessageMixin):
@@ -147,9 +147,9 @@ class ExternalReference(MessageMixin):
 
     def to_message(self) -> Message:
         return pp202.ExternalReference(
-            id=self._id,
-            reference=self._reference,
-            description=self._description,
+            id=None if self._id is None else self._id,
+            reference=None if self._reference is None else self._reference,
+            description=None if self._description is None else self._description,
         )
 
     @classmethod
@@ -160,9 +160,9 @@ class ExternalReference(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, pp202.ExternalReference):
             return ExternalReference(
-                id=msg.id,
-                reference=msg.reference,
-                description=msg.description,
+                id=None if msg.id == '' else msg.id,
+                reference=None if msg.reference == '' else msg.reference,
+                description=None if msg.description == '' else msg.description,
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
@@ -235,8 +235,8 @@ class Evidence(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, pp202.Evidence):
             return Evidence(
-                evidence_code=OntologyClass.from_message(msg.evidence_code),
-                reference=ExternalReference.from_message(msg.reference),
+                evidence_code=extract_pb_message_scalar('evidence_code', OntologyClass, msg),
+                reference=extract_pb_message_scalar('reference', ExternalReference, msg),
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
@@ -433,8 +433,8 @@ class AgeRange(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, pp202.AgeRange):
             return AgeRange(
-                start=Age.from_message(msg.start),
-                end=Age.from_message(msg.end),
+                start=extract_pb_message_scalar('start', Age, msg),
+                end=extract_pb_message_scalar('end', Age, msg),
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
@@ -500,8 +500,8 @@ class TimeInterval(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, pp202.TimeInterval):
             return TimeInterval(
-                start=Timestamp.from_message(msg.start),
-                end=Timestamp.from_message(msg.end),
+                start=extract_pb_message_scalar('start', Timestamp, msg),
+                end=extract_pb_message_scalar('end', Timestamp, msg),
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
@@ -664,17 +664,17 @@ class TimeElement(MessageMixin):
         if isinstance(msg, pp202.TimeElement):
             case = msg.WhichOneof('element')
             if case == 'gestational_age':
-                return TimeElement(gestational_age=GestationalAge.from_message(msg.gestational_age))
+                return TimeElement(gestational_age=extract_pb_message_scalar('gestational_age', GestationalAge, msg))
             elif case == 'age':
-                return TimeElement(age=Age.from_message(msg.age))
+                return TimeElement(age=extract_pb_message_scalar('age', Age, msg))
             elif case == 'age_range':
-                return TimeElement(age_range=AgeRange.from_message(msg.age_range))
+                return TimeElement(age_range=extract_pb_message_scalar('age_range', AgeRange, msg))
             elif case == 'ontology_class':
-                return TimeElement(ontology_class=OntologyClass.from_message(msg.ontology_class))
+                return TimeElement(ontology_class=extract_pb_message_scalar('ontology_class', OntologyClass, msg))
             elif case == 'timestamp':
-                return TimeElement(timestamp=Timestamp.from_message(msg.timestamp))
+                return TimeElement(timestamp=extract_pb_message_scalar('timestamp', Timestamp, msg))
             elif case == 'interval':
-                return TimeElement(interval=TimeInterval.from_message(msg.interval))
+                return TimeElement(interval=extract_pb_message_scalar('interval', TimeInterval, msg))
             else:
                 raise ValueError(f'Unknown one of field set {case}')
         else:
@@ -778,9 +778,9 @@ class Procedure(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, pp202.Procedure):
             return Procedure(
-                code=OntologyClass.from_message(msg.code),
-                body_site=OntologyClass.from_message(msg.body_site),
-                performed=TimeElement.from_message(msg.performed),
+                code=extract_pb_message_scalar('code', OntologyClass, msg),
+                body_site=extract_pb_message_scalar('body_site', OntologyClass, msg),
+                performed=extract_pb_message_scalar('performed', TimeElement, msg),
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)

@@ -173,7 +173,7 @@ class VitalStatus(MessageMixin):
                 status=VitalStatus.Status(msg.status),
                 time_of_death=extract_pb_message_scalar('time_of_death', TimeElement, msg),
                 cause_of_death=extract_pb_message_scalar('cause_of_death', OntologyClass, msg),
-                survival_time_in_days=msg.survival_time_in_days if msg.HasField('survival_time_in_days') else None,
+                survival_time_in_days=None if msg.survival_time_in_days == 0 else msg.survival_time_in_days,
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
