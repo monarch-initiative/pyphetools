@@ -24,7 +24,7 @@ jobs:
             python-version: "3.11"
 
         - name: Install pyphetools
-          run: python3 -m pip install -e .[test]
+          run: python3 -m pip install .[test]
 
         - name: Run all tests
           run: python3 -m pytest
