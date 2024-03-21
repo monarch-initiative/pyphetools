@@ -50,14 +50,14 @@ one example row with data extracted from a publication (We show two tables for b
 
 
 
-| age_of_onset   | age_at_last_encounter |sex	  | ORCID	                 |
+| age_of_onset   | age_at_last_encounter |sex	  | HPO	                 |
 :----------------|:----------------------|:-------|:-------------------------|
-| age      	     | age                   | M:F:O:U| str	                     |
-|Infantile onset |    	P21Y	         | F      | 0000-0002-0736-9199      |
+| age      	     | age                   | M:F:O:U| na	                     |
+|Infantile onset |    	P21Y	         | F      | na     |
 
 11. **age_of_onset**: The age of onset of disease, recorded using [iso8601 convention](https://en.wikipedia.org/wiki/ISO_8601#Durations) or an HPO [Onset](https://hpo.jax.org/app/browse/term/HP:0003674){:target="_blank"} term.
 12. **sex** (M:F:U:O): one of M (male), female (F), other(O), or unknown (U)
-13. **ORCID** (str): ORCID persistent digital identifier of the person who performed the biocuration. Use the ORCID number rather than the entire URL.
+13. **HPO** (str): The column marks the end of the data columns and should contain "na".
 
 ### HPO Term Columns
 All of the following columns denote HPO terms. The first row has the HPO term label. Be sure to use the same label as is shown on the HPO
