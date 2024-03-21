@@ -25,7 +25,7 @@ jobs:
 
         - name: Install pyphetools
           run: |
-            python3 -m pip install .[test]
+            python3 -m pip install --editable .[test]
 
         - name: Run all tests
           run: |
