@@ -26,7 +26,7 @@ jobs:
         - name: Install pyphetools
           run: |
             python3 -m pip install --upgrade pip
-            python3 -m pip install ".[test]"
+            python3 -m pip install --editable '.[test]'
             python3 -m pip freeze
 
         - name: Run all tests
