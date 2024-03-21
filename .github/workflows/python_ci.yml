@@ -29,4 +29,5 @@ jobs:
 
         - name: Run all tests
           run: |
+            python3 -m pip freeze
             pytest
