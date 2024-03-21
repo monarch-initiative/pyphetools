@@ -141,8 +141,8 @@ class VariantManager:
         # The DataFrame has two header rows.
         # For CaseTemplateEncoder, the second header row in effect is the first row of the DataFrame, so we drop it here.
         # For CaseTemplateEncoder, the second row will contain "str" in the second row of the PMID column
-        # For other encoders, there may not be a "PMID" column, and if so it will not contain "str" in the second row
-        if "PMID" in self._dataframe.columns and self._dataframe.iloc[0]["PMID"] == "str":
+        # For other encoders, there may not be a "PMID" column, and if so it will not contain "CURIE" in the second row
+        if "PMID" in self._dataframe.columns and self._dataframe.iloc[0]["PMID"] == "CURIE":
             df = self._dataframe.iloc[1:]
         else:
             df = self._dataframe
@@ -186,6 +186,9 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
+            for a in allele_set:
+                if not a in self._unmapped_alleles:
+                    print(f"Could not find allele {a}")
             raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
             raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
@@ -244,6 +247,16 @@ class VariantManager:
         d = {"status": "unmapped", "count": n_unmapped, "alleles": unmapped_alleles}
         dlist.append(d)
         return pd.DataFrame(dlist)
+
+    def has_unmapped_alleles(self):
+        return len(self._unmapped_alleles) > 0
+
+    def get_unmapped_alleles(self):
+        return self._unmapped_alleles
+
+    def get_mapped_allele_count(self):
+        return len(self._var_d)
+
 
     def add_variants_to_individuals(self, individual_list:List[Individual], hemizygous:bool=False):
         """
