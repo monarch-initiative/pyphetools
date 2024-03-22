@@ -9,6 +9,7 @@ from pyphetools.pp.v202 import *
 def retinoblastoma(
         individual: Individual,
         phenotypic_features: typing.Sequence[PhenotypicFeature],
+        measurements: typing.Sequence[Measurement],
         biosamples: typing.Sequence[Biosample],
         interpretations: typing.Sequence[Interpretation],
         diseases: typing.Sequence[Disease],
@@ -22,6 +23,7 @@ def retinoblastoma(
         id='example.retinoblastoma.phenopacket.id',
         subject=individual,
         phenotypic_features=phenotypic_features,
+        measurements=measurements,
         biosamples=biosamples,
         interpretations=interpretations,
         diseases=diseases,
@@ -77,6 +79,46 @@ def phenotypic_features() -> typing.Sequence[PhenotypicFeature]:
             type=OntologyClass(id='HP:0000541', label='Retinal detachment'),
             modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
             onset=TimeElement(age=Age(iso8601duration='P6M')),
+        ),
+    )
+
+
+@pytest.fixture(scope='package')
+def measurements() -> typing.Sequence[Measurement]:
+    return (
+        Measurement(
+            assay=OntologyClass(id='LOINC:79893-4', label='Left eye Intraocular pressure'),
+            measurement_value=Value(
+                value=Quantity(
+                    unit=OntologyClass(id='UCUM:mm[Hg]', label='millimetres of mercury'),
+                    value=25.0,
+                    reference_range=ReferenceRange(
+                        unit=OntologyClass(id='LOINC:56844-4', label='Intraocular pressure of Eye'),
+                        low=10.0,
+                        high=21.0,
+                    ),
+                ),
+            ),
+            time_observed=TimeElement(
+                age=Age(iso8601duration='P6M'),
+            ),
+        ),
+        Measurement(
+            assay=OntologyClass(id='LOINC:79892-6', label='Right eye Intraocular pressure'),
+            measurement_value=Value(
+                value=Quantity(
+                    unit=OntologyClass(id='UCUM:mm[Hg]', label='millimetres of mercury'),
+                    value=15.0,
+                    reference_range=ReferenceRange(
+                        unit=OntologyClass(id='LOINC:56844-4', label='Intraocular pressure of Eye'),
+                        low=10.0,
+                        high=21.0,
+                    ),
+                ),
+            ),
+            time_observed=TimeElement(
+                age=Age(iso8601duration='P6M'),
+            ),
         ),
     )
 

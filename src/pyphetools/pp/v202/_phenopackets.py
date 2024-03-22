@@ -8,6 +8,7 @@ from ._base import File
 from ._biosample import Biosample
 from ._individual import Individual
 from ._interpretation import Interpretation
+from ._measurement import Measurement
 from ._phenotypic_feature import PhenotypicFeature
 from ._disease import Disease
 from ._meta_data import MetaData
@@ -23,7 +24,7 @@ class Phenopacket(MessageMixin):
             meta_data: MetaData,
             subject: typing.Optional[Individual] = None,
             phenotypic_features: typing.Optional[typing.Iterable[PhenotypicFeature]] = None,
-            # TODO: measurements
+            measurements: typing.Optional[typing.Iterable[Measurement]] = None,
             biosamples: typing.Optional[typing.Iterable[Biosample]] = None,
             interpretations: typing.Optional[typing.Iterable[Interpretation]] = None,
             diseases: typing.Optional[typing.Iterable[Disease]] = None,
@@ -33,6 +34,7 @@ class Phenopacket(MessageMixin):
         self._id = id
         self._subject = subject
         self._phenotypic_features = [] if phenotypic_features is None else list(phenotypic_features)
+        self._measurements = [] if measurements is None else list(measurements)
         self._biosamples = [] if biosamples is None else list(biosamples)
         self._interpretations = [] if interpretations is None else list(interpretations)
         self._diseases = [] if diseases is None else list(diseases)
@@ -64,6 +66,10 @@ class Phenopacket(MessageMixin):
         return self._phenotypic_features
 
     @property
+    def measurements(self) -> typing.MutableSequence[Measurement]:
+        return self._measurements
+
+    @property
     def biosamples(self) -> typing.MutableSequence[Biosample]:
         return self._biosamples
 
@@ -89,7 +95,10 @@ class Phenopacket(MessageMixin):
 
     @staticmethod
     def field_names() -> typing.Iterable[str]:
-        return 'id', 'subject', 'phenotypic_features', 'biosamples', 'interpretations', 'diseases', 'files', 'meta_data'
+        return (
+            'id', 'subject', 'phenotypic_features', 'measurements', 'biosamples',
+            'interpretations', 'diseases', 'files', 'meta_data',
+        )
 
     @classmethod
     def required_fields(cls) -> typing.Sequence[str]:
@@ -103,6 +112,7 @@ class Phenopacket(MessageMixin):
                 id=values['id'],
                 subject=extract_message_scalar('subject', Individual, values),
                 phenotypic_features=extract_message_sequence('phenotypic_features', PhenotypicFeature, values),
+                measurements=extract_message_sequence('measurements', Measurement, values),
                 biosamples=extract_message_sequence('biosamples', Biosample, values),
                 interpretations=extract_message_sequence('interpretations', Interpretation, values),
                 diseases=extract_message_sequence('diseases', Disease, values),
@@ -117,6 +127,7 @@ class Phenopacket(MessageMixin):
             id=self._id,
             subject=self._subject.to_message(),
             phenotypic_features=(pf.to_message() for pf in self._phenotypic_features),
+            measurements=(m.to_message() for m in self._measurements),
             biosamples=(b.to_message() for b in self._biosamples),
             interpretations=(i.to_message() for i in self._interpretations),
             diseases=(d.to_message() for d in self._diseases),
@@ -135,6 +146,7 @@ class Phenopacket(MessageMixin):
                 id=msg.id,
                 subject=extract_pb_message_scalar('subject', Individual, msg),
                 phenotypic_features=extract_pb_message_seq('phenotypic_features', PhenotypicFeature, msg),
+                measurements=extract_pb_message_seq('measurements', Measurement, msg),
                 biosamples=extract_pb_message_seq('biosamples', Biosample, msg),
                 interpretations=extract_pb_message_seq('interpretations', Interpretation, msg),
                 diseases=extract_pb_message_seq('diseases', Disease, msg),
@@ -149,6 +161,7 @@ class Phenopacket(MessageMixin):
             and self._id == other._id \
             and self._subject == other._subject \
             and self._phenotypic_features == other._phenotypic_features \
+            and self._measurements == other._measurements \
             and self._biosamples == other._biosamples \
             and self._interpretations == other._interpretations \
             and self._diseases == other._diseases \
@@ -160,6 +173,7 @@ class Phenopacket(MessageMixin):
                f'id={self._id}, ' \
                f'subject={self._subject}, ' \
                f'phenotypic_features={self._phenotypic_features}, ' \
+               f'measurements={self._measurements}, ' \
                f'biosamples={self._biosamples}, ' \
                f'interpretations={self._interpretations}, ' \
                f'diseases={self._diseases}, ' \

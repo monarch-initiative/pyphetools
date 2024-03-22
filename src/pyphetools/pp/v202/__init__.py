@@ -12,6 +12,7 @@ from ._gene_descriptor import GeneDescriptor
 from ._individual import Individual, KaryotypicSex, Sex, VitalStatus
 from ._interpretation import AcmgPathogenicityClassification, TherapeuticActionability, VariantInterpretation
 from ._interpretation import GenomicInterpretation, Diagnosis, Interpretation
+from ._measurement import ReferenceRange, Quantity, TypedQuantity, ComplexValue, Value, Measurement
 from ._phenotypic_feature import PhenotypicFeature
 from ._disease import Disease
 from ._meta_data import MetaData, Resource, Update
@@ -23,6 +24,7 @@ __all__ = [
     'Individual', 'VitalStatus', 'Sex', 'KaryotypicSex',
     'GeneDescriptor', 'AcmgPathogenicityClassification', 'TherapeuticActionability', 'VariantInterpretation',
     'GenomicInterpretation', 'Diagnosis', 'Interpretation',
+    'ReferenceRange', 'Quantity', 'TypedQuantity', 'ComplexValue', 'Value', 'Measurement',
     'Expression', 'Extension', 'VcfRecord', 'MoleculeContext', 'VariationDescriptor',
     'PhenotypicFeature', 'Disease', 'Biosample',
     'MetaData', 'Resource', 'Update',

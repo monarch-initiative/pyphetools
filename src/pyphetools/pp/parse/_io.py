@@ -141,6 +141,7 @@ class Deserializable(metaclass=abc.ABCMeta):
     @classmethod
     @abc.abstractmethod
     def required_fields(cls) -> typing.Sequence[str]:
+        # May not be implemented if the class includes a field with oneof Protobuf semantics!
         pass
 
     @classmethod
@@ -178,6 +179,17 @@ D = typing.TypeVar('D', bound=Deserializable)
 """
 A type that is a subclass of :class:`Deserializable`.
 """
+
+
+def extract_oneof_scalar(
+        clsd: typing.Mapping[str, typing.Type[D]],
+        vals: typing.Mapping[str, typing.Any],
+) -> typing.Optional[D]:
+    for key, cls in clsd.items():
+        scalar = extract_message_scalar(key, cls, vals)
+        if scalar is not None:
+            return scalar
+    return None
 
 
 def extract_message_scalar(

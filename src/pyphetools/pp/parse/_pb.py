@@ -117,6 +117,19 @@ A type that is a subclass of :class:`FromProtobuf`.
 """
 
 
+def extract_pb_oneof_scalar(
+        oneof_group: str,
+        clsd: typing.Mapping[str, typing.Type[FP]],
+        msg: Message,
+) -> typing.Optional[FP]:
+    key = msg.WhichOneof(oneof_group)
+    if key is not None:
+        cls = clsd[key]
+        return extract_pb_message_scalar(key, cls, msg)
+    else:
+        return None
+
+
 def extract_pb_message_scalar(
         key: str,
         cls: typing.Type[FP],
