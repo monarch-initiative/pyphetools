@@ -9,6 +9,7 @@ from ._biosample import Biosample
 from ._individual import Individual
 from ._interpretation import Interpretation
 from ._measurement import Measurement
+from ._medical_action import MedicalAction
 from ._phenotypic_feature import PhenotypicFeature
 from ._disease import Disease
 from ._meta_data import MetaData
@@ -28,7 +29,7 @@ class Phenopacket(MessageMixin):
             biosamples: typing.Optional[typing.Iterable[Biosample]] = None,
             interpretations: typing.Optional[typing.Iterable[Interpretation]] = None,
             diseases: typing.Optional[typing.Iterable[Disease]] = None,
-            # TODO: medical_actions
+            medical_actions: typing.Optional[typing.Iterable[MedicalAction]] = None,
             files: typing.Optional[typing.Iterable[File]] = None,
     ):
         self._id = id
@@ -38,6 +39,7 @@ class Phenopacket(MessageMixin):
         self._biosamples = [] if biosamples is None else list(biosamples)
         self._interpretations = [] if interpretations is None else list(interpretations)
         self._diseases = [] if diseases is None else list(diseases)
+        self._medical_actions = [] if medical_actions is None else list(medical_actions)
         self._files = [] if files is None else list(files)
         self._meta_data = meta_data
 
@@ -82,6 +84,10 @@ class Phenopacket(MessageMixin):
         return self._diseases
 
     @property
+    def medical_actions(self) -> typing.MutableSequence[MedicalAction]:
+        return self._medical_actions
+
+    @property
     def files(self) -> typing.MutableSequence[File]:
         return self._files
 
@@ -97,7 +103,7 @@ class Phenopacket(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return (
             'id', 'subject', 'phenotypic_features', 'measurements', 'biosamples',
-            'interpretations', 'diseases', 'files', 'meta_data',
+            'interpretations', 'diseases', 'medical_actions', 'files', 'meta_data',
         )
 
     @classmethod
@@ -108,7 +114,6 @@ class Phenopacket(MessageMixin):
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
         if cls._all_required_fields_are_present(values):
             return Phenopacket(
-                # TODO: add the rest
                 id=values['id'],
                 subject=extract_message_scalar('subject', Individual, values),
                 phenotypic_features=extract_message_sequence('phenotypic_features', PhenotypicFeature, values),
@@ -116,6 +121,7 @@ class Phenopacket(MessageMixin):
                 biosamples=extract_message_sequence('biosamples', Biosample, values),
                 interpretations=extract_message_sequence('interpretations', Interpretation, values),
                 diseases=extract_message_sequence('diseases', Disease, values),
+                medical_actions=extract_message_sequence('medical_actions', MedicalAction, values),
                 files=extract_message_sequence('files', File, values),
                 meta_data=extract_message_scalar('meta_data', MetaData, values),
             )
@@ -131,6 +137,7 @@ class Phenopacket(MessageMixin):
             biosamples=(b.to_message() for b in self._biosamples),
             interpretations=(i.to_message() for i in self._interpretations),
             diseases=(d.to_message() for d in self._diseases),
+            medical_actions=(ma.to_message() for ma in self._medical_actions),
             files=(f.to_message() for f in self._files),
             meta_data=self._meta_data.to_message(),
         )
@@ -150,6 +157,7 @@ class Phenopacket(MessageMixin):
                 biosamples=extract_pb_message_seq('biosamples', Biosample, msg),
                 interpretations=extract_pb_message_seq('interpretations', Interpretation, msg),
                 diseases=extract_pb_message_seq('diseases', Disease, msg),
+                medical_actions=extract_pb_message_seq('medical_actions', MedicalAction, msg),
                 files=extract_pb_message_seq('files', File, msg),
                 meta_data=extract_pb_message_scalar('meta_data', MetaData, msg),
             )
@@ -165,6 +173,7 @@ class Phenopacket(MessageMixin):
             and self._biosamples == other._biosamples \
             and self._interpretations == other._interpretations \
             and self._diseases == other._diseases \
+            and self._medical_actions == other._medical_actions \
             and self._files == other._files \
             and self._meta_data == other._meta_data
 
@@ -177,5 +186,6 @@ class Phenopacket(MessageMixin):
                f'biosamples={self._biosamples}, ' \
                f'interpretations={self._interpretations}, ' \
                f'diseases={self._diseases}, ' \
+               f'medical_actions={self._medical_actions}, ' \
                f'files={self._files}, ' \
                f'meta_data={self._meta_data})'

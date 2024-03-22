@@ -13,6 +13,7 @@ def retinoblastoma(
         biosamples: typing.Sequence[Biosample],
         interpretations: typing.Sequence[Interpretation],
         diseases: typing.Sequence[Disease],
+        medical_actions: typing.Sequence[MedicalAction],
         files: typing.Sequence[File],
         meta_data: MetaData,
 ) -> Phenopacket:
@@ -27,6 +28,7 @@ def retinoblastoma(
         biosamples=biosamples,
         interpretations=interpretations,
         diseases=diseases,
+        medical_actions=medical_actions,
         files=files,
         meta_data=meta_data,
     )
@@ -226,6 +228,60 @@ def biosamples() -> typing.Sequence[Biosample]:
                     },
                 ),
             ),
+        ),
+    )
+
+
+@pytest.fixture(scope='package')
+def medical_actions() -> typing.Sequence[MedicalAction]:
+    return (
+        MedicalAction(
+            action=Treatment(
+                agent=OntologyClass(id='DrugCentral:1678', label='melphalan'),
+                route_of_administration=OntologyClass(id='NCIT:C38222', label='Intraarterial Route of Administration'),
+                dose_intervals=(
+                    DoseInterval(
+                        quantity=Quantity(
+                            unit=OntologyClass(id='UCUM:mg.kg-1', label='milligram per kilogram'),
+                            value=0.4,
+                        ),
+                        schedule_frequency=OntologyClass(id='NCIT:C64576', label='Once'),
+                        interval=TimeInterval(
+                            start=Timestamp.from_str('2020-09-02T00:00:00Z'),
+                            end=Timestamp.from_str('2020-09-02T00:00:00Z'),
+                        )
+                    ),
+                )
+            ),
+            treatment_target=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+            treatment_intent=OntologyClass(id='NCIT:C62220', label='Cure'),
+            adverse_events=(
+                OntologyClass(id='HP:0025637', label='Vasospasm'),
+            ),
+            treatment_termination_reason=OntologyClass(id='NCIT:C41331', label='Adverse Event')
+        ),
+        MedicalAction(
+            action=TherapeuticRegimen(
+                identifier=OntologyClass(id='NCIT:C10894', label='Carboplatin/Etoposide/Vincristine'),
+                start_time=TimeElement(
+                    age=Age(iso8601duration='P7M'),
+                ),
+                end_time=TimeElement(
+                    age=Age(iso8601duration='P8M'),
+                ),
+                regimen_status=TherapeuticRegimen.RegimenStatus.COMPLETED,
+            ),
+            treatment_target=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+            treatment_intent=OntologyClass(id='NCIT:C62220', label='Cure'),
+        ),
+        MedicalAction(
+            action=Procedure(
+                code=OntologyClass(id='NCIT:C48601', label='Enucleation'),
+                body_site=OntologyClass(id='UBERON:0004548', label='left eye'),
+                performed=TimeElement(age=Age(iso8601duration='P8M2W'))
+            ),
+            treatment_target=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+            treatment_intent=OntologyClass(id='NCIT:C62220', label='Cure'),
         ),
     )
 
