@@ -106,9 +106,13 @@ class PhenotypicFeature(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'type', 'excluded', 'description', 'severity', 'modifiers', 'onset', 'resolution', 'evidence'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'type' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'type',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return PhenotypicFeature(
                 type=extract_message_scalar('type', OntologyClass, values),
                 excluded=values['excluded'] if 'excluded' in values else False,
@@ -119,6 +123,8 @@ class PhenotypicFeature(MessageMixin):
                 resolution=extract_message_scalar('resolution', TimeElement, values),
                 evidence=extract_message_sequence('evidence', Evidence, values),
             )
+        else:
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         pf = pp202.PhenotypicFeature(

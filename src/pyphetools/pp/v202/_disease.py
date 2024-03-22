@@ -106,9 +106,13 @@ class Disease(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'term', 'excluded', 'onset', 'resolution', 'disease_stage', 'clinical_tnm_finding', 'primary_site', 'laterality'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'term' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'term',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Disease(
                 term=extract_message_scalar('term', OntologyClass, values),
                 excluded=values['excluded'] if 'excluded' in values else False,
@@ -120,7 +124,7 @@ class Disease(MessageMixin):
                 laterality=extract_message_scalar('laterality', OntologyClass, values),
             )
         else:
-            raise ValueError(f'Missing `term` field in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         disease = pp202.Disease(term=self._term.to_message(), excluded=self._excluded)

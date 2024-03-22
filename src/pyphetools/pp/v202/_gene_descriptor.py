@@ -68,9 +68,13 @@ class GeneDescriptor(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'value_id', 'symbol', 'description', 'alternate_ids', 'xrefs', 'alternate_symbols',
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'value_id' in values and 'symbol' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'value_id', 'symbol',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return GeneDescriptor(
                 value_id=values['value_id'],
                 symbol=values['symbol'],
@@ -80,7 +84,7 @@ class GeneDescriptor(MessageMixin):
                 alternate_symbols=values.get('alternate_symbols', None),
             )
         else:
-            raise ValueError(f'Missing required fields `value_id` and `symbol` in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         gene_descriptor = pp202.GeneDescriptor(value_id=self._value_id, symbol=self._symbol)

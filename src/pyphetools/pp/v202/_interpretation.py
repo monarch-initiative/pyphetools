@@ -67,9 +67,13 @@ class VariantInterpretation(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'acmg_pathogenicity_classification', 'therapeutic_actionability', 'variation_descriptor'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if all(field in values for field in VariantInterpretation.field_names()):
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'acmg_pathogenicity_classification', 'therapeutic_actionability', 'variation_descriptor'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return VariantInterpretation(
                 acmg_pathogenicity_classification=MessageMixin._extract_enum_field(
                     'acmg_pathogenicity_classification', AcmgPathogenicityClassification, values),
@@ -78,7 +82,7 @@ class VariantInterpretation(MessageMixin):
                 variation_descriptor=extract_message_scalar('variation_descriptor', VariationDescriptor, values),
             )
         else:
-            raise ValueError(f'Missing one of VariantInterpretation required fields in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.VariantInterpretation(
@@ -189,9 +193,13 @@ class GenomicInterpretation(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'subject_or_biosample_id', 'interpretation_status', 'gene_descriptor', 'variant_interpretation'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'subject_or_biosample_id' in values and 'interpretation_status' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'subject_or_biosample_id', 'interpretation_status',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             if 'gene_descriptor' in values:
                 assert 'variant_interpretation' not in values, \
                     'Variant interpretation must be unset when Gene descriptor is set!'
@@ -219,7 +227,7 @@ class GenomicInterpretation(MessageMixin):
             else:
                 raise ValueError('Either `gene_descriptor` or `variant_interpretation` must be set!')
         else:
-            raise ValueError(f'Missing required fields in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         msg = pp202.GenomicInterpretation(
@@ -319,9 +327,13 @@ class Diagnosis(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'disease', 'genomic_interpretations'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'disease' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'disease',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Diagnosis(
                 disease=extract_message_scalar('disease', OntologyClass, values),
                 genomic_interpretations=extract_message_sequence(
@@ -329,7 +341,7 @@ class Diagnosis(MessageMixin):
                 ),
             )
         else:
-            raise ValueError(f'Missing required field `disease` in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.Diagnosis(
@@ -426,9 +438,13 @@ class Interpretation(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'id', 'progress_status', 'diagnosis', 'summary'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'id' in values and 'progress_status' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id', 'progress_status',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Interpretation(
                 id=values['id'],
                 progress_status=MessageMixin._extract_enum_field('progress_status', Interpretation.ProgressStatus,
@@ -437,7 +453,7 @@ class Interpretation(MessageMixin):
                 summary=MessageMixin._extract_optional_field('summary', values),
             )
         else:
-            raise ValueError(f'Missing a required field in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         i = pp202.Interpretation(

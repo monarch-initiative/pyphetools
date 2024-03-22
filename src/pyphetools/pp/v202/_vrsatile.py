@@ -55,16 +55,20 @@ class Expression(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'syntax', 'value', 'version'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'syntax' in values and 'value' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'syntax', 'value',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Expression(
                 syntax=values['syntax'],
                 value=values['value'],
                 version=values.get('version', None),
             )
         else:
-            raise ValueError(f'Missing `syntax` and `value` fields in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         expression = pp202.Expression(syntax=self._syntax, value=self._value)
@@ -132,12 +136,16 @@ class Extension(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'name', 'value'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'name' in values and 'value' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'name', 'value'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Extension(name=values['name'], value=values['value'])
         else:
-            raise ValueError(f'Missing fields `name` and `value` in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.Extension(name=self._name, value=self._value)
@@ -279,9 +287,13 @@ class VcfRecord(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'genome_assembly', 'chrom', 'pos', 'ref', 'alt', 'id', 'qual', 'filter', 'info'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if all(field in values for field in ('genome_assembly', 'chrom', 'pos', 'ref', 'alt')):
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'genome_assembly', 'chrom', 'pos', 'ref', 'alt'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return VcfRecord(
                 genome_assembly=values['genome_assembly'],
                 chrom=values['chrom'],
@@ -294,7 +306,7 @@ class VcfRecord(MessageMixin):
                 info=MessageMixin._extract_optional_field('info', values),
             )
         else:
-            raise ValueError(f'Missing one of the required fields in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         vcf = pp202.VcfRecord(
@@ -521,8 +533,19 @@ class VariationDescriptor(MessageMixin):
         self._allelic_state = None
 
     @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'id' in values and 'molecule_context' in values:
+    def field_names() -> typing.Iterable[str]:
+        return (
+            'id', 'molecule_context', 'label', 'description', 'gene_context', 'expressions', 'vcf_record', 'xrefs',
+            'alternate_labels', 'extensions', 'structural_type', 'vrs_ref_allele_seq', 'allelic_state',
+        )
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id', 'molecule_context',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return VariationDescriptor(
                 id=values['id'],
                 molecule_context=MessageMixin._extract_enum_field('molecule_context', MoleculeContext, values),
@@ -539,7 +562,7 @@ class VariationDescriptor(MessageMixin):
                 allelic_state=extract_message_scalar('allelic_state', OntologyClass, values),
             )
         else:
-            raise ValueError(f'Missing required fields `id` and `molecule_context` in {values}')
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         vd = pp202.VariationDescriptor(
@@ -600,13 +623,6 @@ class VariationDescriptor(MessageMixin):
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
-
-    @staticmethod
-    def field_names() -> typing.Iterable[str]:
-        return (
-            'id', 'molecule_context', 'label', 'description', 'gene_context', 'expressions', 'vcf_record', 'xrefs',
-            'alternate_labels', 'extensions', 'structural_type', 'vrs_ref_allele_seq', 'allelic_state',
-        )
 
     def __eq__(self, other):
         return isinstance(other, VariationDescriptor) \

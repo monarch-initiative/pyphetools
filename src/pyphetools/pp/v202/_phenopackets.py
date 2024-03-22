@@ -23,11 +23,11 @@ class Phenopacket(MessageMixin):
             meta_data: MetaData,
             subject: typing.Optional[Individual] = None,
             phenotypic_features: typing.Optional[typing.Iterable[PhenotypicFeature]] = None,
-
+            # TODO: measurements
             biosamples: typing.Optional[typing.Iterable[Biosample]] = None,
             interpretations: typing.Optional[typing.Iterable[Interpretation]] = None,
             diseases: typing.Optional[typing.Iterable[Disease]] = None,
-
+            # TODO: medical_actions
             files: typing.Optional[typing.Iterable[File]] = None,
     ):
         self._id = id
@@ -91,9 +91,13 @@ class Phenopacket(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'id', 'subject', 'phenotypic_features', 'biosamples', 'interpretations', 'diseases', 'files', 'meta_data'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'id' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id', 'meta_data'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Phenopacket(
                 # TODO: add the rest
                 id=values['id'],
@@ -106,7 +110,7 @@ class Phenopacket(MessageMixin):
                 meta_data=extract_message_scalar('meta_data', MetaData, values),
             )
         else:
-            raise ValueError('Bug')  # TODO: better name
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.Phenopacket(

@@ -134,9 +134,13 @@ class VitalStatus(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'status', 'time_of_death', 'cause_of_death', 'survival_time_in_days'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'status' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'status',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return VitalStatus(
                 status=MessageMixin._extract_enum_field('status', VitalStatus.Status, values),
                 time_of_death=extract_message_scalar('time_of_death', TimeElement, values),
@@ -144,7 +148,7 @@ class VitalStatus(MessageMixin):
                 survival_time_in_days=int(values['survival_time_in_days']) if 'survival_time_in_days' in values else None,
             )
         else:
-            raise ValueError('Bug')  # TODO: reword
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         vs = pp202.VitalStatus(
@@ -315,9 +319,13 @@ class Individual(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'id', 'alternate_ids', 'date_of_birth', 'time_at_last_encounter', 'vital_status', 'sex', 'karyotypic_sex', 'gender', 'taxonomy'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'id' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Individual(
                 id=values['id'],
                 alternate_ids=MessageMixin._extract_optional_field('alternate_ids', values),
@@ -330,7 +338,7 @@ class Individual(MessageMixin):
                 taxonomy=extract_message_scalar('taxonomy', OntologyClass, values),
             )
         else:
-            raise ValueError('Bug')  # TODO: reword
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         i = pp202.Individual(

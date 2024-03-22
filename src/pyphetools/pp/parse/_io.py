@@ -132,11 +132,31 @@ class Deserializable(metaclass=abc.ABCMeta):
     See :class:`Serializable` for more info.
     """
 
-    @staticmethod
+    @classmethod
     @abc.abstractmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
         # Can raise if a required field is missing
         pass
+
+    @classmethod
+    @abc.abstractmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        pass
+
+    @classmethod
+    def _all_required_fields_are_present(
+            cls,
+            values: typing.Mapping[str, typing.Any]
+    ) -> bool:
+        return all(field in values for field in cls.required_fields())
+
+    @classmethod
+    def _complain_about_missing_field(
+            cls,
+            values: typing.Mapping[str, typing.Any]
+    ):
+        missing = tuple(filter(lambda f: f not in values, cls.required_fields()))
+        raise ValueError(f'{cls.__name__}: missing {len(missing)} required field(s): {missing}')
 
     @staticmethod
     def _extract_optional_field(

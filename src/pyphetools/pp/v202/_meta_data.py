@@ -79,9 +79,13 @@ class Resource(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'id', 'name', 'url', 'version', 'namespace_prefix', 'iri_prefix'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if all(field in values for field in Resource.field_names()):
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id', 'name', 'url', 'version', 'namespace_prefix', 'iri_prefix'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Resource(
                 id=values['id'],
                 name=values['name'],
@@ -91,7 +95,7 @@ class Resource(MessageMixin):
                 iri_prefix=values['iri_prefix'],
             )
         else:
-            return ValueError(f'Missing one of Resource required fields in {values}')
+            cls._complain_about_missing_field(values)
 
     @classmethod
     def message_type(cls) -> typing.Type[Message]:
@@ -187,16 +191,20 @@ class Update(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'timestamp', 'updated_by', 'comment'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'timestamp' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'timestamp',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Update(
                 timestamp=extract_message_scalar('timestamp', Timestamp, values),
                 updated_by=values.get('updated_by', None),
                 comment=values.get('comment', None),
             )
         else:
-            raise ValueError(f'Missing `timestamp` in values: {values}')
+            cls._complain_about_missing_field(values)
 
     @classmethod
     def message_type(cls) -> typing.Type[Message]:
@@ -304,8 +312,16 @@ class MetaData(MessageMixin):
         return self._external_references
 
     @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if all(f in values for f in ('created', 'created_by', 'phenopacket_schema_version')):
+    def field_names() -> typing.Iterable[str]:
+        return 'created', 'created_by', 'submitted_by', 'resources', 'updates', 'phenopacket_schema_version', 'external_references'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'created', 'created_by', 'phenopacket_schema_version',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return MetaData(
                 created=Timestamp.from_str(values['created']),
                 created_by=values['created_by'],
@@ -316,11 +332,7 @@ class MetaData(MessageMixin):
                 external_references=extract_message_sequence('external_references', ExternalReference, values),
             )
         else:
-            raise ValueError(f'Missing required fields in {values}')
-
-    @staticmethod
-    def field_names() -> typing.Iterable[str]:
-        return 'created', 'created_by', 'submitted_by', 'resources', 'updates', 'phenopacket_schema_version', 'external_references'
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         meta_data = pp202.MetaData(

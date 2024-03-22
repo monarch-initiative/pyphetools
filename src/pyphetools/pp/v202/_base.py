@@ -52,13 +52,19 @@ class OntologyClass(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'id', 'label'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'id' in values and 'label' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id', 'label'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return OntologyClass(
                 id=values['id'],
                 label=values['label'],
             )
+        else:
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.OntologyClass(
@@ -137,13 +143,20 @@ class ExternalReference(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'id', 'reference', 'description'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        return ExternalReference(
-            id=MessageMixin._extract_optional_field('id', values),
-            reference=MessageMixin._extract_optional_field('reference', values),
-            description=MessageMixin._extract_optional_field('description', values),
-        )
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return ()
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return ExternalReference(
+                id=MessageMixin._extract_optional_field('id', values),
+                reference=MessageMixin._extract_optional_field('reference', values),
+                description=MessageMixin._extract_optional_field('description', values),
+            )
+        else:
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.ExternalReference(
@@ -211,15 +224,19 @@ class Evidence(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'evidence_code', 'reference'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'evidence_code' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'evidence_code',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Evidence(
                 evidence_code=extract_message_scalar('evidence_code', OntologyClass, values),
                 reference=extract_message_scalar('reference', ExternalReference, values),
             )
         else:
-            raise ValueError(f'Blaa')  # TODO: reword
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.Evidence(
@@ -261,10 +278,6 @@ class GestationalAge(MessageMixin):
         self._weeks = weeks
         self._days = days
 
-    @staticmethod
-    def field_names() -> typing.Iterable[str]:
-        return 'weeks', 'days',
-
     @property
     def weeks(self) -> int:
         return self._weeks
@@ -286,8 +299,16 @@ class GestationalAge(MessageMixin):
         self._days = None
 
     @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'weeks' in values:
+    def field_names() -> typing.Iterable[str]:
+        return 'weeks', 'days',
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'weeks',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             weeks = values['weeks']
             days = values['days'] if 'days' in values else None
             return GestationalAge(
@@ -295,7 +316,7 @@ class GestationalAge(MessageMixin):
                 days=days,
             )
         else:
-            raise ValueError('Bug')  # TODO: better message
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.GestationalAge(
@@ -346,12 +367,16 @@ class Age(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'iso8601duration',
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'iso8601duration' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'iso8601duration',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Age(iso8601duration=values['iso8601duration'])
         else:
-            raise ValueError('Cannot deserialize')  # TODO: wording
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.Age(
@@ -409,15 +434,19 @@ class AgeRange(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'start', 'end'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'start' in values and 'end' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'start', 'end'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return AgeRange(
                 start=Age.from_dict(values['start']),
                 end=Age.from_dict(values['end']),
             )
         else:
-            raise ValueError('Cannot deserialize')  # TODO: wording
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.AgeRange(
@@ -478,13 +507,19 @@ class TimeInterval(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'start', 'end'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'start' in values and 'end' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'start', 'end'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return TimeInterval(
                 start=Timestamp.from_str(values['start']),
                 end=Timestamp.from_str(values['end']),
             )
+        else:
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.TimeInterval(
@@ -617,10 +652,17 @@ class TimeElement(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'gestational_age', 'age', 'age_range', 'ontology_class', 'timestamp', 'interval'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        # We do validation elsewhere
+        return ()
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
         if len(values) != 1:
-            raise ValueError('Should only have one key!')  # TODO: better wording
+            raise ValueError(
+                f'Expected values with only one of the {TimeElement.field_names()} but got {values.keys()}'
+            )
         if 'gestational_age' in values:
             return TimeElement(gestational_age=GestationalAge.from_dict(values['gestational_age']))
         elif 'age' in values:
@@ -634,7 +676,9 @@ class TimeElement(MessageMixin):
         elif 'interval' in values:
             return TimeElement(interval=TimeInterval.from_dict(values['interval']))
         else:
-            raise ValueError('Bug')  # TODO: better message
+            raise ValueError(
+                f'Cannot deserialize {TimeElement.__name__} due to missing one of required fields: '
+                f'{TimeElement.field_names()}')
 
     def to_message(self) -> Message:
         msg = pp202.TimeElement()
@@ -752,16 +796,20 @@ class Procedure(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'code', 'body_site', 'performed'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'code' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'code',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Procedure(
                 code=extract_message_scalar('code', OntologyClass, values),
                 body_site=extract_message_scalar('body_site', OntologyClass, values),
                 performed=extract_message_scalar('performed', TimeElement, values),
             )
         else:
-            raise ValueError('Bug')  # TODO: reword
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         return pp202.Procedure(
@@ -829,16 +877,20 @@ class File(MessageMixin):
     def field_names() -> typing.Iterable[str]:
         return 'uri', 'individual_to_file_identifiers', 'file_attributes'
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'uri' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'uri',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return File(
                 uri=values['uri'],
                 individual_to_file_identifiers=values['individual_to_file_identifiers'],
                 file_attributes=values['file_attributes'],
             )
         else:
-            raise ValueError('Bug')  # TODO: reword
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         file = pp202.File(uri=self._uri)

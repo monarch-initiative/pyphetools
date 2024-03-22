@@ -267,9 +267,13 @@ class Biosample(MessageMixin):
             'files', 'material_sample', 'sample_processing', 'sample_storage',
         )
 
-    @staticmethod
-    def from_dict(values: typing.Mapping[str, typing.Any]):
-        if 'id' in values:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'id',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
             return Biosample(
                 id=values['id'],
                 individual_id=values['individual_id'] if 'individual_id' in values else None,
@@ -293,6 +297,8 @@ class Biosample(MessageMixin):
                 sample_processing=extract_message_scalar('sample_processing', OntologyClass, values),
                 sample_storage=extract_message_scalar('sample_storage', OntologyClass, values),
             )
+        else:
+            cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
         biosample = pp202.Biosample(id=self._id)
