@@ -1,4 +1,3 @@
 # StructuralVariant
 
-
-::: src.pyphetools.creation.StructuralVariant
+::: pyphetools.creation.StructuralVariant

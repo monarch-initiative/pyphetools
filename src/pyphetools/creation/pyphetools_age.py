@@ -104,13 +104,13 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         elif age_string.startswith("P"):
             return IsoAge.from_iso8601(age_string)
         elif age_string in HPO_ONSET_TERMS:
-            return HpoAge(age_string=age_string)
+            return HpoAge(hpo_onset_label=age_string)
         elif GestationalAge.is_gestational_age(age_string):
             return GestationalAge(age_string)
         else:
             # only warn if the user did not enter na=not available
             if age_string != 'na':
-                print(f"[WARNING] Could not parse {age_string} as age.")
+                raise ValueError(f"Could not parse \"{age_string}\" as age.")
             return NoneAge(age_string=age_string)
 
 

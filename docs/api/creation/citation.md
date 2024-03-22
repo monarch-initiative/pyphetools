@@ -1,3 +1,3 @@
 # CohortEncoder
 
-::: src.pyphetools.creation.Citation
+::: pyphetools.creation.Citation

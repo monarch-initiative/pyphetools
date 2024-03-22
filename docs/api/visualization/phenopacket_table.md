@@ -1,4 +1,3 @@
 # PhenopacketTable
 
-
-::: src.pyphetools.visualization.PhenopacketTable
+::: pyphetools.visualization.PhenopacketTable

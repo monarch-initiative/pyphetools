@@ -1,4 +1,4 @@
 # Individual
 
-::: src.pyphetools.creation.Individual
+::: pyphetools.creation.Individual
 

@@ -39,30 +39,12 @@ It is also possible to create a builder object by providing the path to the dire
 builder = HpoaTableBuilder(indir="phenopackets")
 ```
 
-### Age of onset
-In many cases, publications do not provide precise descriptions of the age of onset of disease, or the onset is described globally. For this reason, the builder object allows users to provide the age of onset separetely.
-
-For instance, one publication that describes 9 individuals states: 'Age at symptom recognition ranged from 4 months to 10 years,' but does not provide the ages of onset for each patient. Additionally, the ages of onset in the HPOA file are provided as HPO terms rather than specific numerical values. For this case, it seems that we can conclude there was at least one individual with [Infantile onset](https://hpo.jax.org/app/browse/term/HP:0003593), one with [Childhood onset](https://hpo.jax.org/app/browse/term/HP:0011463), and one with [Juvenile onset](https://hpo.jax.org/app/browse/term/HP:0003621), but we do not know the counts. The best way of annotating seems to be to add one count for each age range as follows. Note that the PMID, the numerator, and the denominator are required to be specified.
-
-```python title="specifying age of onset"
-PMID = "PMID:37167966"
-builder.infantile_onset(PMID, 1, 1).childhood_onset(PMID, 1,1).juvenile_onset(PMID,1,1)
-```
-In this particular example, a second publication is available that states:
-
-    Six individuals of a single consanguineous Bedouin kindred (Fig. 1A) were affected with apparently autosomal recessive progressive limb girdle muscle disease. The disease initially manifested during the fourth decade of life with pain on exertion, followed by muscle fatigue and weakness, affecting mostly the proximal and axial muscles, and culminating with involvement of respiratory muscles.
-
-We code this as
-
-```python title="specifying age of onset"
-PMID2 = "PMID:36745799"
-builder.middle_age_onset(PMID2, 6, 6)
-```
 
 ### Mode of inheritance
 In the HPOA annotation model, we regard the mode of inheritance as certain knoweldge that does not receive a frequency or does not need to be specified for each publication (exception: rare diseases with multiple modes of inheritance). In this case, the disease is listed as autosomal dominant in OMIM and in both publications. We curate this using one of the PMIDs (generally, the first to report the disease) as follows.
 
 ```python title="specifying mode of inheritance"
+PMID = "PMID:123" # enter the PMID of an article that specificies the mode of inheritance.
 builder.autosomal_recessive(PMID)
 ```
 

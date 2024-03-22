@@ -1,4 +1,4 @@
 # ConstantColumnMapper
 
-::: src.pyphetools.creation.ConstantColumnMapper
+::: pyphetools.creation.ConstantColumnMapper
 

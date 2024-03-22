@@ -1,4 +1,4 @@
 # HpoaTableCreator
 
-::: src.pyphetools.visualization.HpoaTableCreator
+::: pyphetools.visualization.HpoaTableCreator
 

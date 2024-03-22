@@ -1,5 +1,3 @@
-
 # ValidationResult
 
-
-::: src.pyphetools.validation.ValidationResult
+::: pyphetools.validation.ValidationResult

@@ -1,3 +1,3 @@
 # OptionColumnMapper
 
-::: src.pyphetools.creation.OptionColumnMapper
+::: pyphetools.creation.OptionColumnMapper

@@ -34,49 +34,49 @@ used (see the last two lines) in case of errors or feature requests. Sometimes, 
 to be imported to support special cases.
 
 
-```python title="imports"
+```python title="Imports"
+import hpotk
+import pyphetools
+
 import pandas as pd
+
+print(f"Using pyphetools version {pyphetools.__version__}")
+
 pd.set_option('display.max_colwidth', None) # show entire column contents, important!
 from IPython.display import display, HTML
-from pyphetools.creation import *
-from pyphetools.visualization import *
-from pyphetools.validation import *
-import pyphetools
-print(f"Using pyphetools version {pyphetools.__version__}")
 ```
-
-
-
 
 ### Import the Human Phenotype Ontology (HPO) file
 
+It is useful to import the HPO file and create the `MetaData` object 
+(which records your `ORCID <https://orcid.org/>`_ id and the version of the HPO used) in one step.
 
-It is useful to import the HPO file and create the MetaData object (which records your `ORCID <https://orcid.org/>`_ id and the version of the HPO used) in one step.
+First, we load the latest HPO file using HPO toolkit:
 
-```python title="HPO and MetaData"
-parser = HpoParser()
-hpo_cr = parser.get_hpo_concept_recognizer()
-hpo_version = parser.get_version()
-hpo_ontology = parser.get_ontology()
+```python title="Load the latest HPO"
+ontostore = hpotk.configure_ontology_store()
+hpo = ontostore.load_hpo()
+```
+
+Now, we can create the `MetaData`: 
+
+```python title="Configure MetaData"
 PMID = "PMID:16783569"
 title = "A novel X-linked recessive mental retardation syndrome comprising macrocephaly and ciliary dysfunction is allelic to oral-facial-digital type I syndrome"
 citation = TODO
 metadata = MetaData(created_by="ORCID:0000-0002-5648-2155", pmid=PMID, pubmed_title=title)
-metadata.default_versions_with_hpo(version=hpo_version)
-print(f"HPO version {hpo_version}")
+metadata.default_versions_with_hpo(version=hpo.version)
+print(f"HPO version {hpo.version}")
 ```
 
 It is often useful to display the title and PubMed identifier of the publication from which the data come.
 Simply replace the above code with the following.
 
-```python title="HPO and MetaData (with title and PMID)"
-parser = HpoParser()
-hpo_cr = parser.get_hpo_concept_recognizer()
-hpo_version = parser.get_version()
+```python title="Configure MetaData with publication title and its PMID"
 PMID = "PMID:24736735"
 title = "New insights into genotype-phenotype correlation for GLI3 mutations"
 metadata = MetaData(created_by="", pmid=PMID, pubmed_title=title)
-metadata.default_versions_with_hpo(version=hpo_version)
+metadata.default_versions_with_hpo(version=hpo.version)
 ```
 
 

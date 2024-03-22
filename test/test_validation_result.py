@@ -1,6 +1,6 @@
 import unittest
-from src.pyphetools.creation import HpTerm, AllelicRequirement
-from src.pyphetools.validation import ValidationResultBuilder
+from pyphetools.creation import HpTerm, AllelicRequirement
+from pyphetools.validation import ValidationResultBuilder
 
 
 

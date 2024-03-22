@@ -1,3 +1,3 @@
 # CaseTemplateEncoder
 
-::: src.pyphetools.creation.CaseTemplateEncoder
+::: pyphetools.creation.CaseTemplateEncoder

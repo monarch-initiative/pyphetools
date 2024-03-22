@@ -3,7 +3,7 @@ site_name: pyphetools
 theme:
   name: "material"
   features:
-    #- navigation.tabs
+    - navigation.tabs
     - navigation.sections
     - toc.integrate
     - navigation.top
@@ -31,15 +31,19 @@ theme:
 
 nav:
   - Home: 'index.md'
-  - Installation: 'installation.md'
+  - Data Entry Template:
+    - 'user-guide/template.md'
+    - 'user-guide/excel.md'
+    - 'user-guide/python_notebook.md'
+    - 'user-guide/tips_for_curation.md'
+    - 'user-guide/variant_notation.md'
   - Developers:
-    - For developers: 'developers.md'
+    - For developers: 'developers/developers.md'
+    - Installation: 'developers/installation.md'
     - HPOA files: 'developers/hpoa_editing.md'
-  - User guide:
-    - Introduction: 'user-guide/tutorial.md'
-    - Data Entry Template: 'user-guide/template.md'
-    - Jupyter notebook:
-      - overview: "user-guide/jupyter.md"
+    - Internal: 'developers/internal.md'
+    - Custom Python scripts:
+      - Overview: 'user-guide/jupyter.md'
       - Column mappers:
         - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
         - Simple column mapper: 'user-guide/simple_column_mapper.md'
@@ -51,9 +55,9 @@ nav:
       - Validation: 'user-guide/validation.md'
       - Visualization: 'user-guide/visualization.md'
   - API:
-    - "overview": 'api/overview.md'
-    - "creation":
-      - overview: "api/creation.md"
+    - Overview: 'api/overview.md'
+    - creation:
+      - overview: 'api/creation.md'
       - AgeColumnMapper: "api/creation/age_column_mapper.md"
       - CaseEncoder: "api/creation/case_encoder.md"
       - CaseTemplateEncoder: "api/creation/case_template_encoder.md"
@@ -77,20 +81,21 @@ nav:
       - SimpleColumnMapper: "api/creation/simple_column_mapper.md"
       - SimpleColumnMapperGenerator: "api/creation/simple_column_mapper_generator.md"
       - StructuralVariant: "api/creation/structural_variant.md"
+      - TemplateCreator: "api/creation/create_template.md"
       - Thresholder: "api/creation/thresholder.md"
       - ThresholdedColumnMapper: "api/creation/thresholded_column_mapper.md"
       - VariantColumnMapper: "api/creation/variant_column_mapper.md"
       - Variant: "api/creation/variant.md"
       - VariantManager: "api/creation/variant_manager.md"
       - VariantValidator: "api/creation/variant_validator.md"
-    - "validation":
-      - "overview": "api/validation.md"
+    - validation:
+      - Overview: "api/validation.md"
       - "CohortValidator": "api/validation/cohort_validator.md"
       - "ContentValidator": "api/validation/content_validator.md"
       - "OntologyQC": "api/validation/ontology_qc.md"
       - "ValidationResult": "api/validation/validation_result.md"
     - visualization:
-      - overview: "api/visualization.md"
+      - Overview: "api/visualization.md"
       - DetailedSupplTable:  "api/visualization/detailed_suppl_table.md"
       - HpoaTableCreator: "api/visualization/hpoa_table_creator.md"
       - OnsetCalculator: "api/visualization/onset_calculator.md"
@@ -104,6 +109,14 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
+          # TODO: I am not sure if `import` takes a list of inventories. In principle, it *should* take a list,
+          # but I was not able to find an example that takes multiple inventories. Investigate..
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://thejacksonlaboratory.github.io/hpo-toolkit/stable/objects.inv
+            - https://pandas.pydata.org/docs/objects.inv
+            - https://matplotlib.org/stable/objects.inv
+            - https://docs.python-requests.org/en/stable/objects.inv
           options:
             docstring_style: sphinx
 
@@ -112,8 +125,6 @@ extra:
   social:
     - icon: fontawesome/brands/github-alt
       link: https://github.com/pnrobinson
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/pnrobins
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/peter-n-robinson-b7833811/
 
@@ -134,9 +145,9 @@ markdown_extensions:
   - md_in_html
   - tables
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:materialx.emoji.to_svg
 
 copyright: |
-  &copy; 2023 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
+  &copy; 2023-2024 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
 

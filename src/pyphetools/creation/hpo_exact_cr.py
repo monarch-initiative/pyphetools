@@ -1,3 +1,8 @@
+import re
+import typing
+
+from collections import defaultdict
+
 import hpotk
 
 from .hpo_cr import HpoConceptRecognizer
@@ -5,9 +10,6 @@ from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
 
-import re
-from typing import List, Union
-from collections import defaultdict
 
 
 class ConceptMatch:
@@ -48,19 +50,64 @@ class ConceptMatch:
             return False
 
 
+def get_label_to_id_map(hpo: hpotk.Ontology) -> typing.Mapping[str, str]:
+    """
+    Create a map from a lower case version of HPO labels to the corresponding HPO id
+    only include terms that are descendants of PHENOTYPE_ROOT
+
+    :returns: a map from lower-case HPO term labels to HPO ids
+    """
+    label_to_id_d = {}
+    for term in hpo.terms:
+        hpo_id = term.identifier
+        if not hpo.graph.is_ancestor_of(hpotk.constants.hpo.base.PHENOTYPIC_ABNORMALITY, hpo_id):
+            continue
+        label_to_id_d[term.name.lower()] = hpo_id.value
+        # Add the labels of the synonyms
+        if term.synonyms is not None and len(term.synonyms) > 0:
+            for synonym in term.synonyms:
+                lc_syn = synonym.name.lower()
+                # only take synonyms with length at least 5 to avoid spurious matches
+                if len(lc_syn) > 4:
+                    label_to_id_d[lc_syn] = hpo_id.value
+
+    return label_to_id_d
+
+
+def get_id_to_label_map(hpo: hpotk.MinimalOntology) -> typing.Mapping[str, str]:
+    """
+    :returns: a map from HPO term ids to HPO labels
+    :rtype: Dict[str,str]
+    """
+    id_to_label_d = {}
+
+    for term in hpo.terms:
+        id_to_label_d[term.identifier.value] = term.name
+
+    return id_to_label_d
+
+
 class HpoExactConceptRecognizer(HpoConceptRecognizer):
-    # self._label_to_id_d, self._id_to_primary_label
-    def __init__(self, label_to_id, id_to_primary_label, ontology:hpotk.Ontology=None):
-        super().__init__()
+
+    @staticmethod
+    def from_hpo(hpo: hpotk.Ontology):
+        label_to_id = get_label_to_id_map(hpo)
+        id_to_primary_label = get_id_to_label_map(hpo)
+
+        return HpoExactConceptRecognizer(
+            label_to_id=label_to_id,
+            id_to_primary_label=id_to_primary_label,
+        )
+
+    def __init__(self, label_to_id, id_to_primary_label):
         if not isinstance(label_to_id, dict):
             raise ValueError("label_to_id_d argument must be dictionary")
         if not isinstance(id_to_primary_label, dict):
             raise ValueError("labels_to_primary_label_d argument must be dictionary")
         self._id_to_primary_label = id_to_primary_label
         self._label_to_id = label_to_id
-        self._ontology = ontology
 
-    def parse_cell(self, cell_contents, custom_d=None) -> List[HpTerm]:
+    def parse_cell(self, cell_contents, custom_d=None) -> typing.List[HpTerm]:
         """parse the contents of one table cell
 
         Args:
@@ -81,7 +128,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         return self._parse_contents(cell_text=cell_text, custom_d=custom_d)
 
 
-    def _get_exact_match_in_custom_d(self, cell_text, custom_d) -> List[HpTerm]:
+    def _get_exact_match_in_custom_d(self, cell_text, custom_d) -> typing.List[HpTerm]:
         """This method is called by _parse_contents if cell_text was present in custom_d
 
         If the match does not result in at least one HpTerm match, it is an error and the custom_d probably has an incorrect string
@@ -111,7 +158,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
         return results
 
 
-    def _find_text_within_custom_items(self, lc_chunk, custom_d) -> List[HpTerm]:
+    def _find_text_within_custom_items(self, lc_chunk, custom_d) -> typing.List[HpTerm]:
         hits = []
         # Note that chunk has been stripped of whitespace and lower-cased already
         for original_text, hpo_label in custom_d.items():
@@ -129,7 +176,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                     hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
         return hits
 
-    def _find_hpo_term_in_lc_chunk(self, lc_chunk) -> List[HpTerm]:
+    def _find_hpo_term_in_lc_chunk(self, lc_chunk) -> typing.List[HpTerm]:
         hits = []
         for lower_case_hp_label, hpo_tid in self._label_to_id.items():
                 key = lower_case_hp_label.lower()
@@ -146,7 +193,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
                     hits.append(ConceptMatch(term=hp_term, start=startpos, end=endpos))
         return hits
 
-    def _parse_contents(self, cell_text, custom_d) -> List[HpTerm]:
+    def _parse_contents(self, cell_text, custom_d) -> typing.List[HpTerm]:
         """Parse the contents of a cell for HPO terms
         Args:
             cell_text (str): The text of a table cell
@@ -164,7 +211,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             results.extend(self._get_non_overlapping_matches(hits=hits_1))
         return results
 
-    def parse_cell_for_exact_matches(self, cell_text, custom_d) -> List[HpTerm]:
+    def parse_cell_for_exact_matches(self, cell_text, custom_d) -> typing.List[HpTerm]:
         """
         Identify HPO Terms from the contents of a cell whose label exactly matches a string in the custom dictionary
 
@@ -183,7 +230,7 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             results.extend(self._get_non_overlapping_matches(hits=hits))
         return
 
-    def _get_non_overlapping_matches(self, hits:[List[ConceptMatch]]) -> List[HpTerm]:
+    def _get_non_overlapping_matches(self, hits:[typing.List[ConceptMatch]]) -> typing.List[HpTerm]:
         """The prupose of this method is to choose a list of non-overlapping matches
 
         Sometimes, we get multiple matches that partially overlap. We will greedily take the longest matches and discard overlaps.
@@ -260,10 +307,3 @@ class HpoExactConceptRecognizer(HpoConceptRecognizer):
             mpr = SimpleColumnMapper(column_name=column_name, hpo_id=hp_term.id, hpo_label=hp_term.label, observed=observed, excluded=excluded)
             simple_mapper_d[column_name] = mpr
         return simple_mapper_d
-
-    def get_hpo_ontology(self):
-        """
-        :returns: a reference to the HPO-toolkit Ontology object for the HPO
-        :rtype: hpotk.MinimalOntology
-        """
-        return self._ontology

@@ -1,5 +1,5 @@
 import unittest
-from src.pyphetools.creation import ConstantColumnMapper
+from pyphetools.creation import ConstantColumnMapper
 
 
 

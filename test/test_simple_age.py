@@ -1,5 +1,5 @@
 import unittest
-from src.pyphetools.visualization import SimpleAge
+from pyphetools.visualization import SimpleAge
 
 
 class TestSimpleAge(unittest.TestCase):

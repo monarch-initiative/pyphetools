@@ -1,4 +1,4 @@
 # AgeColumnMapper
 
 
-::: src.pyphetools.creation.AgeColumnMapper
+::: pyphetools.creation.AgeColumnMapper

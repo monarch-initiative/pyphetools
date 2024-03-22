@@ -5,4 +5,4 @@ typical supplementary materials of publications about cohorts. This option, whic
 with skills in scripting with Python. Additionally, pyphetools can ingest data encoded in an Excel template that can be used without additional scripting.
 The template can be ingested using a standardized notebook. Alternatively, users are invited to work with the HPO team to enter the data into the HPO database.
 
-See [here](https://monarch-initiative.github.io/pyphetools/developers/hpoa_editing/) for instructions on using the template.
+See [here](https://monarch-initiative.github.io/phenopacket-store/contributing/){:target="\_blank"} for instructions on using the template.

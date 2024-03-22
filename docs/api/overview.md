@@ -1,6 +1,6 @@
 # API Documentation
 
-pyphetools has four modules.
+pyphetools has three modules.
 
 
 - [creation](creation.md)

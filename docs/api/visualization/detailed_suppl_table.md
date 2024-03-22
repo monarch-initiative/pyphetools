@@ -1,4 +1,3 @@
 # DetailedSupplTable
 
-::: src.pyphetools.visualization.DetailedSupplTable
-
+::: pyphetools.visualization.DetailedSupplTable

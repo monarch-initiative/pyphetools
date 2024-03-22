@@ -1,4 +1,4 @@
-[![CI](https://github.com/monarch-initiative/genophenocorr/workflows/CI/badge.svg)](https://github.com/monarch-initiative/pyphetools/actions/workflows/python_ci.yml)
+[![CI](https://github.com/monarch-initiative/pyphetools/workflows/CI/badge.svg)](https://github.com/monarch-initiative/pyphetools/actions/workflows/python_ci.yml)
 
 # pyphetools
 Python Phenopacket Tools

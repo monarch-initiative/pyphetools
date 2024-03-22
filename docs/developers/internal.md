@@ -1,4 +1,9 @@
-# For developers
+# Internal
+
+The following commands are used by the development team.
+
+
+
 
 ## Updating package in PyPI
 
@@ -12,7 +17,7 @@ python3 -m pip install --upgrade build
 python3 -m pip install --upgrade twine
 ```
 
-To update the version in PyPI, update the version number in the pyproject.toml file, and 
+To update the version in PyPI, update the version number in the pyproject.toml file, and
 execute the following commands to build and install.
 
 ```bash title="updating package in PyPI"

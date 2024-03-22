@@ -266,7 +266,7 @@ class HpoAgeColumnMapper(AgeColumnMapper):
     def map_cell(self, cell_contents) -> str:
         contents = self._clean_contents(cell_contents=cell_contents)
         if contents in HPO_ONSET_TERMS:
-            return HpoAge(age_string=contents)
+            return HpoAge(hpo_onset_label=contents)
         else:
             self._erroneous_input_counter[contents] += 1
             return NoneAge(cell_contents)
