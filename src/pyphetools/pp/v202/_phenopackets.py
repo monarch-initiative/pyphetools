@@ -103,7 +103,7 @@ class Phenopacket(MessageMixin):
                 interpretations=extract_message_sequence('interpretations', Interpretation, values),
                 diseases=extract_message_sequence('diseases', Disease, values),
                 files=extract_message_sequence('files', File, values),
-                meta_data=MetaData.from_dict(values['meta_data']),
+                meta_data=extract_message_scalar('meta_data', MetaData, values),
             )
         else:
             raise ValueError('Bug')  # TODO: better name
