@@ -2,7 +2,7 @@ import unittest
 from pyphetools.creation import AgeOfDeathColumnMapper, Individual, MetaData
 import phenopackets as PPKt
 
-
+from pyphetools.pp.v202 import VitalStatus as pptVitalStatus
 
 class TestVitalStatus(unittest.TestCase):
 
@@ -16,8 +16,8 @@ class TestVitalStatus(unittest.TestCase):
         self.assertIsNone(vstatus)
         vstatus = mapper.map_cell_to_vital_status("7 months")
         self.assertIsNotNone(vstatus)
-        self.assertTrue(isinstance(vstatus, PPKt.VitalStatus))
-        self.assertEqual(PPKt.VitalStatus.DECEASED, vstatus.status)
+        self.assertTrue(isinstance(vstatus, pptVitalStatus))
+        self.assertEqual(pptVitalStatus.Status.DECEASED, vstatus.status)
         self.assertEqual("P7M", vstatus.time_of_death.age.iso8601duration)
 
     def test_vs2(self):
@@ -28,8 +28,8 @@ class TestVitalStatus(unittest.TestCase):
         mapper = AgeOfDeathColumnMapper(column_name='test', string_to_iso_d=aod_d)
         vstatus = mapper.map_cell_to_vital_status("10 months")
         self.assertIsNotNone(vstatus)
-        self.assertTrue(isinstance(vstatus, PPKt.VitalStatus))
-        self.assertEqual(PPKt.VitalStatus.DECEASED, vstatus.status)
+        self.assertTrue(isinstance(vstatus, pptVitalStatus))
+        self.assertEqual(pptVitalStatus.Status.DECEASED, vstatus.status)
         self.assertEqual("P10M", vstatus.time_of_death.age.iso8601duration)
 
     def test_individual_with_vs(self):

@@ -158,6 +158,7 @@ class VitalStatus(MessageMixin):
         if self._time_of_death is not None:
             vs.time_of_death.CopyFrom(self._time_of_death.to_message())
 
+
         if self._cause_of_death is not None:
             vs.cause_of_death.CopyFrom(self._cause_of_death.to_message())
 

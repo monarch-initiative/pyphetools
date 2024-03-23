@@ -170,8 +170,8 @@ class TemplateImporter:
         vman.add_variants_to_individuals(individuals)
         all_req = TemplateImporter._get_allelic_requirement(df)
         cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
-        if len(cvalidator.n_removed_individuals) > 0:
-            print("Removed erroneous individsuals")
+        if cvalidator.n_removed_individuals() > 0:
+            print(f"Removed {cvalidator.n_removed_individuals()} individuals with unfixable errors")
         ef_individuals = cvalidator.get_error_free_individual_list()
         encoder.output_individuals_as_phenopackets(individual_list=ef_individuals)
         return individuals, cvalidator

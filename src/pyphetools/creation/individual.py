@@ -10,7 +10,7 @@ from .hp_term import HpTerm
 from .hgvs_variant import Variant
 from .metadata import MetaData, Resource
 from .pyphetools_age import PyPheToolsAge, NoneAge, IsoAge
-
+from ..pp.v202 import VitalStatus
 
 class Individual:
     """
@@ -37,6 +37,7 @@ class Individual:
                 sex:str=Constants.NOT_PROVIDED,
                 age_of_onset:str=NoneAge("na"),
                 age_at_last_encounter:str=NoneAge("na"),
+                vital_status:VitalStatus=None,
                 interpretation_list:List[PPKt.VariantInterpretation]=None,
                 disease:Disease=None):
         """Constructor
@@ -57,6 +58,7 @@ class Individual:
         #if not isinstance(age_at_last_encounter, PyPheToolsAge):
         #    raise ValueError(f"age_at_last_encounter argument must be PyPheToolsAge but was {type(age_of_onset)}")
         self._age_at_last_encounter = age_at_last_encounter
+        self._vital_status = vital_status
         if hpo_terms is None:
             self._hpo_terms = list()
         else:
@@ -192,7 +194,9 @@ class Individual:
         """
         self._citation = citation
 
-    def set_vital_status(self, vstatus:PPKt.VitalStatus):
+    def set_vital_status(self, vstatus:VitalStatus):
+        if not isinstance(vstatus, VitalStatus):
+            raise ValueError(f"vstatus argument must be pyphetools.pp.v202.VitalStatus but was{type(vstatus)}")
         self._vital_status = vstatus
 
     def get_phenopacket_id(self, phenopacket_id=None) -> str:
@@ -287,7 +291,8 @@ class Individual:
         elif self._sex == Constants.UNKNOWN_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
         if self._vital_status is not None:
-            php.subject.vital_status.CopyFrom(self._vital_status)
+            vs = self._vital_status.to_message()
+            php.subject.vital_status.CopyFrom(vs)
         disease_object = self._get_disease_object()
         php.diseases.append(disease_object)
         if isinstance(self._hpo_terms, list):

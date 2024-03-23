@@ -17,6 +17,8 @@ import phenopackets as PPKt
 
 
 # The following constants are identical with the constants used in the  Excel template
+from pyphetools.pp.v202 import VitalStatus
+
 AGE_OF_ONSET_FIELDNAME = "age_of_onset"
 AGE_AT_LAST_ENCOUNTER_FIELDNAME = "age_at_last_encounter"
 
@@ -74,6 +76,8 @@ class HpoEncoder(CellEncoder):
         self._is_ntr = ntr
         if h1.endswith(" "):
             self._error = f"Error - HPO label ends with whitespace: \”{h1}\""
+        elif isinstance(h2, float):
+            raise ValueError(f"second header was parsed as float which usually means it was empty: h1=\"{h1}\", h2=\"{h2}\"")
         elif h2.startswith("HP:") and len(h2) != 10:
             self._error = f"Error - Malformed HPO id: \”{h2}\" ({h1})"
         elif not h2.startswith("HP:"):
@@ -264,6 +268,9 @@ class CaseTemplateEncoder:
         for i in range(self._n_columns):
             h1 = header_1[i]
             h2 = header_2[i]
+            if isinstance(h1, float) or len(h1) == 0:
+                raise ValueError(f"Error: Empty column header at column {i}")
+
             if h1 == "HPO":
                 in_hpo_range = True
                 index_to_decoder_d[i] = NullEncoder()
@@ -345,8 +352,6 @@ class CaseTemplateEncoder:
         individual_id = data_items.get('individual_id')
         pmid = data_items.get("PMID")
         title = data_items.get("title")
-        if "deceased" in data_items:
-            print("DO SOMETHING")
         citation = Citation(pmid=pmid, title=title)
         sex = data_items.get("sex")
         if sex == "M":
@@ -369,6 +374,14 @@ class CaseTemplateEncoder:
             encounter_age = PyPheToolsAge.get_age(encounter_age)
         else:
             encounter_age = NoneAge("na")
+        vitStat = None
+        if "deceased" in data_items:
+            decsd = data_items.get("deceased")
+            if encounter_age.is_valid():
+                timeelem = encounter_age.to_ga4gh_time_element()
+                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=timeelem)
+            else:
+                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED)
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         # common error -- e.g. PMID: 3000312 or OMIM: 600123 (whitespace after colon)
@@ -382,6 +395,7 @@ class CaseTemplateEncoder:
                             sex=sex,
                             age_of_onset=onset_age,
                             age_at_last_encounter=encounter_age,
+                            vital_status=vitStat,
                             disease=disease)
 
     def _debug_row(self, target_idx:int, row:pd.Series):
