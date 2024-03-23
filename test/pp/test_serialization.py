@@ -48,7 +48,7 @@ class TestSerializable:
         assert msg.file_attributes['fileFormat'] == 'BAM'
 
     def test_to_message__oneof_field(self):
-        te = TimeElement(age=Age(iso8601duration='P1Y'))
+        te = TimeElement(element=Age(iso8601duration='P1Y'))
 
         msg = te.to_message()
 
@@ -56,7 +56,7 @@ class TestSerializable:
         assert msg.age.iso8601duration == 'P1Y'
 
         # Try other one-of case
-        te = TimeElement(gestational_age=GestationalAge(weeks=6, days=4))
+        te = TimeElement(element=GestationalAge(weeks=6, days=4))
 
         msg = te.to_message()
         assert isinstance(msg, Message)

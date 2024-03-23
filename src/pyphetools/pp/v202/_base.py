@@ -5,7 +5,7 @@ from google.protobuf.message import Message
 
 from .._api import MessageMixin
 from .._timestamp import Timestamp
-from ..parse import extract_message_scalar, extract_pb_message_scalar
+from ..parse import extract_message_scalar, extract_pb_message_scalar, extract_oneof_scalar, extract_pb_oneof_scalar
 
 
 class OntologyClass(MessageMixin):
@@ -553,100 +553,69 @@ class TimeInterval(MessageMixin):
 class TimeElement(MessageMixin):
     """
     TODO: better description
-
-    **Important**: `TimeElement` must be provided with exactly one argument: either `gestational_age`, `age`, ..., or `interval`.
     """
+    _ONEOF_ELEMENT = {
+        'gestational_age': GestationalAge, 'age': Age, 'age_range': AgeRange,
+        'ontology_class': OntologyClass, 'timestamp': Timestamp, 'interval': TimeInterval,
+    }
 
     def __init__(
             self,
-            gestational_age: typing.Optional[GestationalAge] = None,
-            age: typing.Optional[Age] = None,
-            age_range: typing.Optional[AgeRange] = None,
-            ontology_class: typing.Optional[OntologyClass] = None,
-            timestamp: typing.Optional[Timestamp] = None,
-            interval: typing.Optional[TimeInterval] = None,
+            element: typing.Union[GestationalAge, Age, AgeRange, OntologyClass, Timestamp, TimeInterval]
     ):
-        # Exactly one of the one-of fields must be set!
-        one_ofs = (gestational_age, age, age_range, ontology_class, timestamp, interval)
-        if sum(1 for arg in one_ofs if arg is not None) != 1:
-            cnt = sum(1 for arg in one_ofs if arg is not None)
-            raise ValueError(
-                f'Time element must be provided with exactly 1 argument but {cnt} arguments were provided!')
+        self._element = element
 
-        if gestational_age is not None:
-            self._discriminant = 6
-            self._val = gestational_age
-        elif age is not None:
-            self._discriminant = 1
-            self._val = age
-        elif age_range is not None:
-            self._discriminant = 2
-            self._val = age_range
-        elif ontology_class is not None:
-            self._discriminant = 3
-            self._val = ontology_class
-        elif timestamp is not None:
-            self._discriminant = 4
-            self._val = timestamp
-        elif interval is not None:
-            self._discriminant = 5
-            self._val = interval
-        else:
-            raise ValueError('Bug')  # TODO: wording
+    @property
+    def element(self) -> typing.Union[GestationalAge, Age, AgeRange, OntologyClass, Timestamp, TimeInterval]:
+        return self._element
 
     @property
     def age(self) -> typing.Optional[Age]:
-        return self._val if self._discriminant == 1 else None
+        return self._element if isinstance(self._element, Age) else None
 
     @age.setter
     def age(self, value: Age):
-        self._discriminant = 1
-        self._val = value
+        self._element = value
 
     @property
     def age_range(self) -> typing.Optional[AgeRange]:
-        return self._val if self._discriminant == 2 else None
+        return self._element if isinstance(self._element, AgeRange) else None
 
     @age_range.setter
     def age_range(self, value: AgeRange):
-        self._discriminant = 2
-        self._val = value
+        self._element = value
 
     @property
     def ontology_class(self) -> OntologyClass:
-        return self._val if self._discriminant == 3 else None
+        return self._element if isinstance(self._element, OntologyClass) else None
 
     @ontology_class.setter
     def ontology_class(self, value: OntologyClass):
-        self._discriminant = 3
-        self._val = value
+        self._element = value
 
     @property
     def timestamp(self) -> Timestamp:
-        return self._val if self._discriminant == 4 else None
+        return self._element if isinstance(self._element, Timestamp) else None
 
     @timestamp.setter
     def timestamp(self, value: Timestamp):
-        self._discriminant = 4
-        self._val = value
+        self._element = value
 
     @property
-    def interval(self) -> Timestamp:
-        return self._val if self._discriminant == 5 else None
+    def interval(self) -> TimeInterval:
+        return self._element if isinstance(self._element, TimeInterval) else None
 
     @interval.setter
     def interval(self, value: TimeInterval):
-        self._discriminant = 5
-        self._val = value
+        self._element = value
 
     @property
     def gestational_age(self) -> typing.Optional[GestationalAge]:
-        return self._val if self._discriminant == 6 else None
+        return self._element if isinstance(self._element, GestationalAge) else None
 
     @gestational_age.setter
     def gestational_age(self, value: GestationalAge):
-        self._discriminant = 6
-        self._val = value
+        self._element = value
 
     @staticmethod
     def field_names() -> typing.Iterable[str]:
@@ -654,50 +623,40 @@ class TimeElement(MessageMixin):
 
     @classmethod
     def required_fields(cls) -> typing.Sequence[str]:
-        # We do validation elsewhere
-        return ()
+        raise NotImplementedError('Should not be called!')
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if len(values) != 1:
-            raise ValueError(
-                f'Expected values with only one of the {TimeElement.field_names()} but got {values.keys()}'
+        if any(field in values for field in cls._ONEOF_ELEMENT):
+            return TimeElement(
+                element=extract_oneof_scalar(cls._ONEOF_ELEMENT, values)
             )
-        if 'gestational_age' in values:
-            return TimeElement(gestational_age=GestationalAge.from_dict(values['gestational_age']))
-        elif 'age' in values:
-            return TimeElement(age=Age.from_dict(values['age']))
-        elif 'age_range' in values:
-            return TimeElement(age_range=AgeRange.from_dict(values['age_range']))
-        elif 'ontology_class' in values:
-            return TimeElement(ontology_class=OntologyClass.from_dict(values['ontology_class']))
-        elif 'timestamp' in values:
-            return TimeElement(timestamp=Timestamp.from_str(values['timestamp']))
-        elif 'interval' in values:
-            return TimeElement(interval=TimeInterval.from_dict(values['interval']))
         else:
             raise ValueError(
-                f'Cannot deserialize {TimeElement.__name__} due to missing one of required fields: '
-                f'{TimeElement.field_names()}')
+                f'Missing one of required fields: '
+                f'`{"|".join(cls._ONEOF_ELEMENT)}`: {values}'
+            )
 
     def to_message(self) -> Message:
-        msg = pp202.TimeElement()
-        val = self._val.to_message()
-        if self._discriminant == 1:
-            msg.age.CopyFrom(val)
-        elif self._discriminant == 2:
-            msg.age_range.CopyFrom(val)
-        elif self._discriminant == 3:
-            msg.ontology_class.CopyFrom(val)
-        elif self._discriminant == 4:
-            msg.timestamp.CopyFrom(val)
-        elif self._discriminant == 5:
-            msg.interval.CopyFrom(val)
-        elif self._discriminant == 6:
-            msg.gestational_age.CopyFrom(val)
+        te = pp202.TimeElement()
+
+        val = self._element.to_message()
+        if isinstance(self._element, Age):
+            te.age.CopyFrom(val)
+        elif isinstance(self._element, AgeRange):
+            te.age_range.CopyFrom(val)
+        elif isinstance(self._element, OntologyClass):
+            te.ontology_class.CopyFrom(val)
+        elif isinstance(self._element, Timestamp):
+            te.timestamp.CopyFrom(val)
+        elif isinstance(self._element, TimeInterval):
+            te.interval.CopyFrom(val)
+        elif isinstance(self._element, GestationalAge):
+            te.gestational_age.CopyFrom(val)
         else:
-            raise ValueError(f'Invalid discriminant {self._discriminant}')
-        return msg
+            raise ValueError('Bug')
+
+        return te
 
     @classmethod
     def message_type(cls) -> typing.Type[Message]:
@@ -705,47 +664,23 @@ class TimeElement(MessageMixin):
 
     @classmethod
     def from_message(cls, msg: Message):
-        if isinstance(msg, pp202.TimeElement):
-            case = msg.WhichOneof('element')
-            if case == 'gestational_age':
-                return TimeElement(gestational_age=extract_pb_message_scalar('gestational_age', GestationalAge, msg))
-            elif case == 'age':
-                return TimeElement(age=extract_pb_message_scalar('age', Age, msg))
-            elif case == 'age_range':
-                return TimeElement(age_range=extract_pb_message_scalar('age_range', AgeRange, msg))
-            elif case == 'ontology_class':
-                return TimeElement(ontology_class=extract_pb_message_scalar('ontology_class', OntologyClass, msg))
-            elif case == 'timestamp':
-                return TimeElement(timestamp=extract_pb_message_scalar('timestamp', Timestamp, msg))
-            elif case == 'interval':
-                return TimeElement(interval=extract_pb_message_scalar('interval', TimeInterval, msg))
-            else:
-                raise ValueError(f'Unknown one of field set {case}')
+        if isinstance(msg, cls.message_type()):
+            return TimeElement(
+                element=extract_pb_oneof_scalar(
+                    'element',
+                    {
+                        'gestational_age': GestationalAge, 'age': Age, 'age_range': AgeRange,
+                        'ontology_class': OntologyClass, 'timestamp': Timestamp, 'interval': TimeInterval,
+                    }, msg)
+            )
         else:
             cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
-        return isinstance(other, TimeElement) \
-            and self._discriminant == other._discriminant \
-            and self._val == other._val
+        return isinstance(other, TimeElement) and self._element == other._element
 
     def __repr__(self):
-        if self._discriminant == 1:
-            val = f'age={self._val}'
-        elif self._discriminant == 2:
-            val = f'age_range={self._val}'
-        elif self._discriminant == 3:
-            val = f'ontology_class={self._val}'
-        elif self._discriminant == 4:
-            val = f'timestamp={self._val}'
-        elif self._discriminant == 5:
-            val = f'interval={self._val}'
-        elif self._discriminant == 6:
-            val = f'gestational_age={self._val}'
-        else:
-            raise ValueError(f'Invalid discriminant {self._discriminant}')
-
-        return f'TimeElement({val})'
+        return f'TimeElement(element={self._element})'
 
 
 class Procedure(MessageMixin):

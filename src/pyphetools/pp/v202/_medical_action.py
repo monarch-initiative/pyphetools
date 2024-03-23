@@ -13,6 +13,8 @@ from ..parse import extract_pb_message_scalar, extract_pb_message_seq, extract_p
 
 
 class TherapeuticRegimen(MessageMixin):
+    _ONEOF_IDENTIFIER = {'external_reference': ExternalReference, 'ontology_class': OntologyClass}
+
     class RegimenStatus(enum.Enum):
         UNKNOWN_STATUS = 0
         STARTED = 1
@@ -93,11 +95,9 @@ class TherapeuticRegimen(MessageMixin):
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if 'regimen_status' in values and any(field in values for field in ('external_reference', 'ontology_class')):
+        if 'regimen_status' in values and any(field in values for field in cls._ONEOF_IDENTIFIER):
             return TherapeuticRegimen(
-                identifier=extract_oneof_scalar(
-                    {'external_reference': ExternalReference, 'ontology_class': OntologyClass},
-                    values),
+                identifier=extract_oneof_scalar(cls._ONEOF_IDENTIFIER, values),
                 regimen_status=MessageMixin._extract_enum_field(
                     'regimen_status', TherapeuticRegimen.RegimenStatus, values,
                 ),
@@ -137,10 +137,7 @@ class TherapeuticRegimen(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, cls.message_type()):
             return TherapeuticRegimen(
-                identifier=extract_pb_oneof_scalar(
-                    'identifier',
-                    {'external_reference': ExternalReference, 'ontology_class': OntologyClass},
-                    msg),
+                identifier=extract_pb_oneof_scalar('identifier', cls._ONEOF_IDENTIFIER, msg),
                 regimen_status=TherapeuticRegimen.RegimenStatus(msg.regimen_status),
                 start_time=extract_pb_message_scalar('start_time', TimeElement, msg),
                 end_time=extract_pb_message_scalar('end_time', TimeElement, msg),
@@ -499,6 +496,11 @@ class Treatment(MessageMixin):
 
 
 class MedicalAction(MessageMixin):
+    _CLS_ACTION = {
+        'procedure': Procedure, 'treatment': Treatment,
+        'radiation_therapy': RadiationTherapy,
+        'therapeutic_regimen': TherapeuticRegimen,
+    }
 
     def __init__(
             self,
@@ -618,12 +620,9 @@ class MedicalAction(MessageMixin):
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if any(field in values for field in ('procedure', 'treatment', 'radiation_therapy', 'therapeutic_regimen')):
+        if any(field in values for field in cls._CLS_ACTION):
             return MedicalAction(
-                action=extract_oneof_scalar({
-                    'procedure': Procedure, 'treatment': Treatment,
-                    'radiation_therapy': RadiationTherapy, 'therapeutic_regimen': TherapeuticRegimen,
-                }, values),
+                action=extract_oneof_scalar(cls._CLS_ACTION, values),
                 treatment_target=extract_message_scalar('treatment_target', OntologyClass, values),
                 treatment_intent=extract_message_scalar('treatment_intent', OntologyClass, values),
                 response_to_treatment=extract_message_scalar('response_to_treatment', OntologyClass, values),
@@ -674,16 +673,11 @@ class MedicalAction(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, cls.message_type()):
             return MedicalAction(
-                action=extract_pb_oneof_scalar('action',
-                                               {
-                                                   'procedure': Procedure, 'treatment': Treatment,
-                                                   'radiation_therapy': RadiationTherapy,
-                                                   'therapeutic_regimen': TherapeuticRegimen,
-                                               },
-                                               msg),
+                action=extract_pb_oneof_scalar('action', cls._CLS_ACTION, msg),
                 treatment_target=extract_pb_message_scalar('treatment_target', OntologyClass, msg),
                 treatment_intent=extract_pb_message_scalar('treatment_intent', OntologyClass, msg),
-                response_to_treatment=extract_pb_message_scalar('response_to_treatment', OntologyClass, msg),
+                response_to_treatment=extract_pb_message_scalar('response_to_treatment', OntologyClass,
+                                                                msg),
                 adverse_events=extract_pb_message_seq('adverse_events', OntologyClass, msg),
                 treatment_termination_reason=extract_pb_message_scalar(
                     'treatment_termination_reason', OntologyClass, msg),

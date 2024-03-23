@@ -319,6 +319,7 @@ class ComplexValue(MessageMixin):
 
 
 class Value(MessageMixin):
+    _ONEOF_VALUE = {'quantity': Quantity, 'ontology_class': OntologyClass}
 
     def __init__(
             self,
@@ -356,9 +357,9 @@ class Value(MessageMixin):
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if any(field in values for field in ('quantity', 'ontology_class')):
+        if any(field in values for field in cls._ONEOF_VALUE):
             return Value(
-                value=extract_oneof_scalar({'quantity': Quantity, 'ontology_class': OntologyClass}, values),
+                value=extract_oneof_scalar(cls._ONEOF_VALUE, values),
             )
         else:
             raise ValueError(f'Missing one of required fields: `quantity|ontology_class`: {values}')
@@ -383,10 +384,7 @@ class Value(MessageMixin):
     def from_message(cls, msg: Message):
         if isinstance(msg, cls.message_type()):
             return Value(
-                value=extract_pb_oneof_scalar(
-                    'value',
-                    {'quantity': Quantity, 'ontology_class': OntologyClass},
-                    msg),
+                value=extract_pb_oneof_scalar('value', cls._ONEOF_VALUE, msg),
             )
         else:
             cls.complain_about_incompatible_msg_type(msg)
@@ -399,6 +397,7 @@ class Value(MessageMixin):
 
 
 class Measurement(MessageMixin):
+    _ONEOF_MEASUREMENT_VALUE = {'value': Value, 'complex_value': ComplexValue}
 
     def __init__(
             self,
@@ -480,10 +479,10 @@ class Measurement(MessageMixin):
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if 'assay' in values and any(field in values for field in ('value', 'complex_value')):
+        if 'assay' in values and any(field in values for field in cls._ONEOF_MEASUREMENT_VALUE):
             return Measurement(
                 assay=extract_message_scalar('assay', OntologyClass, values),
-                measurement_value=extract_oneof_scalar({'value': Value, 'complex_value': ComplexValue}, values),
+                measurement_value=extract_oneof_scalar(cls._ONEOF_MEASUREMENT_VALUE, values),
                 description=values.get('description', None),
                 time_observed=extract_message_scalar('time_observed', TimeElement, values),
                 procedure=extract_message_scalar('procedure', Procedure, values),
@@ -525,7 +524,7 @@ class Measurement(MessageMixin):
                 assay=extract_pb_message_scalar('assay', OntologyClass, msg),
                 measurement_value=extract_pb_oneof_scalar(
                     'measurement_value',
-                    {'value': Value, 'complex_value': ComplexValue},
+                    cls._ONEOF_MEASUREMENT_VALUE,
                     msg),
                 description=None if msg.description == '' else msg.description,
                 time_observed=extract_pb_message_scalar('time_observed', TimeElement, msg),

@@ -43,13 +43,13 @@ def individual() -> Individual:
         id='proband A',
         alternate_ids=('some', 'other', 'identifiers'),
         time_at_last_encounter=TimeElement(
-            age=Age(
+            element=Age(
                 iso8601duration='P6M',
             )
         ),
         vital_status=VitalStatus(
             status=VitalStatus.Status.DECEASED,
-            time_of_death=TimeElement(age=Age(iso8601duration='P1Y')),
+            time_of_death=TimeElement(element=Age(iso8601duration='P1Y')),
             cause_of_death=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
             survival_time_in_days=180,
         ),
@@ -65,22 +65,22 @@ def phenotypic_features() -> typing.Sequence[PhenotypicFeature]:
         PhenotypicFeature(
             type=OntologyClass(id='HP:0030084', label='Clinodactyly'),
             modifiers=(OntologyClass(id='HP:0012834', label='Right'),),
-            onset=TimeElement(age=Age(iso8601duration='P3M')),
+            onset=TimeElement(element=Age(iso8601duration='P3M')),
         ),
         PhenotypicFeature(
             type=OntologyClass(id='HP:0000555', label='Leukocoria'),
             modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
-            onset=TimeElement(age=Age(iso8601duration='P4M')),
+            onset=TimeElement(element=Age(iso8601duration='P4M')),
         ),
         PhenotypicFeature(
             type=OntologyClass(id='HP:0000486', label='Strabismus'),
             modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
-            onset=TimeElement(age=Age(iso8601duration='P5M15D')),
+            onset=TimeElement(element=Age(iso8601duration='P5M15D')),
         ),
         PhenotypicFeature(
             type=OntologyClass(id='HP:0000541', label='Retinal detachment'),
             modifiers=(OntologyClass(id='HP:0012835', label='Left'),),
-            onset=TimeElement(age=Age(iso8601duration='P6M')),
+            onset=TimeElement(element=Age(iso8601duration='P6M')),
         ),
     )
 
@@ -102,7 +102,7 @@ def measurements() -> typing.Sequence[Measurement]:
                 ),
             ),
             time_observed=TimeElement(
-                age=Age(iso8601duration='P6M'),
+                element=Age(iso8601duration='P6M'),
             ),
         ),
         Measurement(
@@ -119,7 +119,7 @@ def measurements() -> typing.Sequence[Measurement]:
                 ),
             ),
             time_observed=TimeElement(
-                age=Age(iso8601duration='P6M'),
+                element=Age(iso8601duration='P6M'),
             ),
         ),
     )
@@ -130,7 +130,7 @@ def diseases() -> typing.Sequence[Disease]:
     return (
         Disease(
             term=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
-            onset=TimeElement(age=Age(iso8601duration='P4M')),
+            onset=TimeElement(element=Age(iso8601duration='P4M')),
             disease_stage=(OntologyClass(id='LOINC:LA24739-7', label='Group E'),),
             clinical_tnm_finding=(OntologyClass(id='NCIT:C140678', label='Retinoblastoma cM0 TNM Finding v8'),),
             primary_site=OntologyClass(id='UBERON:0004548', label='left eye'),
@@ -264,10 +264,10 @@ def medical_actions() -> typing.Sequence[MedicalAction]:
             action=TherapeuticRegimen(
                 identifier=OntologyClass(id='NCIT:C10894', label='Carboplatin/Etoposide/Vincristine'),
                 start_time=TimeElement(
-                    age=Age(iso8601duration='P7M'),
+                    element=Age(iso8601duration='P7M'),
                 ),
                 end_time=TimeElement(
-                    age=Age(iso8601duration='P8M'),
+                    element=Age(iso8601duration='P8M'),
                 ),
                 regimen_status=TherapeuticRegimen.RegimenStatus.COMPLETED,
             ),
@@ -278,7 +278,7 @@ def medical_actions() -> typing.Sequence[MedicalAction]:
             action=Procedure(
                 code=OntologyClass(id='NCIT:C48601', label='Enucleation'),
                 body_site=OntologyClass(id='UBERON:0004548', label='left eye'),
-                performed=TimeElement(age=Age(iso8601duration='P8M2W'))
+                performed=TimeElement(element=Age(iso8601duration='P8M2W'))
             ),
             treatment_target=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
             treatment_intent=OntologyClass(id='NCIT:C62220', label='Cure'),
