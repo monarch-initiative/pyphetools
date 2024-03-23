@@ -747,11 +747,17 @@ class Procedure(MessageMixin):
             cls._complain_about_missing_field(values)
 
     def to_message(self) -> Message:
-        return pp202.Procedure(
+        procedure = pp202.Procedure(
             code=self._code.to_message(),
-            body_site=self._body_site.to_message(),
-            performed=self._performed.to_message()
         )
+
+        if self._body_site is not None:
+            procedure.body_site.CopyFrom(self._body_site.to_message())
+
+        if self._performed is not None:
+            procedure.performed.CopyFrom(self._performed.to_message())
+
+        return procedure
 
     @classmethod
     def message_type(cls) -> typing.Type[Message]:

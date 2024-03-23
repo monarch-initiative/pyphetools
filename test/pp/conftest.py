@@ -209,13 +209,30 @@ def biosamples() -> typing.Sequence[Biosample]:
                 PhenotypicFeature(type=OntologyClass(id='NCIT:C35941', label='Flexner-Wintersteiner Rosette Formation')),
                 PhenotypicFeature(type=OntologyClass(id='NCIT:C132485', label='Apoptosis and Necrosis')),
             ),
-            # measurements=(), # TODO: add after implementing Measurement
+            measurements=(
+                Measurement(
+                    assay=OntologyClass(id='LOINC:33728-7', label='Size.maximum dimension in Tumor'),
+                    measurement_value=Value(
+                        value=Quantity(
+                            unit=OntologyClass(id='UCUM:mm', label='millimeter'),
+                            value=15.0,
+                        )
+                    ),
+                    time_observed=TimeElement(
+                        element=Age(iso8601duration='P8M2W')
+                    )
+                ),
+            ),
             tumor_progression=OntologyClass(id='NCIT:C8509', label='Primary Neoplasm'),
             pathological_tnm_finding=(
                 OntologyClass(id='NCIT:C140720', label='Retinoblastoma pT3 TNM Finding v8'),
                 OntologyClass(id='NCIT:C140711', label='Retinoblastoma pN0 TNM Finding v8'),
             ),
-            # procedure=,  # TODO: add after implementing Procedure
+            procedure=Procedure(
+                code=OntologyClass(id='NCIT:C48601', label='Enucleation'),
+                body_site=OntologyClass(id='UBERON:0004548', label='left eye'),
+                performed=TimeElement(element=Age(iso8601duration='P8M2W'))
+            ),
             files=(
                 File(
                     uri='file://data/fileSomaticWgs.vcf.gz',
