@@ -132,7 +132,7 @@ class TemplateImporter:
         :rtype: typing.Tuple[typing.List[pyphetools.creation.Individual], pyphetools.validation.CohortValidator]
         """
         from pyphetools.creation  import HpoParser
-        from pyphetools.creation import CaseTemplateEncoder, AllelicRequirement
+        from pyphetools.creation import CaseTemplateEncoder
         from pyphetools.creation import VariantManager
         from pyphetools.validation import CohortValidator
         parser = HpoParser(hpo_json_file=self._hp_json)
@@ -170,6 +170,8 @@ class TemplateImporter:
         vman.add_variants_to_individuals(individuals)
         all_req = TemplateImporter._get_allelic_requirement(df)
         cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
+        if len(cvalidator.n_removed_individuals) > 0:
+            print("Removed erroneous individsuals")
         ef_individuals = cvalidator.get_error_free_individual_list()
         encoder.output_individuals_as_phenopackets(individual_list=ef_individuals)
         return individuals, cvalidator

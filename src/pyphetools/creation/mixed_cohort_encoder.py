@@ -60,6 +60,7 @@ class MixedCohortEncoder(AbstractEncoder):
     def __init__(self,
                 df,
                 hpo_cr,
+                hpo_ontology,
                 column_mapper_list,
                 individual_column_name,
                 disease_id_mapper,
@@ -95,7 +96,7 @@ class MixedCohortEncoder(AbstractEncoder):
         self._title_column = title_column
         self._variant_mapper = variant_mapper
         self._delimiter = delimiter
-        MixedCohortEncoder.HPO_VERSION = hpo_cr.get_hpo_ontology().version
+        MixedCohortEncoder.HPO_VERSION = hpo_ontology.version
 
 
     def get_individuals(self) -> List[Individual]:
@@ -179,7 +180,7 @@ class MixedCohortEncoder(AbstractEncoder):
             cite = Citation(pmid=pmid, title=title)
             indi = Individual(individual_id=individual_id,
                                 sex=sex,
-                                age=age,
+                                age_at_last_encounter=age,
                                 hpo_terms=hpo_terms,
                                 citation=cite,
                                 interpretation_list=interpretation_list,

@@ -178,7 +178,7 @@ EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "
 
 DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "HGNC_id",
                 "gene_symbol", "transcript", "allele_1", "allele_2",  "age_of_onset",
-                "age_at_last_encounter", "sex"}
+                "age_at_last_encounter", "deceased", "sex"}
 
 # note that the allele_2 field is option
 REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id", "disease_label",
@@ -187,6 +187,12 @@ ALLELE_2_IDX = 8
 
 REQUIRED_H2_FIELDS = ["CURIE", "str",	"str", "optional", "CURIE", "str", "CURIE",	"str",
                     "str","str","str","optional",  "age", "age", "M:F:O:U", "na"]
+
+OPTIONAL_H1_FIELDS = REQUIRED_H1_FIELDS
+OPTIONAL_H1_FIELDS.insert(14, "deceased")
+OPTIONAL_H2_FIELDS = REQUIRED_H2_FIELDS
+OPTIONAL_H2_FIELDS.insert(14, "yes/no/na")
+
 
 class CaseTemplateEncoder:
     """Class to encode data from user-provided Excel template.
@@ -216,13 +222,20 @@ class CaseTemplateEncoder:
             raise ValueError("headers are different lengths. Check template file for correctness.")
         # check headers are well formed
         idx = 0
-        for i in range(len(REQUIRED_H1_FIELDS)):
-            if idx == ALLELE_2_IDX and header_1[idx] != REQUIRED_H1_FIELDS[idx]:
+        ## The deceased field is optional
+        if header_1.index("deceased") > 0:
+            required_h1 = OPTIONAL_H1_FIELDS
+            required_h2 = OPTIONAL_H2_FIELDS
+        else:
+            required_h1 = REQUIRED_H1_FIELDS
+            required_h2 = REQUIRED_H2_FIELDS
+        for i in range(len(required_h1)):
+            if idx == ALLELE_2_IDX and header_1[idx] != required_h1[idx]:
                 idx += 1 # skip optional index
-            if header_1[idx] != REQUIRED_H1_FIELDS[idx]:
-                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{REQUIRED_H1_FIELDS[idx]}\" but got \"{header_1[idx]}\"")
-            if header_2[idx] != REQUIRED_H2_FIELDS[idx]:
-                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{REQUIRED_H2_FIELDS[idx]}\" but got \"{header_2[idx]}\"")
+            if header_1[idx] != required_h1[idx]:
+                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{required_h1[idx]}\" but got \"{header_1[idx]}\"")
+            if header_2[idx] != required_h2[idx]:
+                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{required_h2[idx]}\" but got \"{header_2[idx]}\"")
         self._header_fields_1 = header_1
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
@@ -259,6 +272,8 @@ class CaseTemplateEncoder:
                 index_to_decoder_d[i] = MiscEncoder(h1=h1, h2=h2, hpo_cr=hpo_cr)
             elif not in_hpo_range:
                 if h1 in EXPECTED_HEADERS:
+                    index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
+                elif h1 == "deceased":
                     index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
                 else:
                     raise ValueError(f"Malformed template header at column {i}: \"{h1}\"")
@@ -330,6 +345,8 @@ class CaseTemplateEncoder:
         individual_id = data_items.get('individual_id')
         pmid = data_items.get("PMID")
         title = data_items.get("title")
+        if "deceased" in data_items:
+            print("DO SOMETHING")
         citation = Citation(pmid=pmid, title=title)
         sex = data_items.get("sex")
         if sex == "M":
@@ -354,6 +371,10 @@ class CaseTemplateEncoder:
             encounter_age = NoneAge("na")
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
+        # common error -- e.g. PMID: 3000312 or OMIM: 600123 (whitespace after colon)
+        for item in [pmid, disease_id]:
+            if " " in item:
+                raise ValueError(f"Found illegal whitespace in {item}. Please remove it and try again")
         disease = Disease(disease_id=disease_id, disease_label=disease_label)
         return Individual(individual_id=individual_id,
                             citation=citation,
