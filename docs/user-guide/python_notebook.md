@@ -5,87 +5,58 @@ The following sections explain how to use Python code to create phenopackets fro
 
 ## Preparing the notebook.
 
-We first import the necessary libraries. Note that for conciseness, we import all classes from the pyphetools modules below. It is often better
-to import only the specifically needed classes.
+We first import the TemplateImporter to import the data and create phenopackets, and several classes to visualize the data.
 
 ```python
-import pandas as pd
+from pyphetools.creation import TemplateImporter
+from pyphetools.visualization import IndividualTable, QcVisualizer
 from IPython.display import display, HTML
-pd.set_option('display.max_colwidth', None) # show entire column contents, important!
-from collections import defaultdict
-from pyphetools.creation import *
-from pyphetools.visualization import *
-from pyphetools.validation import *
 import pyphetools
 print(f"Using pyphetools version {pyphetools.__version__}")
 ```
 
-Import the [Human Phenotype Ontology (HPO)](https://hpo.jax.org/app/) hp.json file. Note that here we show code that assumes that the file is available in the encloding directory. Update the ORCID identifier to your own [ORCID](https://orcid.org/){:target="_blank"}  id.
+Import the [Human Phenotype Ontology (HPO)](https://hpo.jax.org/app/) hp.json file. Note that here we show code that assumes that the file is available in the enclosing directory. Update the ORCID identifier to your own [ORCID](https://orcid.org/){:target="_blank"}  id. Indicate
+the location of the template file.
 
 ```python
-parser = HpoParser(hpo_json_file="../hp.json")
-hpo_cr = parser.get_hpo_concept_recognizer()
-hpo_version = parser.get_version()
-hpo_ontology = parser.get_ontology()
-created_by="ORCID:0000-0002-0736-9199"
-print(f"HPO version {hpo_version}")
+template = "input/BRD4_individuals.xlsx"
+hp_json = "../hp.json"
+created_by = "0000-0002-0736-9199"
 ```
 
-import the template file and show the contents (Adjust the head command to show as many lines as needed to check the data).
+import the template file. The code returns the pyphetools Individual objects, each of which contains all of the information needed to create a phenopacket and which here can be used if desired for debugging or further analysis. The cvalidator object is used to display quality assessment information.
 
 ```
-df = pd.read_excel("input/ATP13A2_Kufor_Rakeb_individuals.xlsx")
-df.head(2)
+timporter = TemplateImporter(template=template, hp_json=hp_json, created_by=created_by)
+individual_list, cvalidator = timporter.import_phenopackets_from_template()
 ```
-Create the encoder.
-
+Display quality assessment data.
 ```
-encoder = CaseTemplateEncoder(df=df, hpo_cr=hpo_cr, created_by=created_by)
-individuals = encoder.get_individuals()
-```
-Create the VariantManager object. Supply it with the corresponding gene symbol and transcript. If the disease being curated displays monoallelic variants (e.g., autosomal dominant), omit the  ``allele_2_column_name`` argument.
-
-
-```python
-vmanager = VariantManager(df=df,
-                          individual_column_name="individual_id",
-                          gene_symbol="ATP13A2",
-                          transcript="NM_022089.4",
-                          allele_1_column_name="allele_1",
-                          allele_2_column_name="allele_2")
-```
-
-Check results of variant encoding.
-```python
-vmanager.to_summary()
-```
-This will show (correctly) mapped as well as unmapped variants. If an HGVS variant is unmapped, it will need to be corrected. See  [variant notation](variant_notation.md) for suggestions. If the variants are chromosomal, there are special functions that are used. See the corresponding [pyphetools](https://monarch-initiative.github.io/pyphetools/){:target="_blank"} documentation.
-
-
-Add the variants to the individual objects.
-
-```python
-vmanager.add_variants_to_individuals(individuals)
-```
-
-Perform quality control. The QC will show errors that need to be corrected as well as warnings that are for information only.
-
-```python
-cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1,
-                                allelic_requirement=AllelicRequirement.BI_ALLELIC)
 qc = QcVisualizer(cohort_validator=cvalidator)
 display(HTML(qc.to_summary_html()))
 ```
+Display summaries of each phenopacket. The command ``cvalidator.get_error_free_individual_list()``returns versions of the Individual objects
+in which errors such as redundancies have been removed; this is the data that gets transformed into phenopackets.
 
-Display summary of phenopackets
+
 ```python
-individuals = cvalidator.get_error_free_individual_list()
-table = IndividualTable(individuals)
+table = IndividualTable(cvalidator.get_error_free_individual_list())
 display(HTML(table.to_html()))
 ```
-Output the phenopackets to file.
-```python
-encoder.output_individuals_as_phenopackets(individual_list=individuals)
-```
 
-See the [pyphetools documentation](https://monarch-initiative.github.io/pyphetools/developers/hpoa_editing/){:target="_blank"} for information about exporting HPOA files from collections of phenoapckets.
+### HPOA files
+
+If desired, we can transform the phenopacket data into an HPOA file. This is the format that the HPO team uses to create the phenotype.hpoa file that is distributed on the [Human Phenotype Ontology](https://hpo.jax.org/){target="_blank"} website. We need to choose a PubMed identifier that documents
+the mode of inheritance (MOI) and then indicate the MOI. If multiple distinct diseases are stored in the phenopackets directory, then we need to choose one of them using the target argument.
+
+Check results of variant encoding.
+```python
+pmid = "PMID:36333996"
+timporter.create_hpoa_from_phenopackets(pmid=pmid, moi="Autosomal recessive")
+```
+or
+
+```python
+pmid = "PMID:36333996"
+timporter.create_hpoa_from_phenopackets(pmid=pmid, moi="Autosomal recessive", target="OMIM:620427")
+```

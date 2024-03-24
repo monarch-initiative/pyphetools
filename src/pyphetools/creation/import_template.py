@@ -114,9 +114,11 @@ class TemplateImporter:
 
 
 
-    def import_phenopackets_from_template(self, deletions:typing.Set[str]=set(),
+    def import_phenopackets_from_template(self,
+                                          deletions:typing.Set[str]=set(),
                                         duplications:typing.Set[str]=set(),
-                                        inversions:typing.Set[str]=set()):
+                                        inversions:typing.Set[str]=set(),
+                                        hemizygous:bool=False):
         """Import the data from an Excel template and create a collection of Phenopackets
 
         Note that things will be completely automatic if the template just has HGNC encoding variants
@@ -128,6 +130,8 @@ class TemplateImporter:
         :type duplications: (typing.Set[str], optional
         :param inversions: Strings (identical to entries in the templates) that represent inversions.
         :type inversions: (typing.Set[str], optional
+        :param hemizygous: Set this to true for X-chromosomal recessive conditions in which the genotype of affected males is hemizygous
+        :type hemizygous: bool
         :returns: tuple with individual list and CohortValidator that optionally can be used to display in a notebook
         :rtype: typing.Tuple[typing.List[pyphetools.creation.Individual], pyphetools.validation.CohortValidator]
         """
@@ -167,7 +171,7 @@ class TemplateImporter:
                     print(f"- {uma} (may require coding as structural variant)")
             print("Fix this error and then try again!")
             sys.exit(1)
-        vman.add_variants_to_individuals(individuals)
+        vman.add_variants_to_individuals(individuals, hemizygous=hemizygous)
         all_req = TemplateImporter._get_allelic_requirement(df)
         cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
         if cvalidator.n_removed_individuals() > 0:

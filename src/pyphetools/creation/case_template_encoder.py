@@ -227,7 +227,7 @@ class CaseTemplateEncoder:
         # check headers are well formed
         idx = 0
         ## The deceased field is optional
-        if header_1.index("deceased") > 0:
+        if "deceased" in header_1:
             required_h1 = OPTIONAL_H1_FIELDS
             required_h2 = OPTIONAL_H2_FIELDS
         else:
