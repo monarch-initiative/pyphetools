@@ -17,6 +17,8 @@ import phenopackets as PPKt
 
 
 # The following constants are identical with the constants used in the  Excel template
+from pyphetools.pp.v202 import VitalStatus
+
 AGE_OF_ONSET_FIELDNAME = "age_of_onset"
 AGE_AT_LAST_ENCOUNTER_FIELDNAME = "age_at_last_encounter"
 
@@ -74,6 +76,8 @@ class HpoEncoder(CellEncoder):
         self._is_ntr = ntr
         if h1.endswith(" "):
             self._error = f"Error - HPO label ends with whitespace: \”{h1}\""
+        elif isinstance(h2, float):
+            raise ValueError(f"second header was parsed as float which usually means it was empty: h1=\"{h1}\", h2=\"{h2}\"")
         elif h2.startswith("HP:") and len(h2) != 10:
             self._error = f"Error - Malformed HPO id: \”{h2}\" ({h1})"
         elif not h2.startswith("HP:"):
@@ -178,7 +182,7 @@ EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "
 
 DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "HGNC_id",
                 "gene_symbol", "transcript", "allele_1", "allele_2",  "age_of_onset",
-                "age_at_last_encounter", "sex"}
+                "age_at_last_encounter", "deceased", "sex"}
 
 # note that the allele_2 field is option
 REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id", "disease_label",
@@ -187,6 +191,12 @@ ALLELE_2_IDX = 8
 
 REQUIRED_H2_FIELDS = ["CURIE", "str",	"str", "optional", "CURIE", "str", "CURIE",	"str",
                     "str","str","str","optional",  "age", "age", "M:F:O:U", "na"]
+
+OPTIONAL_H1_FIELDS = REQUIRED_H1_FIELDS
+OPTIONAL_H1_FIELDS.insert(14, "deceased")
+OPTIONAL_H2_FIELDS = REQUIRED_H2_FIELDS
+OPTIONAL_H2_FIELDS.insert(14, "yes/no/na")
+
 
 class CaseTemplateEncoder:
     """Class to encode data from user-provided Excel template.
@@ -216,13 +226,20 @@ class CaseTemplateEncoder:
             raise ValueError("headers are different lengths. Check template file for correctness.")
         # check headers are well formed
         idx = 0
-        for i in range(len(REQUIRED_H1_FIELDS)):
-            if idx == ALLELE_2_IDX and header_1[idx] != REQUIRED_H1_FIELDS[idx]:
+        ## The deceased field is optional
+        if "deceased" in header_1:
+            required_h1 = OPTIONAL_H1_FIELDS
+            required_h2 = OPTIONAL_H2_FIELDS
+        else:
+            required_h1 = REQUIRED_H1_FIELDS
+            required_h2 = REQUIRED_H2_FIELDS
+        for i in range(len(required_h1)):
+            if idx == ALLELE_2_IDX and header_1[idx] != required_h1[idx]:
                 idx += 1 # skip optional index
-            if header_1[idx] != REQUIRED_H1_FIELDS[idx]:
-                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{REQUIRED_H1_FIELDS[idx]}\" but got \"{header_1[idx]}\"")
-            if header_2[idx] != REQUIRED_H2_FIELDS[idx]:
-                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{REQUIRED_H2_FIELDS[idx]}\" but got \"{header_2[idx]}\"")
+            if header_1[idx] != required_h1[idx]:
+                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{required_h1[idx]}\" but got \"{header_1[idx]}\"")
+            if header_2[idx] != required_h2[idx]:
+                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{required_h2[idx]}\" but got \"{header_2[idx]}\"")
         self._header_fields_1 = header_1
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
@@ -251,6 +268,9 @@ class CaseTemplateEncoder:
         for i in range(self._n_columns):
             h1 = header_1[i]
             h2 = header_2[i]
+            if isinstance(h1, float) or len(h1) == 0:
+                raise ValueError(f"Error: Empty column header at column {i}")
+
             if h1 == "HPO":
                 in_hpo_range = True
                 index_to_decoder_d[i] = NullEncoder()
@@ -259,6 +279,8 @@ class CaseTemplateEncoder:
                 index_to_decoder_d[i] = MiscEncoder(h1=h1, h2=h2, hpo_cr=hpo_cr)
             elif not in_hpo_range:
                 if h1 in EXPECTED_HEADERS:
+                    index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
+                elif h1 == "deceased":
                     index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
                 else:
                     raise ValueError(f"Malformed template header at column {i}: \"{h1}\"")
@@ -352,8 +374,20 @@ class CaseTemplateEncoder:
             encounter_age = PyPheToolsAge.get_age(encounter_age)
         else:
             encounter_age = NoneAge("na")
+        vitStat = None
+        if "deceased" in data_items:
+            decsd = data_items.get("deceased")
+            if encounter_age.is_valid():
+                timeelem = encounter_age.to_ga4gh_time_element()
+                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=timeelem)
+            else:
+                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED)
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
+        # common error -- e.g. PMID: 3000312 or OMIM: 600123 (whitespace after colon)
+        for item in [pmid, disease_id]:
+            if " " in item:
+                raise ValueError(f"Found illegal whitespace in {item}. Please remove it and try again")
         disease = Disease(disease_id=disease_id, disease_label=disease_label)
         return Individual(individual_id=individual_id,
                             citation=citation,
@@ -361,6 +395,7 @@ class CaseTemplateEncoder:
                             sex=sex,
                             age_of_onset=onset_age,
                             age_at_last_encounter=encounter_age,
+                            vital_status=vitStat,
                             disease=disease)
 
     def _debug_row(self, target_idx:int, row:pd.Series):

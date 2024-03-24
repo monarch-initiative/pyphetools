@@ -5,6 +5,7 @@ from typing import Dict, List
 from .abstract_encoder import AbstractEncoder
 from .age_column_mapper import AgeColumnMapper
 from .citation import Citation
+from .column_mapper import ColumnMapper
 from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
@@ -49,16 +50,16 @@ class CohortEncoder(AbstractEncoder):
     """
 
     def __init__(self,
-                df,
+                df:pd.DataFrame,
                 hpo_cr: HpoConceptRecognizer,
-                column_mapper_list,
-                individual_column_name,
+                column_mapper_list:List[ColumnMapper],
+                individual_column_name:str,
                 metadata,
-                age_of_onset_mapper=AgeColumnMapper.not_provided(),
-                age_at_last_encounter_mapper=AgeColumnMapper.not_provided(),
-                sexmapper=SexColumnMapper.not_provided(),
-                variant_mapper=None,
-                delimiter=None):
+                age_of_onset_mapper:AgeColumnMapper=AgeColumnMapper.not_provided(),
+                age_at_last_encounter_mapper:AgeColumnMapper=AgeColumnMapper.not_provided(),
+                sexmapper:SexColumnMapper=SexColumnMapper.not_provided(),
+                variant_mapper:VariantColumnMapper=None,
+                delimiter:str=None):
         """Constructor
         """
         super().__init__(metadata=metadata)

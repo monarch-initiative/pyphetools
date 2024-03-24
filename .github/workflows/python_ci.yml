@@ -18,13 +18,15 @@ jobs:
       steps:
         - uses: actions/checkout@v4
 
-        - name: Initialize Python ${{ matrix.python }}
+        - name: Initialize Python 3.10
           uses: actions/setup-python@v5
           with:
-            python-version: "3.11"
+            python-version: "3.10"
 
         - name: Install pyphetools
-          run: python3 -m pip install .[test]
+          run: |
+            python3 -m pip install --editable .[test]
 
         - name: Run all tests
-          run: python3 -m pytest
+          run: |
+            pytest

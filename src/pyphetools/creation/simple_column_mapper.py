@@ -1,6 +1,7 @@
 from .hp_term import HpTerm
 from .column_mapper import ColumnMapper
 from .hpo_cr import HpoConceptRecognizer
+from .pyphetools_age import IsoAge
 from typing import List
 import pandas as pd
 import re
@@ -66,7 +67,7 @@ class SimpleColumnMapper(ColumnMapper):
         contents = cell_contents.strip()
         # first check if the cell contents represent a valid iso8601, which represents age of onset.
         if ColumnMapper.is_valid_iso8601(contents):
-            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=contents)]
+            return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=IsoAge(contents))]
         if contents in self._observed:
             return [HpTerm(hpo_id=self._hpo_id, label=self._hpo_label)]
         elif contents in self._excluded:
