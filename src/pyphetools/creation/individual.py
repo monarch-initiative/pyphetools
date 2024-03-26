@@ -52,11 +52,11 @@ class Individual:
             self._sex = PPKt.Sex.UNKNOWN_SEX
         else:
             self._sex = sex
-        #if not isinstance(age_of_onset, PyPheToolsAge):
-        #    raise ValueError(f"age_of_onset argument must be PyPheToolsAge but was {type(age_of_onset)}")
+        if not isinstance(age_of_onset, PyPheToolsAge):
+            raise ValueError(f"age_of_onset argument must be PyPheToolsAge but was {type(age_of_onset)}")
         self._age_of_onset = age_of_onset
-        #if not isinstance(age_at_last_encounter, PyPheToolsAge):
-        #    raise ValueError(f"age_at_last_encounter argument must be PyPheToolsAge but was {type(age_of_onset)}")
+        if not isinstance(age_at_last_encounter, PyPheToolsAge):
+            raise ValueError(f"age_at_last_encounter argument must be PyPheToolsAge but was {type(age_of_onset)}")
         self._age_at_last_encounter = age_at_last_encounter
         self._vital_status = vital_status
         if hpo_terms is None:

@@ -2,6 +2,8 @@ import os
 import pandas as pd
 from collections import defaultdict
 from .hpo_parser  import HpoParser
+from typing import List
+import hpotk
 from .case_template_encoder import REQUIRED_H1_FIELDS, REQUIRED_H2_FIELDS
 
 class TemplateCreator:
@@ -12,7 +14,8 @@ class TemplateCreator:
         parser = HpoParser(hpo_json_file=hp_json)
         self._hpo_cr = parser.get_hpo_concept_recognizer()
         self._hpo_ontology = parser.get_ontology()
-        self._hp_term_list = list()
+        self._all_added_hp_term_set = set()
+
 
 
     def add_seed_terms(self, text:str) -> None:
@@ -24,17 +27,20 @@ class TemplateCreator:
         :param text: free text that contains HPO term labels to be mined
         :type text: str
         """
-        hp_terms = set()
         for line in text.split("\n"):
             hpo_term_list = self._hpo_cr.parse_cell(line)
             for hpt in hpo_term_list:
-                hp_terms.add(hpt)
+                self._all_added_hp_term_set.add(hpt)
+
+
+    def arrange_terms(self) -> List[hpotk.model.TermId]:
+        hp_term_list = list()
         ## Arrange hp_terms so that all terms that belong to a given top level term go together
         PHENO_ROOT_TERM_ID = "HP:0000118"
         top_level_term_ids = self._hpo_ontology.graph.get_children(PHENO_ROOT_TERM_ID, False)
         top_level_term_ids = list(top_level_term_ids)
         top_level_d = defaultdict(list)
-        for hpt in hp_terms:
+        for hpt in self._all_added_hp_term_set:
             found= False
             for tlt in top_level_term_ids:
                 if self._hpo_ontology.graph.is_descendant_of(hpt.id,tlt):
@@ -46,8 +52,9 @@ class TemplateCreator:
         # Now the terms can be arrange by top level ancestor, which will make it easier to enter
         # in the Excel sheet
         for tlt, hpt_list in top_level_d.items():
-            self._hp_term_list.extend(hpt_list)
-        print(f"[INFO] Add {len(self._hp_term_list)} HPO terms to template.")
+            hp_term_list.extend(hpt_list)
+        print(f"[INFO] Add {len(hp_term_list)} HPO terms to template.")
+        return hp_term_list
 
 
     def create_template(self, disease_id:str, disease_label:str, HGNC_id:str, gene_symbol:str, transcript:str):
@@ -64,7 +71,8 @@ class TemplateCreator:
         if len(H1_Headers) != len(H2_Headers):
             raise ValueError("Header lists must have same length")
         EMPTY_STRING = ""
-        for hpt in self._hp_term_list:
+        hp_term_list = self.arrange_terms()
+        for hpt in hp_term_list:
             H1_Headers.append(hpt.label)
             H2_Headers.append(hpt.id)
         df = pd.DataFrame(columns=H1_Headers)

@@ -41,8 +41,6 @@ class IndividualTable:
     def __init__(self,  individual_list:List[Individual],
                         metadata:MetaData=None) -> None:
         """
-        :param phenopacket_list: List of GA4GH phenopackets to be displayed
-        :type phenopacket_list: List[PPKt.Phenopacket]
         :param individual_list: List of Indidivual objects to be displayed
         :type individual_list: List[Individual]
         :param metadata: metadata about the individuals

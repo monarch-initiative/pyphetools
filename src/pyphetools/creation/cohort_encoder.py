@@ -168,8 +168,6 @@ class CohortEncoder(AbstractEncoder):
         if not self._df.index.name in self._df.columns:
             df = self._df.reset_index()
         individuals = []
-        age_onset_column_name = self._age_of_onset_mapper.get_column_name()
-        age_last_encounter_column_name = self._age_at_last_encounter_mapper.get_column_name()
         sex_column_name = self._sex_mapper.get_column_name()
         if self._variant_mapper is None:
             variant_colname = None
