@@ -194,13 +194,8 @@ class MonthAgeColumnMapper(AgeColumnMapper):
         if month.isdigit():
             full_months = int(month)
             days = 0
-            age_string = f"P{full_months}M"
-            if full_months < 12:
-                return IsoAge(m=full_months, age_string=age_string)
-            elif full_months == 12:
-                return IsoAge(y=1, age_string="P1Y")
-            else:
-                raise ValueError(f"Improperly coded months : {month} -- should be at most 12.")
+            age_string = AgeIsoFormater.from_numerical_month(full_months)
+            return IsoAge(m=full_months, age_string=age_string)
         elif month.replace('.', '', 1).isdigit() and month.count('.') < 2:
             # a float such as 0.9 (months)
             months = float(month)
@@ -217,6 +212,8 @@ class MonthAgeColumnMapper(AgeColumnMapper):
                 days = int(remainder * avg_num_days_in_month)
                 age_string = f"P{full_months}M{days}D"
                 return IsoAge(m=full_months, d=days, age_string=age_string)
+        else:
+            return NoneAge("na")
 
 
 

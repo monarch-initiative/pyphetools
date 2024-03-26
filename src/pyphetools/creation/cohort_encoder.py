@@ -145,17 +145,19 @@ class CohortEncoder(AbstractEncoder):
 
 
     def _get_age(row:pd.Series, mapper:AgeColumnMapper):
+        import math
         column_name = mapper.get_column_name()
         if column_name == Constants.NOT_PROVIDED:
             return NoneAge("na")
-        else:
-            age_cell_contents = row[column_name]
-            try:
-                age = mapper.map_cell(age_cell_contents)
-            except Exception as ee:
-                print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
-                age = NoneAge("na")
-            return age
+        age_cell_contents = row[column_name]
+        if isinstance(age_cell_contents, float) and math.isnan(age_cell_contents):
+            return NoneAge("na")
+        try:
+            age = mapper.map_cell(age_cell_contents)
+        except Exception as ee:
+            print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
+            age = NoneAge("na")
+        return age
 
 
     def get_individuals(self) -> List[Individual]:

@@ -132,6 +132,9 @@ class TestOptionMapper(unittest.TestCase):
         self.assertEqual("P5M", age_iso.age_string)
         age_iso = ageMapper.map_cell(0.8)
         self.assertEqual("P24D", age_iso.age_string)
+
+    def test_by_month_one_year(self):
+        ageMapper = AgeColumnMapper.by_month(column_name=TEST_COLUMN)
         age_iso = ageMapper.map_cell(12)
         self.assertEqual("P1Y", age_iso.age_string)
 
