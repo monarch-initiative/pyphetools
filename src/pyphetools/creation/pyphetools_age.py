@@ -101,6 +101,8 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
             return NoneAge("na")
         if isinstance(age_string, float) and math.isnan(age_string):
             return NoneAge("na") # sometimes pandas returns an empty cell as a float NaN
+        if len(age_string) == 0:
+            return NoneAge("na")
         elif age_string.startswith("P"):
             return IsoAge.from_iso8601(age_string)
         elif age_string in HPO_ONSET_TERMS:
