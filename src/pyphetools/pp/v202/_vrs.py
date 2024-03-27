@@ -5,6 +5,7 @@ from google.protobuf.message import Message
 
 from .._api import MessageMixin
 from ..parse import extract_message_scalar, extract_message_sequence, extract_pb_message_scalar, extract_pb_message_seq
+from ..parse import extract_oneof_scalar, extract_pb_oneof_scalar
 
 
 class Gene(MessageMixin):
@@ -400,14 +401,13 @@ class SequenceInterval:
 
 
 class SequenceLocation:
+    # TODO:
 
     def __init__(
             self,
-            _id: str,
             sequence_id: str,
             interval: typing.Union[SequenceInterval, SimpleInterval],
     ):
-        self._id = _id
         self._sequence_id = sequence_id
         self._interval = interval
 
@@ -524,7 +524,7 @@ class LiteralSequenceExpression(MessageMixin):
         return f'LiteralSequenceExpression(sequence={self._sequence})'
 
 
-class DerivedSequenceExpression:
+class DerivedSequenceExpression(MessageMixin):
 
     def __init__(
             self,
@@ -534,8 +534,77 @@ class DerivedSequenceExpression:
         self._location = location
         self._reverse_complement = reverse_complement
 
+    @property
+    def location(self) -> SequenceLocation:
+        return self._location
 
-class RepeatedSequenceExpression:
+    @location.setter
+    def location(self, value: SequenceLocation):
+        self._location = value
+
+    @property
+    def reverse_complement(self) -> bool:
+        return self._reverse_complement
+
+    @reverse_complement.setter
+    def reverse_complement(self, value: bool):
+        self._reverse_complement = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'location', 'reverse_complement'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'location', 'reverse_complement'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return DerivedSequenceExpression(
+                location=extract_message_scalar('location', SequenceLocation, values),
+                reverse_complement=values['reverse_complement'],
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    def to_message(self) -> Message:
+        return pp202.DerivedSequenceExpression(
+            location=self._location.to_message(),
+            reverse_complement=self._reverse_complement,
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.DerivedSequenceExpression
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return DerivedSequenceExpression(
+                location=extract_pb_message_scalar('location', SequenceLocation, msg),
+                reverse_complement=msg.reverse_complement,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, DerivedSequenceExpression) \
+            and self._location == other._location \
+            and self._reverse_complement == other._reverse_complement
+
+    def __repr__(self):
+        return f'DerivedSequenceExpression(location={self._location}, reverse_complement={self._reverse_complement})'
+
+
+class RepeatedSequenceExpression(MessageMixin):
+    _ONEOF_SEQ_EXPRESSION = {
+        'literal_sequence_expression': LiteralSequenceExpression,
+        'derived_sequence_expression': DerivedSequenceExpression,
+    }
+    _ONEOF_COUNT = {
+        'number': Number, 'indefinite_range': IndefiniteRange, 'definite_range': DefiniteRange,
+    }
 
     def __init__(
             self,
@@ -543,7 +612,126 @@ class RepeatedSequenceExpression:
             count: typing.Union[Number, IndefiniteRange, DefiniteRange],
     ):
         self._seq_expr = seq_expr
-        self._count = count,
+        self._count = count
+
+    @property
+    def seq_expr(self) -> typing.Union[LiteralSequenceExpression, DerivedSequenceExpression]:
+        return self._seq_expr
+
+    @property
+    def literal_sequence_expression(self) -> typing.Optional[LiteralSequenceExpression]:
+        return self._seq_expr if isinstance(self._seq_expr, LiteralSequenceExpression) else None
+
+    @literal_sequence_expression.setter
+    def literal_sequence_expression(self, value: LiteralSequenceExpression):
+        self._seq_expr = value
+
+    @property
+    def derived_sequence_expression(self) -> typing.Optional[DerivedSequenceExpression]:
+        return self._seq_expr if isinstance(self._seq_expr, DerivedSequenceExpression) else None
+
+    @derived_sequence_expression.setter
+    def derived_sequence_expression(self, value: DerivedSequenceExpression):
+        self._seq_expr = value
+
+    @property
+    def count(self) -> typing.Union[Number, IndefiniteRange, DefiniteRange]:
+        return self._count
+
+    @property
+    def number(self) -> typing.Optional[Number]:
+        return self._count if isinstance(self._count, Number) else None
+
+    @number.setter
+    def number(self, value: Number):
+        self._count = value
+
+    @property
+    def indefinite_range(self) -> typing.Optional[IndefiniteRange]:
+        return self._count if isinstance(self._count, IndefiniteRange) else None
+
+    @indefinite_range.setter
+    def indefinite_range(self, value: IndefiniteRange):
+        self._count = value
+
+    @property
+    def definite_range(self):
+        return self._count if isinstance(self._count, DefiniteRange) else None
+
+    @definite_range.setter
+    def definite_range(self, value: DefiniteRange):
+        self._count = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return (
+            'literal_sequence_expression', 'derived_sequence_expression',
+            'number', 'indefinite_range', 'definite_range',
+        )
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        raise NotImplementedError('Should not be called!')
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if any(f in values for f in cls._ONEOF_SEQ_EXPRESSION) \
+                and any(f in values for f in cls._ONEOF_COUNT):
+            return RepeatedSequenceExpression(
+                seq_expr=extract_oneof_scalar(cls._ONEOF_SEQ_EXPRESSION, values),
+                count=extract_oneof_scalar(cls._ONEOF_COUNT, values),
+            )
+        else:
+            raise ValueError(
+                'Missing one of required fields: ' 
+                '`literal_sequence_expression|derived_sequence_expression` or '
+                f'`number|indefinite_range|definite_range`: {values}'
+                )
+
+    def to_message(self) -> Message:
+        e = pp202.RepeatedSequenceExpression()
+
+        # `seq_expr`
+        if isinstance(self._seq_expr, LiteralSequenceExpression):
+            e.literal_sequence_expression.CopyFrom(self._seq_expr.to_message())
+        elif isinstance(self._seq_expr, DerivedSequenceExpression):
+            e.derived_sequence_expression.CopyFrom(self._seq_expr.to_message())
+        else:
+            raise ValueError('Bug')
+
+        # `count`
+        if isinstance(self._count, Number):
+            e.number.CopyFrom(self._count.to_message())
+        elif isinstance(self._count, IndefiniteRange):
+            e.indefinite_range.CopyFrom(self._count.to_message())
+        elif isinstance(self._count, DefiniteRange):
+            e.definite_range.CopyFrom(self._count.to_message())
+        else:
+            raise ValueError('Bug')
+
+        return e
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.RepeatedSequenceExpression
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return RepeatedSequenceExpression(
+                seq_expr=extract_pb_oneof_scalar('seq_expr', cls._ONEOF_SEQ_EXPRESSION, msg),
+                count=extract_pb_oneof_scalar('count', cls._ONEOF_COUNT, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, RepeatedSequenceExpression) \
+            and self._seq_expr == other._seq_expr \
+            and self._count == other._count
+
+    def __repr__(self):
+        return f'RepeatedSequenceExpression(seq_expr={self._seq_expr}, count={self._count})'
 
 
 class CytobandInterval(MessageMixin):
@@ -616,7 +804,7 @@ class CytobandInterval(MessageMixin):
         return f'CytobandInterval(start={self._start}, end={self._end})'
 
 
-class ChromosomeLocation:
+class ChromosomeLocation(MessageMixin):
 
     def __init__(
             self,
@@ -628,8 +816,83 @@ class ChromosomeLocation:
         self._chr = chr
         self._interval = interval
 
+    @property
+    def species_id(self) -> str:
+        return self._species_id
+
+    @species_id.setter
+    def species_id(self, value: str):
+        self._species_id = value
+
+    @property
+    def chr(self) -> str:
+        return self._chr
+
+    @chr.setter
+    def chr(self, value: str):
+        self._chr = value
+
+    @property
+    def interval(self) -> CytobandInterval:
+        return self._interval
+
+    @interval.setter
+    def interval(self, value: CytobandInterval):
+        self._interval = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'species_id', 'chr', 'interval'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'species_id', 'chr', 'interval'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return ChromosomeLocation(
+                species_id=values['species_id'],
+                chr=values['chr'],
+                interval=extract_message_scalar('interval', CytobandInterval, values),
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.ChromosomeLocation
+
+    def to_message(self) -> Message:
+        return pp202.ChromosomeLocation(
+            species_id=self._species_id,
+            chr=self._chr,
+            interval=self._interval.to_message(),
+        )
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return ChromosomeLocation(
+                species_id=msg.species_id,
+                chr=msg.chr,
+                interval=extract_pb_message_scalar('interval', CytobandInterval, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, ChromosomeLocation) \
+            and self._species_id == other._species_id \
+            and self._chr == other._chr \
+            and self._interval == other._interval
+
+    def __repr__(self):
+        return f'ChromosomeLocation(species_id={self._species_id}, chr={self._chr}, interval={self._interval})'
+
 
 class Allele:
+    # TODO:
 
     def __init__(
             self,
@@ -646,6 +909,8 @@ class Allele:
 
 
 class Haplotype:
+    # TODO:
+
     class Member:
         def __init__(
                 self,
@@ -655,18 +920,16 @@ class Haplotype:
 
     def __init__(
             self,
-            _id: str,
             members: typing.Iterable[Member],
     ):
-        self._id = _id
         self._members = list(members)
 
 
 class CopyNumber:
+    # TODO:
 
     def __init__(
             self,
-            _id: str,
             subject: typing.Union[
                 Allele, Haplotype, Gene,
                 LiteralSequenceExpression, DerivedSequenceExpression, RepeatedSequenceExpression,
@@ -674,12 +937,13 @@ class CopyNumber:
             ],
             copies: typing.Union[Number, IndefiniteRange, DefiniteRange],
     ):
-        self._id = _id
         self._subject = subject
         self._copies = copies
 
 
 class VariationSet:
+    # TODO:
+
     class Member:
         """
 
@@ -696,14 +960,13 @@ class VariationSet:
 
     def __init__(
             self,
-            _id: str,
             members: typing.Iterable[Member],
     ):
-        self._id = _id
         self._members = list(members)
 
 
 class Variation:
+    # TODO:
 
     def __init__(
             self,
