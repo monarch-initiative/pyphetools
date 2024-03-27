@@ -175,7 +175,7 @@ class Number(MessageMixin):
         return f'Number(value={self._value})'
 
 
-class IndefiniteRange:
+class IndefiniteRange(MessageMixin):
 
     def __init__(
             self,
@@ -185,8 +185,70 @@ class IndefiniteRange:
         self._value = value
         self._comparator = comparator
 
+    @property
+    def value(self) -> int:
+        return self._value
 
-class DefiniteRange:
+    @value.setter
+    def value(self, value: int):
+        self._value = value
+
+    @property
+    def comparator(self) -> str:
+        return self._comparator
+
+    @comparator.setter
+    def comparator(self, value: str):
+        self._comparator = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'value', 'comparator'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'value', 'comparator'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return IndefiniteRange(
+                value=values['value'],
+                comparator=values['comparator'],
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.IndefiniteRange
+
+    def to_message(self) -> Message:
+        return pp202.IndefiniteRange(
+            value=self._value,
+            comparator=self._comparator,
+        )
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return IndefiniteRange(
+                value=msg.value,
+                comparator=msg.comparator,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, IndefiniteRange) \
+            and self._value == other._value \
+            and self._comparator == other._comparator
+
+    def __repr__(self):
+        return f'IndefiniteRange(value={self._value}, comparator={self._comparator})'
+
+
+class DefiniteRange(MessageMixin):
 
     def __init__(
             self,
@@ -196,8 +258,67 @@ class DefiniteRange:
         self._min = min
         self._max = max
 
+    @property
+    def min(self) -> int:
+        return self._min
 
-class SimpleInterval:
+    @min.setter
+    def min(self, value: int):
+        self._min = value
+
+    @property
+    def max(self) -> int:
+        return self._max
+
+    @max.setter
+    def max(self, value: int):
+        self._max = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'min', 'max'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'min', 'max'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return DefiniteRange(
+                min=values['min'],
+                max=values['max'],
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.DefiniteRange
+
+    def to_message(self) -> Message:
+        return pp202.DefiniteRange(min=self._min, max=self._max)
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return DefiniteRange(
+                min=msg.min,
+                max=msg.max,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, DefiniteRange) \
+            and self._min == other._min \
+            and self._max == other._max
+
+    def __repr__(self):
+        return f'DefiniteRange(min={self._min}, max={self._max})'
+
+
+class SimpleInterval(MessageMixin):
 
     def __init__(
             self,
@@ -206,6 +327,65 @@ class SimpleInterval:
     ):
         self._start = start
         self._end = end
+
+    @property
+    def start(self) -> int:
+        return self._start
+
+    @start.setter
+    def start(self, value: int):
+        self._start = value
+
+    @property
+    def end(self) -> int:
+        return self._end
+
+    @end.setter
+    def end(self, value: int):
+        self._end = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'start', 'end'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'start', 'end'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return SimpleInterval(
+                start=values['start'],
+                end=values['end'],
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.SimpleInterval
+
+    def to_message(self) -> Message:
+        return pp202.SimpleInterval(start=self._start, end=self._end)
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return SimpleInterval(
+                start=msg.start,
+                end=msg.end,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, SimpleInterval) \
+            and self._start == other._start \
+            and self._end == other._end
+
+    def __repr__(self):
+        return f'SimpleInterval(start={self._start}, end={self._end})'
 
 
 class SequenceInterval:
@@ -286,7 +466,7 @@ class SequenceState(MessageMixin):
 
     def __repr__(self):
         return f'SequenceState(sequence={self._sequence})'
-    
+
 
 class LiteralSequenceExpression(MessageMixin):
 
@@ -366,7 +546,7 @@ class RepeatedSequenceExpression:
         self._count = count,
 
 
-class CytobandInterval:
+class CytobandInterval(MessageMixin):
 
     def __init__(
             self,
@@ -376,17 +556,74 @@ class CytobandInterval:
         self._start = start
         self._end = end
 
+    @property
+    def start(self) -> str:
+        return self._start
+
+    @start.setter
+    def start(self, value: str):
+        self._start = value
+
+    @property
+    def end(self) -> str:
+        return self._end
+
+    @end.setter
+    def end(self, value: str):
+        self._end = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'start', 'end'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'start', 'end'
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return CytobandInterval(
+                start=values['start'],
+                end=values['end'],
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.CytobandInterval
+
+    def to_message(self) -> Message:
+        return pp202.CytobandInterval(start=self._start, end=self._end)
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return CytobandInterval(
+                start=msg.start,
+                end=msg.end,
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, CytobandInterval) \
+            and self._start == other._start \
+            and self._end == other._end
+
+    def __repr__(self):
+        return f'CytobandInterval(start={self._start}, end={self._end})'
+
 
 class ChromosomeLocation:
 
     def __init__(
             self,
-            _id: str,
             species_id: str,
             chr: str,
             interval: CytobandInterval,
     ):
-        self._id = _id
         self._species_id = species_id
         self._chr = chr
         self._interval = interval
