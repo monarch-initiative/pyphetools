@@ -147,7 +147,7 @@ class TemplateImporter:
         encoder = CaseTemplateEncoder(df=df, hpo_cr=hpo_cr, created_by=self._created_by, hpo_ontology=hpo_ontology)
         individuals = encoder.get_individuals()
         disease_id, disease_label, HGNC_id, gene_symbol, transcript = TemplateImporter._get_data_from_template(df)
-        print(f" we got {disease_id}  {transcript}")
+        print(f"Importing {disease_id}, {disease_label}, {HGNC_id}, {gene_symbol},  {transcript}")
         vman = VariantManager(df=df, individual_column_name="individual_id",
                                 allele_1_column_name="allele_1",
                                 allele_2_column_name="allele_2",
