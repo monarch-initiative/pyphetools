@@ -403,6 +403,9 @@ class SequenceInterval:
 class SequenceLocation:
     # TODO:
 
+class SequenceLocation(MessageMixin):
+    _ONEOF_INTERVAL_VALUE = {'sequence_interval': SequenceInterval, 'simple_interval': SimpleInterval}
+
     def __init__(
             self,
             sequence_id: str,
@@ -410,6 +413,80 @@ class SequenceLocation:
     ):
         self._sequence_id = sequence_id
         self._interval = interval
+
+    @property
+    def sequence_id(self) -> str:
+        return self._sequence_id
+
+    @sequence_id.setter
+    def sequence_id(self, value: str):
+        self._sequence_id = value
+
+    @property
+    def interval(self) -> typing.Union[SequenceInterval, SimpleInterval]:
+        return self._interval
+
+    @property
+    def sequence_interval(self):
+        return self._interval if isinstance(self._interval, SequenceInterval) else None
+
+    @sequence_interval.setter
+    def sequence_interval(self, value: SequenceInterval):
+        self._interval = value
+
+    @property
+    def simple_interval(self):
+        return self._interval if isinstance(self._interval, SimpleInterval) else None
+
+    @simple_interval.setter
+    def simple_interval(self, value: SimpleInterval):
+        self._interval = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'sequence_id', 'sequence_interval', 'simple_interval'
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        raise NotImplementedError('Should not be called!')
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if 'sequence_id' in values and any(f in values for f in cls._ONEOF_INTERVAL_VALUE):
+            return SequenceLocation(
+                sequence_id=values['sequence_id'],
+                interval=extract_oneof_scalar(cls._ONEOF_INTERVAL_VALUE, values),
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    def to_message(self) -> Message:
+        return pp202.SequenceLocation(
+            sequence_id=self._sequence_id,
+            interval=self._interval.to_message(),
+        )
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.SequenceLocation
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return SequenceLocation(
+                sequence_id=msg.sequence_id,
+                interval=extract_pb_oneof_scalar('interval', cls._ONEOF_INTERVAL_VALUE, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, SequenceLocation) \
+            and self._sequence_id == other._sequence_id \
+            and self._interval == other._interval
+
+    def __repr__(self):
+        return f'SequenceLocation(sequence_id={self._sequence_id}, interval={self._interval})'
 
 
 class SequenceState(MessageMixin):
