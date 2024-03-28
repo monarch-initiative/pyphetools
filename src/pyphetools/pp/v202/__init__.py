@@ -18,6 +18,10 @@ from ._phenotypic_feature import PhenotypicFeature
 from ._disease import Disease
 from ._meta_data import MetaData, Resource, Update
 from ._phenopackets import Phenopacket
+from ._vrs import Gene, Text, Number, IndefiniteRange, DefiniteRange, SimpleInterval, SequenceInterval
+from ._vrs import SequenceLocation, SequenceState, LiteralSequenceExpression, DerivedSequenceExpression
+from ._vrs import RepeatedSequenceExpression, CytobandInterval, ChromosomeLocation, Allele, Haplotype, CopyNumber
+from ._vrs import VariationSet, Variation
 from ._vrsatile import Expression, Extension, VcfRecord, MoleculeContext, VariationDescriptor
 
 __all__ = [
@@ -32,4 +36,9 @@ __all__ = [
     'MetaData', 'Resource', 'Update',
     'OntologyClass', 'ExternalReference', 'Evidence', 'Procedure', 'GestationalAge', 'Age', 'AgeRange', 'TimeInterval',
     'TimeElement', 'Timestamp', 'File',
+    # and the VRS members
+    'Gene', 'Text', 'Number', 'IndefiniteRange', 'DefiniteRange', 'SimpleInterval', 'SequenceInterval',
+    'SequenceLocation', 'SequenceState', 'LiteralSequenceExpression', 'DerivedSequenceExpression',
+    'RepeatedSequenceExpression', 'CytobandInterval', 'ChromosomeLocation', 'Allele', 'Haplotype', 'CopyNumber',
+    'VariationSet',
 ]
