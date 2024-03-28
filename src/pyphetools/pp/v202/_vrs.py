@@ -389,7 +389,11 @@ class SimpleInterval(MessageMixin):
         return f'SimpleInterval(start={self._start}, end={self._end})'
 
 
-class SequenceInterval:
+class SequenceInterval(MessageMixin):
+    # TODO: this is a hard nut to crack
+    _ONEOF_START_END_VALUES = {
+        'number': Number, 'indefinite_range': IndefiniteRange, 'definite_range': DefiniteRange,
+    }
 
     def __init__(
             self,
@@ -399,9 +403,75 @@ class SequenceInterval:
         self._start = start
         self._end = end
 
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'start', 'end'
 
-class SequenceLocation:
-    # TODO:
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        raise NotImplementedError('Should not be called!')
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if any(field in values for field in cls._ONEOF_START_END_VALUES):
+            # TODO: this is a hard nut to crack
+            return SequenceInterval(
+                # This is a degenerate case, because `start` and `end` oneof fields consist of the same values.
+                # Protobuf solves this by appending the type to field name.
+                # For instance, it stores `start` in one of `startNumber`, `startIndefiniteRange`, `startDefiniteRange`
+                # depending on the type, and `end` as `endNumber`, `endIndefiniteRange`, `endDefiniteRange`
+                # for the other field.
+                start=extract_oneof_scalar(cls._ONEOF_START_END_VALUES, values),
+                end=extract_oneof_scalar(cls._ONEOF_START_END_VALUES, values),
+            )
+        else:
+            raise ValueError(f'Missing one of required fields: `assay, value|complex_value` {values}')
+
+    def to_message(self) -> Message:
+        si = pp202.SequenceInterval()
+
+        # TODO:
+        # I am not sure about the attribute where we should be setting this.
+        # Both for `start` and `end`
+        if isinstance(self._start, Number):
+            si.start.CopyFrom(self._start.to_message())
+        elif isinstance(self._start, IndefiniteRange):
+            si.start.CopyFrom(self._start.to_message())
+        elif isinstance(self._start, DefiniteRange):
+            si.start.CopyFrom(self._start.to_message())
+        else:
+            raise ValueError('Bug')
+
+        if isinstance(self._end, Number):
+            si.end.CopyFrom(self._end.to_message())
+        elif isinstance(self._end, IndefiniteRange):
+            si.end.CopyFrom(self._end.to_message())
+        elif isinstance(self._end, DefiniteRange):
+            si.end.CopyFrom(self._end.to_message())
+        else:
+            raise ValueError('Bug')
+
+        return si
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.SequenceInterval
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        # TODO:
+        pass
+
+    def __eq__(self, other):
+        return isinstance(other, SequenceInterval) \
+            and self._start == other._start \
+            and self._end == other._end
+
+    def __repr__(self):
+        return f'SequenceInterval(' \
+               f'start={self._start}, ' \
+               f'end={self._end})'
+
 
 class SequenceLocation(MessageMixin):
     _ONEOF_INTERVAL_VALUE = {'sequence_interval': SequenceInterval, 'simple_interval': SimpleInterval}
@@ -1137,21 +1207,145 @@ class Allele(MessageMixin):
                f'state={self._state})'
 
 
-class Haplotype:
-    # TODO:
+class Haplotype(MessageMixin):
 
-    class Member:
+    class Member(MessageMixin):
+
         def __init__(
                 self,
                 value: typing.Union[Allele, str],
         ):
             self._value = value
 
+        @property
+        def value(self) -> typing.Union[Allele, str]:
+            return self._value
+
+        @property
+        def allele(self) -> typing.Optional[Allele]:
+            return self._value if isinstance(self._value, Allele) else None
+
+        @allele.setter
+        def allele(self, value: Allele):
+            self._value = value
+
+        @property
+        def curie(self) -> typing.Optional[str]:
+            return self._value if isinstance(self._value, str) else None
+
+        @curie.setter
+        def curie(self, value: str):
+            self._value = value
+
+        @staticmethod
+        def field_names() -> typing.Iterable[str]:
+            return 'allele', 'curie',
+
+        @classmethod
+        def required_fields(cls) -> typing.Sequence[str]:
+            raise NotImplementedError('Should not be called!')
+
+        @classmethod
+        def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+            if any(f in values for f in ('allele', 'curie')):
+                # We must extract the value in a special way because `not isinstance(curie, Deserializable)`.
+                if 'curie' in values:
+                    value = values['curie']
+                else:
+                    value = extract_message_scalar('allele', Allele, values)
+
+                return Haplotype.Member(
+                    value=value,
+                )
+            else:
+                raise ValueError(f'Missing one of required fields: `curie|allele` {values}')
+
+        def to_message(self) -> Message:
+            hm = pp202.Haplotype.Member()
+
+            if isinstance(self._value, str):
+                hm.curie = self._value
+            elif isinstance(self._value, Allele):
+                hm.allele.CopyFrom(self._value.to_message())
+            else:
+                raise ValueError('Bug')
+
+            return hm
+
+        @classmethod
+        def message_type(cls) -> typing.Type[Message]:
+            return pp202.Haplotype.Member
+
+        @classmethod
+        def from_message(cls, msg: Message):
+            if isinstance(msg, cls.message_type()):
+                which = msg.WhichOneof('value')
+                if which == 'curie':
+                    value = msg.curie
+                else:
+                    value = extract_pb_message_scalar('allele', Allele, msg)
+                return pp202.Haplotype.Member(
+                    value=value,
+                )
+            else:
+                cls.complain_about_incompatible_msg_type(msg)
+
+        def __eq__(self, other):
+            return isinstance(other, Haplotype.Member) \
+                and self._value == other._value
+
+        def __repr__(self):
+            return f'Haplotype.Member(value={self._value})'
+
     def __init__(
             self,
             members: typing.Iterable[Member],
     ):
         self._members = list(members)
+
+    @property
+    def members(self) -> typing.MutableSequence[Member]:
+        return self._members
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'members',
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'members',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return Haplotype(
+                members=extract_message_sequence('members', Haplotype.Member, values)
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    def to_message(self) -> Message:
+        return pp202.Haplotype(members=(m.to_message() for m in self._members))
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Haplotype
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return Haplotype(
+                members=extract_pb_message_seq('members', Haplotype.Member, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, Haplotype) \
+            and self._members == other._members
+
+    def __repr__(self):
+        return f'Haplotype(members={self._members})'
 
 
 class CopyNumber:
@@ -1170,10 +1364,9 @@ class CopyNumber:
         self._copies = copies
 
 
-class VariationSet:
-    # TODO:
+class VariationSet(MessageMixin):
 
-    class Member:
+    class Member(MessageMixin):
         """
 
         **IMPORTANT**: `value` can also be an instance of :class:`VariationSet`!
@@ -1187,11 +1380,57 @@ class VariationSet:
             if isinstance(value, VariationSet):
                 pass
 
+        # TODO: implement
+
     def __init__(
             self,
             members: typing.Iterable[Member],
     ):
         self._members = list(members)
+
+    @property
+    def members(self) -> typing.MutableSequence[Member]:
+        return self._members
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'members',
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        return 'members',
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if cls._all_required_fields_are_present(values):
+            return VariationSet(
+                members=extract_message_sequence('members', VariationSet.Member, values)
+            )
+        else:
+            cls._complain_about_missing_field(values)
+
+    def to_message(self) -> Message:
+        return pp202.VariationSet(members=(m.to_message() for m in self._members))
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.VariationSet
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return VariationSet(
+                members=extract_pb_message_seq('members', VariationSet.Member, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, VariationSet) \
+            and self._members == other._members
+
+    def __repr__(self):
+        return f'VariationSet(members={self._members})'
 
 
 class Variation:
