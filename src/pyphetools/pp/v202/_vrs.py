@@ -968,21 +968,173 @@ class ChromosomeLocation(MessageMixin):
         return f'ChromosomeLocation(species_id={self._species_id}, chr={self._chr}, interval={self._interval})'
 
 
-class Allele:
-    # TODO:
+class Allele(MessageMixin):
+    _ONEOF_LOCATION = {
+        'curie': str,
+        'chromosome_location': ChromosomeLocation,
+        'sequence_location': SequenceLocation,
+    }
+    _ONEOF_STATE = {
+        'sequence_state': SequenceState,
+        'literal_sequence_expression': LiteralSequenceExpression,
+        'derived_sequence_expression': DerivedSequenceExpression,
+        'repeated_sequence_expression': RepeatedSequenceExpression,
+    }
 
     def __init__(
             self,
-            _id: str,
             location: typing.Union[str, ChromosomeLocation, SequenceLocation],
             state: typing.Union[
                 SequenceState, LiteralSequenceExpression,
                 DerivedSequenceExpression, RepeatedSequenceExpression,
             ],
     ):
-        self._id = _id
         self._location = location
         self._state = state
+
+    @property
+    def location(self) -> typing.Union[str, ChromosomeLocation, SequenceLocation]:
+        return self._location
+
+    @property
+    def curie(self) -> typing.Optional[str]:
+        return self._location if isinstance(self._location, str) else None
+
+    @curie.setter
+    def curie(self, value: str):
+        self._location = value
+
+    @property
+    def chromosome_location(self) -> typing.Optional[ChromosomeLocation]:
+        return self._location if isinstance(self._location, ChromosomeLocation) else None
+
+    @chromosome_location.setter
+    def chromosome_location(self, value: ChromosomeLocation):
+        self._location = value
+
+    @property
+    def sequence_location(self) -> typing.Optional[SequenceLocation]:
+        return self._location if isinstance(self._location, SequenceLocation) else None
+
+    @sequence_location.setter
+    def sequence_location(self, value: SequenceLocation):
+        self._location = value
+
+    @property
+    def state(self) -> typing.Union[
+                SequenceState, LiteralSequenceExpression,
+                DerivedSequenceExpression, RepeatedSequenceExpression,
+            ]:
+        return self._state
+
+    @property
+    def sequence_state(self) -> typing.Optional[SequenceState]:
+        return self._state if isinstance(self._state, SequenceState) else None
+
+    @sequence_state.setter
+    def sequence_state(self, value: SequenceState):
+        self._state = value
+
+    @property
+    def literal_sequence_expression(self) -> typing.Optional[LiteralSequenceExpression]:
+        return self._state if isinstance(self._state, LiteralSequenceExpression) else None
+
+    @literal_sequence_expression.setter
+    def literal_sequence_expression(self, value: LiteralSequenceExpression):
+        self._state = value
+
+    @property
+    def derived_sequence_expression(self) -> typing.Optional[DerivedSequenceExpression]:
+        return self._state if isinstance(self._state, DerivedSequenceExpression) else None
+
+    @derived_sequence_expression.setter
+    def derived_sequence_expression(self, value: DerivedSequenceExpression):
+        self._state = value
+
+    @property
+    def repeated_sequence_expression(self) -> typing.Optional[RepeatedSequenceExpression]:
+        return self._state if isinstance(self._state, RepeatedSequenceExpression) else None
+
+    @repeated_sequence_expression.setter
+    def repeated_sequence_expression(self, value: RepeatedSequenceExpression):
+        self._state = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return (
+            'curie', 'chromosome_location', 'sequence_location',
+            'sequence_state', 'literal_sequence_expression',
+            'derived_sequence_expression', 'repeated_sequence_expression',
+        )
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        raise NotImplementedError('Should not be called!')
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if any(f in values for f in cls._ONEOF_LOCATION) and any(f in values for f in cls._ONEOF_STATE):
+            # We must extract the location in a special way because `not isinstance(curie, Deserializable)`.
+            if 'curie' in values:
+                location = values['curie']
+            else:
+                location = extract_oneof_scalar(cls._ONEOF_LOCATION, values)
+
+            return Allele(
+                location=location,
+                state=extract_oneof_scalar(cls._ONEOF_STATE, values),
+            )
+        else:
+            raise ValueError(
+                'Missing one of required fields: '
+                '`curie|chromosome_location|,sequence_location` '
+                '`sequence_state|literal_sequence_expression|derived_sequence_expression|repeated_sequence_expression`'
+                f' {values}')
+
+    def to_message(self) -> Message:
+        a = pp202.Allele(
+            state=self._state.to_message(),
+        )
+
+        if isinstance(self._location, str):
+            a.curie = self._location
+        elif isinstance(self._location, ChromosomeLocation):
+            a.chromosome_location.CopyFrom(self._location.to_message())
+        elif isinstance(self._location, SequenceLocation):
+            a.sequence_location.CopyFrom(self._location.to_message())
+        else:
+            raise ValueError('Bug')
+
+        return a
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Allele
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            location = msg.WhichOneof('location')
+            if location == 'curie':
+                loc = msg.curie
+            else:
+                loc = extract_pb_oneof_scalar('curie', cls._ONEOF_LOCATION, msg)
+            return Allele(
+                location=loc,
+                state=extract_pb_oneof_scalar('state', cls._ONEOF_STATE, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, Allele) \
+            and self._location == other._location \
+            and self._state == other._state
+
+    def __repr__(self):
+        return f'Allele(' \
+               f'location={self._location}, ' \
+               f'state={self._state})'
 
 
 class Haplotype:
