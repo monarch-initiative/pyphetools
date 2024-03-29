@@ -5,6 +5,18 @@ pyphetools is a Python package for creating [GA4GH phenopackets](https://phenopa
 from tabular data such as databases or supplemental files found in the medical literature.
 
 
+
+
+This documentation contains information about
+
+- How to use the [Excel template](user-guide/excel.md) to code clinical data
+- How to use [pyphetools classes](user-guide/jupyter.md) to convert tabular data (e.g., supplemental tables) to phenopackets
+- Information for [developers](developers/developers.md)
+- A description of the pyphetools [API](api/overview.md)
+
+
+See the following pages for more information:
+
 - **GitHub**:
 Source code is available at the [pyphetools GitHub repository](https://github.com/monarch-initiative/pyphetools){:target="\_blank"}.
 - **PyPI**:

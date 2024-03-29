@@ -1,3 +1,0 @@
-# MixedCohortEncoder
-
-::: pyphetools.creation.MixedCohortEncoder

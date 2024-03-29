@@ -37,29 +37,29 @@ nav:
     - 'user-guide/python_notebook.md'
     - 'user-guide/tips_for_curation.md'
     - 'user-guide/variant_notation.md'
+  - Coding tabular data with Python scripts:
+      - Overview: 'tabular/overview.md'
+      - Jupyter notebooks: 'tabular/jupyter.md'
+      - Column mappers:
+        - Choosing a column mapper: 'tabular/choosing_column_mapper.md'
+        - Simple column mapper: 'tabular/simple_column_mapper.md'
+        - Constant column mapper: 'tabular/constant_column_mapper.md'
+        - Option column mapper: 'tabular/option_column_mapper.md'
+        - Threshold column mapper: 'tabular/threshold_column_mapper.md'
+      - Variant column mapper: 'tabular/variant_column_mapper.md'
+      - Cohort encoder: 'tabular/cohort_encoder.md'
+      - Validation: 'tabular/validation.md'
+      - Visualization: 'tabular/visualization.md'
   - Developers:
     - For developers: 'developers/developers.md'
     - Installation: 'developers/installation.md'
     - HPOA files: 'developers/hpoa_editing.md'
     - Internal: 'developers/internal.md'
-    - Custom Python scripts:
-      - Overview: 'user-guide/jupyter.md'
-      - Column mappers:
-        - Choosing a column mapper: 'user-guide/choosing_column_mapper.md'
-        - Simple column mapper: 'user-guide/simple_column_mapper.md'
-        - Constant column mapper: 'user-guide/constant_column_mapper.md'
-        - Option column mapper: 'user-guide/option_column_mapper.md'
-        - Threshold column mapper: 'user-guide/threshold_column_mapper.md'
-      - Variant column mapper: 'user-guide/variant_column_mapper.md'
-      - Cohort encoder: 'user-guide/cohort_encoder.md'
-      - Validation: 'user-guide/validation.md'
-      - Visualization: 'user-guide/visualization.md'
   - API:
     - Overview: 'api/overview.md'
     - creation:
       - overview: 'api/creation.md'
       - AgeColumnMapper: "api/creation/age_column_mapper.md"
-      - CaseEncoder: "api/creation/case_encoder.md"
       - CaseTemplateEncoder: "api/creation/case_template_encoder.md"
       - Citation:  "api/creation/citation.md"
       - CohortEncoder: "api/creation/cohort_encoder.md"
@@ -75,7 +75,6 @@ nav:
       - Individual: "api/creation/individual.md"
       - IsoAge: "api/creation/iso_age.md"
       - MetaData: "api/creation/metadata.md"
-      - MixedCohortEncoder: "api/creation/mixed_cohort_encoder.md"
       - OptionColumnMapper: "api/creation/option_column_mapper.md"
       - SexColumnMapper: "api/creation/sex_column_mapper.md"
       - SimpleColumnMapper: "api/creation/simple_column_mapper.md"

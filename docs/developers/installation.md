@@ -1,7 +1,7 @@
 # Installation of pyphetools
 
 
-pyphetools is available as a [PyPI package](https://pypi.org/project/pyphetools/){:target="\_blank"}. 
+pyphetools is available as a [PyPI package](https://pypi.org/project/pyphetools/){:target="\_blank"}.
 
 Most users should install the latest version (the following example creates a virtual environment).
 Note that depending on your system it will be necessary to update pip to be able to install pyphetools.
@@ -23,7 +23,7 @@ To use the kernel in notebooks, enter the following
 
 ```bash title="installing jupyter and running pyphetools in a notebook"
 pip install jupyter ipykernel
-python -m ipykernel install --name "ppt_env" --display-name "ppt_env"
+python -m ipykernel install --user --name "ppt_env" --display-name "ppt_env"
 jupyter-notebook
 ```
 

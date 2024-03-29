@@ -2,7 +2,6 @@ from .age_column_mapper import AgeColumnMapper
 from .age_isoformater import AgeIsoFormater
 from .age_of_death_mapper import AgeOfDeathColumnMapper
 from .allelic_requirement import AllelicRequirement
-from .case_encoder import CaseEncoder
 from .case_template_encoder import CaseTemplateEncoder
 from .citation import Citation
 from .cohort_encoder import CohortEncoder
@@ -19,11 +18,11 @@ from .hp_term import HpTerm, HpTermBuilder
 from .import_template import TemplateImporter
 from .individual import Individual
 from .metadata import MetaData
-from .mixed_cohort_encoder import MixedCohortEncoder
 from .option_column_mapper import OptionColumnMapper
 from .pyphetools_age import PyPheToolsAge, IsoAge, HpoAge, GestationalAge, HPO_ONSET_TERMS
 from .sex_column_mapper import SexColumnMapper
-from .simple_column_mapper import SimpleColumnMapper, SimpleColumnMapperGenerator
+from .simple_column_mapper import SimpleColumnMapper
+from .scm_generator import SimpleColumnMapperGenerator
 from .structural_variant import StructuralVariant
 from .thresholded_column_mapper import ThresholdedColumnMapper
 from .thresholder import Thresholder
@@ -39,7 +38,6 @@ __all__ = [
     "AgeIsoFormater",
     "AgeOfDeathColumnMapper",
     "AllelicRequirement",
-    "CaseEncoder",
     "CaseTemplateEncoder",
     "Citation",
     "CohortEncoder",
@@ -56,7 +54,6 @@ __all__ = [
     "HpTermBuilder",
     "Individual",
     "MetaData",
-    "MixedCohortEncoder",
     "OptionColumnMapper",
     "PyPheToolsAge", "IsoAge", "HpoAge", "GestationalAge", "HPO_ONSET_TERMS",
     "SexColumnMapper",

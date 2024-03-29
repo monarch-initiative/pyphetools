@@ -244,6 +244,7 @@ class CaseTemplateEncoder:
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
         data_df = df.iloc[1:]
+        self._check_for_duplicate_individual_ids(data_df)
         self._is_biallelic = "allele_2" in header_1
         self._allele1_d = {}
         self._allele2_d = {}
@@ -306,6 +307,31 @@ class CaseTemplateEncoder:
             for e in self._errors:
                 print(f"ERROR: {e}")
         return index_to_decoder_d
+
+    def _check_for_duplicate_individual_ids(self, df:pd.DataFrame) -> None:
+        """Check that no two individuals in the dataframe have the same identifier
+        Duplicate identifiers can lead to other errors in the code
+        An identifier is made from the combination of PMID and individual_id and must be unique
+        If there is one or mure duplicates, this function will throw a value error.
+        """
+        if not "individual_id" in df.columns:
+            raise ValueError(f"Malformed template headers - could not find column \"individual_id\"")
+        if not "PMID" in df.columns:
+            raise ValueError(f"Malformed template headers - could not find column \"individual_id\"")
+        seen_ids = set()
+        errors = list()
+        for _, row in df.iterrows():
+            individual_id = row["individual_id"]
+            pmid = row["PMID"]
+            composite_id = f"{pmid}_{individual_id}"
+            if composite_id in seen_ids:
+                errors.append(f"Duplicate identifier: {composite_id}")
+            else:
+                seen_ids.add(composite_id)
+        if len(errors) > 0:
+            err_str = "\n".join(errors)
+            raise ValueError(err_str)
+        # else, all is OK, no duplicate ids
 
     def _parse_individual(self, row:pd.Series):
         if not isinstance(row, pd.Series):

@@ -140,7 +140,7 @@ class Iso8601AgeColumnMapper(AgeColumnMapper):
     def __init__(self, column_name) -> None:
         super().__init__(column_name=column_name)
 
-    def map_cell(self, cell_contents) -> str:
+    def map_cell(self, cell_contents) -> PyPheToolsAge:
         contents = self._clean_contents(cell_contents=cell_contents)
         match = re.search(ISO8601_REGEX, contents)
         if match:
@@ -157,22 +157,25 @@ class YearMonthAgeColumnMapper(AgeColumnMapper):
     def __init__(self, column_name) -> None:
         super().__init__(column_name=column_name)
 
-    def map_cell(self, cell_contents) -> str:
+    def map_cell(self, cell_contents) -> PyPheToolsAge:
         contents = self._clean_contents(cell_contents=cell_contents)
         try:
             match = re.search(YEAR_AND_MONTH_REGEX, contents)
             if match:
                 years = int(match.group(1))
                 months = int(match.group(2))
-                return AgeIsoFormater.to_string(y=years, m=months)
+                age_string = f"P{years}Y{months}M"
+                return IsoAge(y=years, m=months, age_string=age_string)
             match = re.search(YEAR_REGEX, contents)
             if match:
                 years = int(match.group(1))
-                return AgeIsoFormater.to_string(y=years)
+                age_string = f"P{years}Y"
+                return IsoAge(y=years, age_string=age_string)
             match = re.search(MONTH_REGEX, contents)
             if match:
                 months = int(match.group(1))
-                return AgeIsoFormater.to_string(m=months)
+                age_string = f"P{months}M"
+                return IsoAge(m=months, age_string=age_string)
         except ValueError as verr:
             print(f"Could not parse {cell_contents} as year/month: {verr}")
             return NoneAge(contents)
@@ -184,10 +187,34 @@ class MonthAgeColumnMapper(AgeColumnMapper):
     def __init__(self, column_name) -> None:
         super().__init__(column_name=column_name)
 
-    def map_cell(self, cell_contents) -> str:
+    def map_cell(self, cell_contents) -> PyPheToolsAge:
         # assume month encoded by integer or float.
         contents = self._clean_contents(cell_contents=cell_contents)
-        return AgeIsoFormater.from_numerical_month(contents)
+        month = str(contents)
+        if month.isdigit():
+            full_months = int(month)
+            days = 0
+            age_string = AgeIsoFormater.from_numerical_month(full_months)
+            return IsoAge(m=full_months, age_string=age_string)
+        elif month.replace('.', '', 1).isdigit() and month.count('.') < 2:
+            # a float such as 0.9 (months)
+            months = float(month)
+            avg_num_days_in_month = 30.437
+            floor_months = math.floor(months)
+            if floor_months == 0.0:
+                days = int(months * avg_num_days_in_month)
+                full_months = 0
+                age_string = f"P{days}D"
+                return IsoAge(d=days, age_string=age_string)
+            else:
+                remainder = months - floor_months
+                full_months = int(months - remainder)
+                days = int(remainder * avg_num_days_in_month)
+                age_string = f"P{full_months}M{days}D"
+                return IsoAge(m=full_months, d=days, age_string=age_string)
+        else:
+            return NoneAge("na")
+
 
 
 class YearAgeColumnMapper(AgeColumnMapper):
@@ -195,7 +222,7 @@ class YearAgeColumnMapper(AgeColumnMapper):
     def __init__(self, column_name) -> None:
         super().__init__(column_name=column_name)
 
-    def map_cell(self, cell_contents) -> str:
+    def map_cell(self, cell_contents) -> PyPheToolsAge:
         """
         Extract an iso8601 string for age recorded as a year (either an int such as 4 or a float such as 4.25 for P4Y3M)
         :param age: an int representing years or a float such as 2.5 for two and a half years
@@ -233,7 +260,7 @@ class CustomAgeColumnMapper(AgeColumnMapper):
         super().__init__(column_name=column_name)
         self._string_to_iso_d = string_to_iso_d
 
-    def map_cell(self, cell_contents) -> str:
+    def map_cell(self, cell_contents) -> PyPheToolsAge:
         if cell_contents not in self._string_to_iso_d:
             print(f"[WARNING] Could not find \"{cell_contents}\" in custom dictionary")
             return NoneAge(cell_contents)
@@ -263,7 +290,7 @@ class HpoAgeColumnMapper(AgeColumnMapper):
     def __init__(self, column_name:str) -> None:
         super().__init__(column_name=column_name)
 
-    def map_cell(self, cell_contents) -> str:
+    def map_cell(self, cell_contents) -> PyPheToolsAge:
         contents = self._clean_contents(cell_contents=cell_contents)
         if contents in HPO_ONSET_TERMS:
             return HpoAge(hpo_onset_label=contents)
