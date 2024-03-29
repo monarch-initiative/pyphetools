@@ -52,11 +52,11 @@ class Individual:
             self._sex = PPKt.Sex.UNKNOWN_SEX
         else:
             self._sex = sex
-        if not isinstance(age_of_onset, PyPheToolsAge):
-            raise ValueError(f"age_of_onset argument must be PyPheToolsAge but was {type(age_of_onset)}")
+        #if age_of_onset is None or isinstance(age_of_onset, str):
+        #    raise ValueError(f"age_of_onset argument must be PyPheToolsAge but was {type(age_of_onset)}")
         self._age_of_onset = age_of_onset
-        if not isinstance(age_at_last_encounter, PyPheToolsAge):
-            raise ValueError(f"age_at_last_encounter argument must be PyPheToolsAge but was {type(age_of_onset)}")
+        #if age_at_last_encounter is None or isinstance(age_at_last_encounter, str):
+        #    raise ValueError(f"age_at_last_encounter argument must be PyPheToolsAge but was {type(age_of_onset)}")
         self._age_at_last_encounter = age_at_last_encounter
         self._vital_status = vital_status
         if hpo_terms is None:
@@ -458,23 +458,30 @@ class Individual:
         #pypt_metadata = Individual.from_ga4gh_metadata(mdata=metadata)
         subject_id =  ppkt.subject.id
         sex = ppkt.subject.sex
-        age = ppkt.subject.time_at_last_encounter.age.iso8601duration
+        age_at_last_encounter = ppkt.subject.time_at_last_encounter.age.iso8601duration
+        age_of_onset = NoneAge("na")
+        if len(ppkt.diseases) > 0:
+            d = ppkt.diseases[0]
+            if d.HasField("onset") and d.onset.HasField("age"):
+                age_of_onset = d.onset.age
         hpo_terms = []
         for pf in ppkt.phenotypic_features:
             hpo_id = pf.type.id
             hpo_label = pf.type.label
             observed = not pf.excluded
-            if pf.HasField("age") and pf.age.HasField("iso8601duration") and pf.onset.age.iso8601duration.startswith("P"):
-                onset_age = pf.onset.age.iso8601duration
-            else:
-                onset_age = None
+            onset_age = NoneAge("na")
+            if pf.HasField("onset"):
+                onset = pf.onset
+                if onset.HasField("age") and onset.age.HasField("iso8601duration"):
+                        onset_age = pf.onset.age.iso8601duration
             hpo_terms.append(HpTerm(hpo_id=hpo_id, label=hpo_label, observed=observed, onset=onset_age))
         disease, var_list = Individual.get_variants_and_disease(ppkt)
         indi = Individual(individual_id=subject_id,
                             hpo_terms=hpo_terms,
                             citation=None,
                             sex=sex,
-                            age=age,
+                            age_of_onset=age_of_onset,
+                            age_at_last_encounter=age_at_last_encounter,
                             interpretation_list=var_list)
         if disease is not None:
             indi.set_disease(disease=disease)

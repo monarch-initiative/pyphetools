@@ -1,3 +1,0 @@
-# CaseEncoder
-
-::: pyphetools.creation.CaseEncoder
