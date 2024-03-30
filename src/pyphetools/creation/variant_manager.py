@@ -84,7 +84,6 @@ class VariantManager:
             raise ValueError(f"If not None, the \"allele_2_column_name\" argument must be a a column in df (a pandas DataFrame)")
         self._dataframe = df
         self._individual_column_name = individual_column_name
-        #self._cohort_name = transcript
         self._transcript = transcript
         self._allele_1_column_name = allele_1_column_name
         self._allele_2_column_name = allele_2_column_name
@@ -149,6 +148,8 @@ class VariantManager:
         for _, row in df.iterrows():
             individual_id = self._get_identifier_with_pmid(row=row)
             allele1 = row[self._allele_1_column_name]
+            if allele1.startswith(" ") or allele1.endswith(" "):
+                raise ValueError(f"Malformed allele_1 description that starts/ends with whitespace: \"{allele1}\".")
             self._individual_to_alleles_d[individual_id].append(allele1)
             if allele1.startswith("c."):
                 variant_set.add(allele1)
@@ -161,6 +162,8 @@ class VariantManager:
                 if allele2 == "na" or allele2 == "n/a":
                     continue
                 self._individual_to_alleles_d[individual_id].append(allele2)
+                if allele2.startswith(" ") or allele2.endswith(" "):
+                    raise ValueError(f"Malformed allele_2 description that starts/ends with whitespace: \"{allele2}\".")
                 if allele2.startswith("c."):
                     variant_set.add(allele2)
                 else:
