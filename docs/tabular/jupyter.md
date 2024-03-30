@@ -12,15 +12,14 @@ to be imported to support special cases.
 
 
 ```python title="Imports"
-import hpotk
-import pyphetools
-
 import pandas as pd
-
-print(f"Using pyphetools version {pyphetools.__version__}")
-
 pd.set_option('display.max_colwidth', None) # show entire column contents, important!
-from IPython.display import display, HTML
+from IPython.display import HTML, display
+from pyphetools.creation import *
+from pyphetools.validation import *
+from pyphetools.visualization import *
+import pyphetools
+print(f"pyphetools version {pyphetools.__version__}")
 ```
 
 ### Import the Human Phenotype Ontology (HPO) file
@@ -28,37 +27,34 @@ from IPython.display import display, HTML
 It is useful to import the HPO file and create the `MetaData` object
 (which records your `ORCID <https://orcid.org/>`_ id and the version of the HPO used) in one step.
 
-First, we load the latest HPO file using HPO toolkit:
-
-```python title="Load the latest HPO"
-ontostore = hpotk.configure_ontology_store()
-hpo = ontostore.load_hpo()
-```
-
-Now, we can create the `MetaData`:
+The following code first creates a `Citation` object with data about the PubMed identifier and title of the paper
+we are curating.
+It then imports the HPO (which in this example has been previously downloaded and stored at the file location `../hp.json`). Note
+that the hp.json file can be downloaded from many places including the [HPO Homepage](https://hpo.jax.org/app/){:target="_blank"}.
+We recommend always using the latest version. The code then initializes the HPO concept recognizer (i.e., text-mining) object, the ontology object,
+and the MetaData object (see  the
+[GA4GH phenopackets documentation](https://phenopacket-schema.readthedocs.io/en/latest/){:target="\_blank"} for more details on MetaData).
 
 ```python title="Configure MetaData"
-PMID = "PMID:16783569"
-title = "A novel X-linked recessive mental retardation syndrome comprising macrocephaly and ciliary dysfunction is allelic to oral-facial-digital type I syndrome"
-citation = TODO
-metadata = MetaData(created_by="ORCID:0000-0002-5648-2155", pmid=PMID, pubmed_title=title)
-metadata.default_versions_with_hpo(version=hpo.version)
-print(f"HPO version {hpo.version}")
+PMID = "PMID:36189931"
+title = "Comprehensive genetic screening for vascular Ehlers-Danlos syndrome through an amplification-based next-generation sequencing system"
+cite = Citation(pmid=PMID, title=title)
+parser = HpoParser(hpo_json_file="../hp.json")
+hpo_cr = parser.get_hpo_concept_recognizer()
+hpo_version = parser.get_version()
+hpo_ontology = parser.get_ontology()
+metadata = MetaData(created_by="ORCID:0000-0002-5648-2155", citation=cite)
+metadata.default_versions_with_hpo(version=hpo_version)
+print(f"HPO version {hpo_version}")
 ```
 
-It is often useful to display the title and PubMed identifier of the publication from which the data come.
-Simply replace the above code with the following.
-
-```python title="Configure MetaData with publication title and its PMID"
-PMID = "PMID:24736735"
-title = "New insights into genotype-phenotype correlation for GLI3 mutations"
-metadata = MetaData(created_by="", pmid=PMID, pubmed_title=title)
-metadata.default_versions_with_hpo(version=hpo.version)
+Note that if you leave the argument of HpoParser empty, the class will download the latest version of HPO automatically. Depending on the settings
+of your system, this may lead to an SSL certificate error, which can be addressed by adding the following two lines to the top of the cell
+```
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 ```
 
-
-The MetaData is a message of the GA4GH Phenopacket Schema. See the
-[GA4GH phenopackets documentation](https://phenopacket-schema.readthedocs.io/en/latest/){:target="\_blank"} for more details.
 
 
 ### Importing the data
@@ -99,17 +95,15 @@ names (strings) of the columns of the table and whose values are the correspondi
 want to map. Note that it is not necessary to map each column of a table.
 
 
-Data with clinical columns in typical supplemental files often have one of three forms.
+Data with clinical columns in typical supplemental files often have one of several formats.
 
 
-1. Simple. The column header is a string such as 'ID' that corresponds to an HPO term
-2. ([Intellectual disability HP:0001249](https://hpo.jax.org/app/browse/term/HP:0001249){:target="\_blank"} and each cell has a symbol such as
+1. Simple. The column header is a string such as 'ID' that corresponds to an HPO term, for instance [Intellectual disability HP:0001249](https://hpo.jax.org/app/browse/term/HP:0001249){:target="\_blank"}, whereby each cell has a symbol such as
 'Y', 'y', '+', 'yes', ''n', '-', etc. to indicate whether the feature was present in the individual specified by the row.  See :ref:`simple_column_mapper` for more information about how to work with this kind of column.
-3. Options. Some columns contain several strings, each of which corresponds to a specific HPO term. For instance, a columns such as 'severity of ID' with entries such as `mild`, `moderate`, `severe` would correspond to HPO terms for
+2. Options. Some columns contain several strings, each of which corresponds to a specific HPO term. For instance, a columns such as 'severity of ID' with entries such as `mild`, `moderate`, `severe` would correspond to HPO terms for
 `Intellectual disability, mild HP:0001256 <https://hpo.jax.org/app/browse/term/HP:0001256>`_, etc. See :ref:`option_column_mapper` for more information about how to work with this kind of column.
-4. Custom. This mapper is used for columns whose cells contain longer strings. We use a combination of text mining and specification of strings that were not matched by mining to extract HPO terms. See :ref:`custom_column_mapper_rst` for more information.
-5. Constant. This mapper can be used if all individuals diusplay the same feature. See :ref:`simple_column_mapper`.
-6. Threshold. This can be used for columns that have numerical data whereby being above or below a certain threshold is abnormal. See :ref:`threshold_column_mapper`.
+3. Constant. This mapper can be used if all individuals diusplay the same feature. See :ref:`simple_column_mapper`.
+4. Threshold. This can be used for columns that have numerical data whereby being above or below a certain threshold is abnormal. See :ref:`threshold_column_mapper`.
 
 
 ## Row-based vs column-based
@@ -148,3 +142,81 @@ dft.head() # check the transposed table
 ```
 
 After this step is completed, the remaining steps to create phenopackets are the same as in the row-based notebook.
+
+
+## Mapping the data
+
+Unfortunately, tabular data as it is currently available is so hetgerogeneous, that it is difficult to provide a simple step-for-step recipe for
+how to use pyphetools to encode it. The basic steps are to choose a column mapper type for each of the phenotype columns in the table, and to use
+age, sex, and variant column mappers for these types.
+
+- HPO (phenotype) [column mapper types](choosing_column_mapper.md)
+- Variants: [variant column mapper](variant_column_mapper.md)
+- Age of onset and age at last examination: TODO
+- Sex column mapper: TODO
+
+We recommend studying available notebooks in the [phenopacket-store](https://github.com/monarch-initiative/phenopacket-store){:target:"_blank"} to get an idea of how to combine the column mappers for several examples.
+
+## Cohort encoder
+
+The [CohortEncoder](../api/creation/cohort_encoder.md) class was designed to work with the above column mappers. It can be setup as follows.
+
+```python title="Setting up the cohort mapper"
+encoder = CohortEncoder(df=df,
+                        hpo_cr=hpo_cr,
+                        column_mapper_list=column_mapper_list,
+                        individual_column_name="individual_id",
+                        age_of_onset_mapper=onsetMapper,
+                        age_at_last_encounter_mapper=lastEncounterMapper,
+                        sexmapper=sexMapper,
+                        variant_mapper=varMapper,
+                        metadata=metadata)
+```
+Note that the ``age_of_onset_mapper`` and ``age_at_last_encounter_mapper`` arguments can be omitted if this information is not available.
+
+## Specify the disease
+
+pyphetools requires a disease identifier and label, as follows.
+
+```python title="Specify the disease"
+vEDS = Disease(disease_id='OMIM:130050', disease_label='Ehlers-Danlos syndrome, vascular type')
+encoder.set_disease(vEDS)
+```
+
+## Validation
+
+Now we can retrieve the Individual objects and do Q/C
+
+
+```python title="pyphetools validation"
+individuals = encoder.get_individuals()
+cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=AllelicRequirement.MONO_ALLELIC)
+qc = QcVisualizer(cohort_validator=cvalidator)
+display(HTML(qc.to_summary_html()))
+```
+
+This step will show warnings that can generally be ignored (e.g., the redundant terms were removed). If there are serious errors, a message will be shown, and the user will need to fix the errors before going on.
+
+## Summaries of the phenopackets
+
+The following commands display a table with a summary of each phenopacket created.
+```python title="List of phenopackets created in the current notebook"
+individuals = cvalidator.get_error_free_individual_list()
+table = PhenopacketTable(individual_list=individuals, metadata=metadata)
+display(HTML(table.to_html()))
+```
+## Saving phenopackets to file
+The following command writes each phenopacket as a JSON file to the directory ``phenopackets``(other directory names can be chosen).
+
+```python title="output"
+Individual.output_individuals_as_phenopackets(individual_list=individuals,
+                                              metadata=metadata)
+```
+
+
+
+## HPOA files
+To create the HPOA files used to create the phenotype.hpoa by the HPO team, adapt the following code. Note that this code is
+slightly different to the code used with the Excel template to build HPOA files.
+
+Please see [HPOA files](../developers/hpoa_editing.md).

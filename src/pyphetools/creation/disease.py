@@ -12,6 +12,10 @@ class Disease:
     """
 
     def __init__(self, disease_id:str, disease_label):
+        if " " in disease_id:
+            raise ValueError(f"Malformed disease identifier with white space: \"{disease_id}\"")
+        if disease_label.startswith(" ") or disease_label.endswith(" "):
+            raise ValueError(f"Malformed disease label (starts/ends with whitespace): \"{disease_label}\"")
         self._id = disease_id
         self._label = disease_label
 
