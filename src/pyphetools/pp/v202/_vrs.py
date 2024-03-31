@@ -830,10 +830,10 @@ class RepeatedSequenceExpression(MessageMixin):
             )
         else:
             raise ValueError(
-                'Missing one of required fields: ' 
+                'Missing one of required fields: '
                 '`literal_sequence_expression|derived_sequence_expression` or '
                 f'`number|indefinite_range|definite_range`: {values}'
-                )
+            )
 
     def to_message(self) -> Message:
         e = pp202.RepeatedSequenceExpression()
@@ -1092,9 +1092,9 @@ class Allele(MessageMixin):
 
     @property
     def state(self) -> typing.Union[
-                SequenceState, LiteralSequenceExpression,
-                DerivedSequenceExpression, RepeatedSequenceExpression,
-            ]:
+        SequenceState, LiteralSequenceExpression,
+        DerivedSequenceExpression, RepeatedSequenceExpression,
+    ]:
         return self._state
 
     @property
@@ -1188,7 +1188,7 @@ class Allele(MessageMixin):
             if location == 'curie':
                 loc = msg.curie
             else:
-                loc = extract_pb_oneof_scalar('curie', cls._ONEOF_LOCATION, msg)
+                loc = extract_pb_oneof_scalar('location', cls._ONEOF_LOCATION, msg)
             return Allele(
                 location=loc,
                 state=extract_pb_oneof_scalar('state', cls._ONEOF_STATE, msg),
@@ -1208,7 +1208,6 @@ class Allele(MessageMixin):
 
 
 class Haplotype(MessageMixin):
-
     class Member(MessageMixin):
 
         def __init__(
@@ -1348,8 +1347,21 @@ class Haplotype(MessageMixin):
         return f'Haplotype(members={self._members})'
 
 
-class CopyNumber:
-    # TODO:
+class CopyNumber(MessageMixin):
+    _ONEOF_SUBJECT = {
+        'allele': Allele,
+        'haplotype': Haplotype,
+        'gene': Gene,
+        'literal_sequence_expression': LiteralSequenceExpression,
+        'derived_sequence_expression': DerivedSequenceExpression,
+        'repeated_sequence_expression': RepeatedSequenceExpression,
+        'curie': str,
+    }
+    _ONEOF_COPIES = {
+        'number': Number,
+        'indefinite_range': DefiniteRange,
+        'definite_range': DefiniteRange,
+    }
 
     def __init__(
             self,
@@ -1363,9 +1375,194 @@ class CopyNumber:
         self._subject = subject
         self._copies = copies
 
+    @property
+    def subject(self) -> typing.Union[
+                Allele, Haplotype, Gene,
+                LiteralSequenceExpression, DerivedSequenceExpression, RepeatedSequenceExpression,
+                str,
+            ]:
+        return self._subject
+
+    @property
+    def allele(self) -> typing.Optional[Allele]:
+        return self._subject if isinstance(self._subject, Allele) else None
+
+    @allele.setter
+    def allele(self, value: Allele):
+        self._subject = value
+
+    @property
+    def haplotype(self) -> typing.Optional[Haplotype]:
+        return self._subject if isinstance(self._subject, Haplotype) else None
+
+    @haplotype.setter
+    def haplotype(self, value: Haplotype):
+        self._subject = value
+
+    @property
+    def gene(self) -> typing.Optional[Gene]:
+        return self._subject if isinstance(self._subject, Gene) else None
+
+    @gene.setter
+    def gene(self, value: Gene):
+        self._subject = value
+
+    @property
+    def literal_sequence_expression(self) -> typing.Optional[LiteralSequenceExpression]:
+        return self._subject if isinstance(self._subject, LiteralSequenceExpression) else None
+
+    @literal_sequence_expression.setter
+    def literal_sequence_expression(self, value: LiteralSequenceExpression):
+        self._subject = value
+
+    @property
+    def derived_sequence_expression(self) -> typing.Optional[DerivedSequenceExpression]:
+        return self._subject if isinstance(self._subject, DerivedSequenceExpression) else None
+
+    @derived_sequence_expression.setter
+    def derived_sequence_expression(self, value: DerivedSequenceExpression):
+        self._subject = value
+
+    @property
+    def repeated_sequence_expression(self) -> typing.Optional[RepeatedSequenceExpression]:
+        return self._subject if isinstance(self._subject, RepeatedSequenceExpression) else None
+
+    @repeated_sequence_expression.setter
+    def repeated_sequence_expression(self, value: RepeatedSequenceExpression):
+        self._subject = value
+
+    @property
+    def curie(self) -> typing.Optional[str]:
+        return self._subject if isinstance(self._subject, str) else None
+
+    @curie.setter
+    def curie(self, value: str):
+        self._subject = value
+
+    @property
+    def copies(self) -> typing.Union[Number, IndefiniteRange, DefiniteRange]:
+        return self._copies
+
+    @property
+    def number(self) -> typing.Optional[Number]:
+        return self._copies if isinstance(self._copies, Number) else None
+
+    @number.setter
+    def number(self, value: Number):
+        self._copies = value
+
+    @property
+    def indefinite_range(self) -> typing.Optional[IndefiniteRange]:
+        return self._copies if isinstance(self._copies, IndefiniteRange) else None
+
+    @indefinite_range.setter
+    def indefinite_range(self, value: IndefiniteRange):
+        self._copies = value
+
+    @property
+    def definite_range(self) -> typing.Optional[DefiniteRange]:
+        return self._copies if isinstance(self._copies, DefiniteRange) else None
+
+    @definite_range.setter
+    def definite_range(self, value: DefiniteRange):
+        self._copies = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return (
+            'allele', 'haplotype', 'gene',
+            'literal_sequence_expression', 'derived_sequence_expression', 'repeated_sequence_expression', 'curie',
+            'number', 'indefinite_range', 'definite_range',
+        )
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        raise NotImplementedError('Should not be called!')
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if any(f in values for f in cls._ONEOF_SUBJECT) and any(f in values for f in cls._ONEOF_COPIES):
+            # We must extract the subject in a special way because `not isinstance(curie, Deserializable)`.
+            if 'curie' in values:
+                subject = values['curie']
+            else:
+                subject = extract_oneof_scalar(cls._ONEOF_SUBJECT, values)
+
+            return CopyNumber(
+                subject=subject,
+                copies=extract_oneof_scalar(cls._ONEOF_COPIES, values),
+            )
+        else:
+            raise ValueError(
+                'Missing one of required fields: '
+                f'`{"|".join(cls._ONEOF_SUBJECT)}` ',
+                f'`{"|".join(cls._ONEOF_COPIES)}` in ',
+                f'{values}')
+
+    def to_message(self) -> Message:
+        cn = pp202.CopyNumber()
+
+        # subject
+        if isinstance(self._subject, Allele):
+            cn.allele = self._subject.to_message()
+        elif isinstance(self._subject, Haplotype):
+            cn.haplotype.CopyFrom(self._subject.to_message())
+        elif isinstance(self._subject, Gene):
+            cn.gene.CopyFrom(self._subject.to_message())
+        elif isinstance(self._subject, LiteralSequenceExpression):
+            cn.literal_sequence_expression.CopyFrom(self._subject.to_message())
+        elif isinstance(self._subject, DerivedSequenceExpression):
+            cn.derived_sequence_expression.CopyFrom(self._subject.to_message())
+        elif isinstance(self._subject, RepeatedSequenceExpression):
+            cn.repeated_sequence_expression.CopyFrom(self._subject.to_message())
+        elif isinstance(self._subject, str):
+            cn.curie = self._subject
+        else:
+            raise ValueError('Bug')
+
+        # copies
+        if isinstance(self._copies, Number):
+            cn.number = self._copies.to_message()
+        elif isinstance(self._copies, IndefiniteRange):
+            cn.indefinite_range.CopyFrom(self._copies.to_message())
+        elif isinstance(self._copies, DefiniteRange):
+            cn.definite_range.CopyFrom(self._copies.to_message())
+        else:
+            raise ValueError('Bug')
+
+        return cn
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.CopyNumber
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            subject = msg.WhichOneof('subject')
+            if subject == 'curie':
+                sub = msg.curie
+            else:
+                sub = extract_pb_oneof_scalar('subject', cls._ONEOF_SUBJECT, msg)
+            return CopyNumber(
+                subject=sub,
+                copies=extract_pb_oneof_scalar('copies', cls._ONEOF_COPIES, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, CopyNumber) \
+            and self._subject == other._subject \
+            and self._copies == other._copies
+
+    def __repr__(self):
+        return f'CopyNumber(' \
+               f'subject={self._subject}, ' \
+               f'copies={self._copies})'
+
 
 class VariationSet(MessageMixin):
-
     class Member(MessageMixin):
         """
 
