@@ -1564,6 +1564,12 @@ class CopyNumber(MessageMixin):
 
 class VariationSet(MessageMixin):
     class Member(MessageMixin):
+        _ONEOF_VALUE = {
+            # 'curie': str,
+            'allele': Allele, 'haplotype': Haplotype,
+            'copy_number': CopyNumber, 'text': Text,
+            # 'variation_set': VariationSet,
+        }
         """
 
         **IMPORTANT**: `value` can also be an instance of :class:`VariationSet`!
@@ -1574,10 +1580,135 @@ class VariationSet(MessageMixin):
                 value: typing.Union[str, Allele, Haplotype, CopyNumber, Text],
         ):
             self._value = value
-            if isinstance(value, VariationSet):
-                pass
 
-        # TODO: implement
+        @property
+        def value(self) -> typing.Union[str, Allele, Haplotype, CopyNumber, Text]:
+            return self._value
+
+        @property
+        def curie(self) -> typing.Optional[str]:
+            return self._value if isinstance(self._value, str) else None
+
+        @curie.setter
+        def curie(self, value: str):
+            self._value = value
+
+        @property
+        def allele(self) -> typing.Optional[Allele]:
+            return self._value if isinstance(self._value, Allele) else None
+
+        @allele.setter
+        def allele(self, value: Allele):
+            self._value = value
+
+        @property
+        def haplotype(self) -> typing.Optional[Haplotype]:
+            return self._value if isinstance(self._value, Haplotype) else None
+
+        @haplotype.setter
+        def haplotype(self, value: Haplotype):
+            self._value = value
+
+        @property
+        def copy_number(self) -> typing.Optional[CopyNumber]:
+            return self._value if isinstance(self._value, CopyNumber) else None
+
+        @copy_number.setter
+        def copy_number(self, value: CopyNumber):
+            self._value = value
+
+        @property
+        def text(self) -> typing.Optional[Text]:
+            return self._value if isinstance(self._value, Text) else None
+
+        @text.setter
+        def text(self, value: Text):
+            self._value = value
+
+        @property
+        def variation_set(self):
+            """
+            Get :class:`VariationSet` if present or `None` if `value` contains a different type.
+            """
+            return self._value if isinstance(self._value, VariationSet) else None
+
+        @variation_set.setter
+        def variation_set(self, value):
+            if isinstance(value, VariationSet):
+                self._value = value
+
+        @staticmethod
+        def field_names() -> typing.Iterable[str]:
+            return 'curie', 'allele', 'haplotype', 'copy_number', 'text', 'variation_set',
+
+        @classmethod
+        def required_fields(cls) -> typing.Sequence[str]:
+            raise NotImplementedError('Should not be called!')
+
+        @classmethod
+        def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+            if 'curie' in values or any(f in values for f in cls._ONEOF_VALUE) or 'variation_set' in values:
+                if 'curie' in values:
+                    return VariationSet.Member(value=values['curie'])
+                elif 'variation_set' in values:
+                    # Disabling the false positive warning below - we cannot add VariationSet into the __init__
+                    # but it is an acceptable value.
+                    # noinspection PyTypeChecker
+                    return VariationSet.Member(value=extract_message_scalar('variation_set', VariationSet, values))
+                else:
+                    return VariationSet.Member(value=extract_oneof_scalar(cls._ONEOF_VALUE, values))
+            else:
+                raise ValueError(
+                    'Missing one of required fields: `curie|allele|haplotype|copy_number|text|variation_set` in ',
+                    f'{values}')
+
+        def to_message(self) -> Message:
+            m = pp202.VariationSet.Member()
+
+            if isinstance(self._value, str):
+                m.curie = self._value
+            elif isinstance(self._value, Allele):
+                m.allele = self._value.to_message()
+            elif isinstance(self._value, Haplotype):
+                m.haplotype.CopyFrom(self._value.to_message())
+            elif isinstance(self._value, CopyNumber):
+                m.copy_number.CopyFrom(self._value.to_message())
+            elif isinstance(self._value, Text):
+                m.text.CopyFrom(self._value.to_message())
+            elif isinstance(self._value, VariationSet):
+                m.variation_set.CopyFrom(self._value.to_message())
+            else:
+                raise ValueError('Bug')
+
+            return m
+
+        @classmethod
+        def message_type(cls) -> typing.Type[Message]:
+            return pp202.VariationSet.Member
+
+        @classmethod
+        def from_message(cls, msg: Message):
+            if isinstance(msg, cls.message_type()):
+                which = msg.WhichOneof('value')
+                if which == 'curie':
+                    return VariationSet.Member(value=msg.curie)
+                elif which == 'variation_set':
+                    # Same as in `from_dict`, the warning is false positive.
+                    # noinspection PyTypeChecker
+                    return VariationSet.Member(value=extract_pb_message_scalar('variation_set', VariationSet, msg))
+                else:
+                    return VariationSet.Member(
+                        value=extract_pb_oneof_scalar('value', cls._ONEOF_VALUE, msg),
+                    )
+            else:
+                cls.complain_about_incompatible_msg_type(msg)
+
+        def __eq__(self, other):
+            return isinstance(other, VariationSet.Member) \
+                and self._value == other._value
+
+        def __repr__(self):
+            return f'VariationSet.Member(value={self._value})'
 
     def __init__(
             self,
