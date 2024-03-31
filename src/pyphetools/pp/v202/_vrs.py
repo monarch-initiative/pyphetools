@@ -1377,10 +1377,10 @@ class CopyNumber(MessageMixin):
 
     @property
     def subject(self) -> typing.Union[
-                Allele, Haplotype, Gene,
-                LiteralSequenceExpression, DerivedSequenceExpression, RepeatedSequenceExpression,
-                str,
-            ]:
+        Allele, Haplotype, Gene,
+        LiteralSequenceExpression, DerivedSequenceExpression, RepeatedSequenceExpression,
+        str,
+    ]:
         return self._subject
 
     @property
@@ -1630,11 +1630,116 @@ class VariationSet(MessageMixin):
         return f'VariationSet(members={self._members})'
 
 
-class Variation:
-    # TODO:
+class Variation(MessageMixin):
+    _ONEOF_VARIATION = {
+        'allele': Allele, 'haplotype': Haplotype, 'copy_number': CopyNumber,
+        'text': Text, 'variation_set': VariationSet,
+    }
 
     def __init__(
             self,
             variation: typing.Union[Allele, Haplotype, CopyNumber, Text, VariationSet],
     ):
         self._variation = variation
+
+    @property
+    def variation(self) -> typing.Union[Allele, Haplotype, CopyNumber, Text, VariationSet]:
+        return self._variation
+
+    @property
+    def allele(self) -> typing.Optional[Allele]:
+        return self._variation if isinstance(self._variation, Allele) else None
+
+    @allele.setter
+    def allele(self, value: Allele):
+        self._variation = value
+
+    @property
+    def haplotype(self) -> typing.Optional[Haplotype]:
+        return self._variation if isinstance(self._variation, Haplotype) else None
+
+    @haplotype.setter
+    def haplotype(self, value: Haplotype):
+        self._variation = value
+
+    @property
+    def copy_number(self) -> typing.Optional[CopyNumber]:
+        return self._variation if isinstance(self._variation, CopyNumber) else None
+
+    @copy_number.setter
+    def copy_number(self, value: CopyNumber):
+        self._variation = value
+
+    @property
+    def text(self) -> typing.Optional[Text]:
+        return self._variation if isinstance(self._variation, Text) else None
+
+    @text.setter
+    def text(self, value: Text):
+        self._variation = value
+
+    @property
+    def variation_set(self) -> typing.Optional[VariationSet]:
+        return self._variation if isinstance(self._variation, VariationSet) else None
+
+    @variation_set.setter
+    def variation_set(self, value: VariationSet):
+        self._variation = value
+
+    @staticmethod
+    def field_names() -> typing.Iterable[str]:
+        return 'allele', 'haplotype', 'copy_number', 'text', 'variation_set',
+
+    @classmethod
+    def required_fields(cls) -> typing.Sequence[str]:
+        raise NotImplementedError('Should not be called!')
+
+    @classmethod
+    def from_dict(cls, values: typing.Mapping[str, typing.Any]):
+        if any(f in values for f in cls._ONEOF_VARIATION):
+            return Variation(
+                variation=extract_oneof_scalar(cls._ONEOF_VARIATION, values),
+            )
+        else:
+            raise ValueError(
+                'Missing one of required fields: '
+                f'`{"|".join(cls._ONEOF_VARIATION)}` in ',
+                f'{values}')
+
+    def to_message(self) -> Message:
+        v = pp202.Variation()
+
+        if isinstance(self._variation, Allele):
+            v.allele = self._variation.to_message()
+        elif isinstance(self._variation, Haplotype):
+            v.haplotype.CopyFrom(self._variation.to_message())
+        elif isinstance(self._variation, CopyNumber):
+            v.copy_number.CopyFrom(self._variation.to_message())
+        elif isinstance(self._variation, Text):
+            v.text.CopyFrom(self._variation.to_message())
+        elif isinstance(self._variation, VariationSet):
+            v.variation_set.CopyFrom(self._variation.to_message())
+        else:
+            raise ValueError('Bug')
+
+        return v
+
+    @classmethod
+    def message_type(cls) -> typing.Type[Message]:
+        return pp202.Variation
+
+    @classmethod
+    def from_message(cls, msg: Message):
+        if isinstance(msg, cls.message_type()):
+            return Variation(
+                variation=extract_pb_oneof_scalar('variation', cls._ONEOF_VARIATION, msg),
+            )
+        else:
+            cls.complain_about_incompatible_msg_type(msg)
+
+    def __eq__(self, other):
+        return isinstance(other, Variation) \
+            and self._variation == other._variation
+
+    def __repr__(self):
+        return f'Variation(variation={self._variation})'
