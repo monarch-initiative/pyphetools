@@ -150,7 +150,7 @@ def interpretations() -> typing.Sequence[Interpretation]:
                     GenomicInterpretation(
                         subject_or_biosample_id='proband A',
                         interpretation_status=GenomicInterpretation.InterpretationStatus.CAUSATIVE,
-                        variant_interpretation=VariantInterpretation(
+                        call=VariantInterpretation(
                             acmg_pathogenicity_classification=AcmgPathogenicityClassification.PATHOGENIC,
                             therapeutic_actionability=TherapeuticActionability.ACTIONABLE,
                             variation_descriptor=VariationDescriptor(
@@ -166,7 +166,7 @@ def interpretations() -> typing.Sequence[Interpretation]:
                     GenomicInterpretation(
                         subject_or_biosample_id='biosample.1',
                         interpretation_status=GenomicInterpretation.InterpretationStatus.CAUSATIVE,
-                        variant_interpretation=VariantInterpretation(
+                        call=VariantInterpretation(
                             acmg_pathogenicity_classification=AcmgPathogenicityClassification.PATHOGENIC,
                             therapeutic_actionability=TherapeuticActionability.ACTIONABLE,
                             variation_descriptor=VariationDescriptor(
