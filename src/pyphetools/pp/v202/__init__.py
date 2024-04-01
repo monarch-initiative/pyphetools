@@ -40,5 +40,5 @@ __all__ = [
     'Gene', 'Text', 'Number', 'IndefiniteRange', 'DefiniteRange', 'SimpleInterval', 'SequenceInterval',
     'SequenceLocation', 'SequenceState', 'LiteralSequenceExpression', 'DerivedSequenceExpression',
     'RepeatedSequenceExpression', 'CytobandInterval', 'ChromosomeLocation', 'Allele', 'Haplotype', 'CopyNumber',
-    'VariationSet',
+    'VariationSet', 'Variation',
 ]

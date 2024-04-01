@@ -156,7 +156,21 @@ def interpretations() -> typing.Sequence[Interpretation]:
                             variation_descriptor=VariationDescriptor(
                                 id='example-cnv',
                                 molecule_context=MoleculeContext.genomic,
-                                # TODO: variation
+                                # variation=Variation(
+                                #     variation=CopyNumber(
+                                #         subject=DerivedSequenceExpression(
+                                #             location=SequenceLocation(
+                                #                 sequence_id='refseq:NC_000013.14',
+                                #                 interval=SequenceInterval(
+                                #                     start=Number(value=25_981_249),
+                                #                     end=Number(value=61_706_822),
+                                #                 )
+                                #             ),
+                                #             reverse_complement=False,
+                                #         ),
+                                #         copies=Number(value=1),
+                                #     )
+                                # ),
                                 extensions=(
                                     Extension(name='mosaicism', value='40.0%'),
                                 ),
@@ -172,7 +186,20 @@ def interpretations() -> typing.Sequence[Interpretation]:
                             variation_descriptor=VariationDescriptor(
                                 id='rs121913300',
                                 molecule_context=MoleculeContext.genomic,
-                                # TODO: variation
+                                # variation=Variation(
+                                #     variation=Allele(
+                                #         location=SequenceLocation(
+                                #             sequence_id='refseq:NC_000013.11',
+                                #             interval=SequenceInterval(
+                                #                 start=Number(value=48_367_511),
+                                #                 end=Number(value=48_367_512),
+                                #             )
+                                #         ),
+                                #         state=LiteralSequenceExpression(
+                                #             sequence='T',
+                                #         )
+                                #     )
+                                # ),
                                 label='RB1 c.958C>T (p.Arg320Ter)',
                                 gene_context=GeneDescriptor(value_id='HGNC:9884', symbol='RB1'),
                                 expressions=(

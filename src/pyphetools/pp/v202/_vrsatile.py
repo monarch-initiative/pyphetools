@@ -390,7 +390,7 @@ class VariationDescriptor(MessageMixin):
             self,
             id: str,
             molecule_context: MoleculeContext,
-            variation: typing.Optional[Variation] = None,
+            # variation: typing.Optional[Variation] = None,
             label: typing.Optional[str] = None,
             description: typing.Optional[str] = None,
             gene_context: typing.Optional[GeneDescriptor] = None,
@@ -405,7 +405,7 @@ class VariationDescriptor(MessageMixin):
     ):
         self._id = id
         self._molecule_context = molecule_context
-        self._variation = variation
+        # self._variation = variation
         self._label = label
         self._description = description
         self._gene_context = gene_context
@@ -434,17 +434,17 @@ class VariationDescriptor(MessageMixin):
     def molecule_context(self, value: MoleculeContext):
         self._molecule_context = value
 
-    @property
-    def variation(self) -> typing.Optional[Variation]:
-        return self._variation
-
-    @variation.setter
-    def variation(self, value: Variation):
-        self._variation = value
-
-    @variation.deleter
-    def variation(self):
-        self._variation = None
+    # @property
+    # def variation(self) -> typing.Optional[Variation]:
+    #     return self._variation
+    #
+    # @variation.setter
+    # def variation(self, value: Variation):
+    #     self._variation = value
+    #
+    # @variation.deleter
+    # def variation(self):
+    #     self._variation = None
 
     @property
     def label(self) -> typing.Optional[str]:
@@ -549,7 +549,8 @@ class VariationDescriptor(MessageMixin):
     @staticmethod
     def field_names() -> typing.Iterable[str]:
         return (
-            'id', 'molecule_context', 'variation', 'label', 'description', 'gene_context', 'expressions', 'vcf_record',
+            'id', 'molecule_context',  # 'variation',
+            'label', 'description', 'gene_context', 'expressions', 'vcf_record',
             'xrefs', 'alternate_labels', 'extensions', 'structural_type', 'vrs_ref_allele_seq', 'allelic_state',
         )
 
@@ -563,7 +564,7 @@ class VariationDescriptor(MessageMixin):
             return VariationDescriptor(
                 id=values['id'],
                 molecule_context=MessageMixin._extract_enum_field('molecule_context', MoleculeContext, values),
-                variation=extract_message_scalar('variation', Variation, values),
+                # variation=extract_message_scalar('variation', Variation, values),
                 label=values.get('label', None),
                 description=values.get('description', None),
                 gene_context=extract_message_scalar('gene_context', GeneDescriptor, values),
@@ -585,8 +586,8 @@ class VariationDescriptor(MessageMixin):
             molecule_context=pp202.MoleculeContext.Value(self._molecule_context.name),
         )
 
-        if self._variation is not None:
-            vd.variation.CopyFrom(self._variation.to_message())
+        # if self._variation is not None:
+        #     vd.variation.CopyFrom(self._variation.to_message())
 
         if self._label is not None:
             vd.label = self._label
@@ -627,7 +628,7 @@ class VariationDescriptor(MessageMixin):
             return VariationDescriptor(
                 id=msg.id,
                 molecule_context=MoleculeContext(msg.molecule_context),
-                variation=extract_pb_message_scalar('variation', Variation, msg),
+                # variation=extract_pb_message_scalar('variation', Variation, msg),
                 label=None if msg.label == '' else msg.label,
                 description=None if msg.description == '' else msg.description,
                 gene_context=extract_pb_message_scalar('gene_context', GeneDescriptor, msg),
@@ -644,10 +645,10 @@ class VariationDescriptor(MessageMixin):
             cls.complain_about_incompatible_msg_type(msg)
 
     def __eq__(self, other):
+        # and self._variation == other._variation \
         return isinstance(other, VariationDescriptor) \
             and self._id == other._id \
             and self._molecule_context == other._molecule_context \
-            and self._variation == other._variation \
             and self._label == other._label \
             and self._description == other._description \
             and self._gene_context == other._gene_context \
@@ -661,10 +662,10 @@ class VariationDescriptor(MessageMixin):
             and self._allelic_state == other._allelic_state
 
     def __repr__(self):
+        # f'variation={self._variation}, ' \
         return 'VariationDescriptor(' \
                f'id={self._id}, ' \
                f'molecule_context={self._molecule_context}, ' \
-               f'variation={self._variation}, ' \
                f'label={self._label}, ' \
                f'description={self._description}, ' \
                f'gene_context={self._gene_context}, ' \

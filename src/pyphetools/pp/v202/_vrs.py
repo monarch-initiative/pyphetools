@@ -124,9 +124,12 @@ class Number(MessageMixin):
 
     def __init__(
             self,
-            value: int,
+            value: typing.Union[int, str],
     ):
-        self._value = value
+        if isinstance(value, str):
+            self._value = int(value)
+        else:
+            self._value = value
 
     @property
     def value(self) -> int:
@@ -390,10 +393,19 @@ class SimpleInterval(MessageMixin):
 
 
 class SequenceInterval(MessageMixin):
-    # TODO: this is a hard nut to crack
-    _ONEOF_START_END_VALUES = {
-        'number': Number, 'indefinite_range': IndefiniteRange, 'definite_range': DefiniteRange,
-    }
+    """
+    `SequenceInterval` is a complicated case which is
+    """
+    _ONE_OF_START_FIELDS = ('start_number', 'start_indefinite_range', 'start_definite_range')
+    _ONE_OF_END_FIELDS = ('end_number', 'end_indefinite_range', 'end_definite_range')
+
+    # `SequenceInterval` is a degenerate case, because `start` and `end` oneof fields consist of the same value types.
+    # Protobuf solves this by appending the type to field name.
+    # For instance, it stores `start` in one of `startNumber`, `startIndefiniteRange`, `startDefiniteRange`
+    # depending on the type, and `end` as `endNumber`, `endIndefiniteRange`, `endDefiniteRange`
+    # for the other field.,
+    #
+    # We will do the same for the purpose of (de)serialization.
 
     def __init__(
             self,
@@ -403,26 +415,124 @@ class SequenceInterval(MessageMixin):
         self._start = start
         self._end = end
 
+    @property
+    def start(self) -> typing.Union[Number, IndefiniteRange, DefiniteRange]:
+        return self._start
+
+    @property
+    def start_number(self) -> typing.Optional[Number]:
+        return self._start if isinstance(self._start, Number) else None
+
+    @start_number.setter
+    def start_number(self, value: Number):
+        self._start = value
+
+    @property
+    def start_indefinite_range(self) -> typing.Optional[IndefiniteRange]:
+        return self._start if isinstance(self._start, IndefiniteRange) else None
+
+    @start_indefinite_range.setter
+    def start_indefinite_range(self, value: IndefiniteRange):
+        self._start = value
+
+    @property
+    def start_definite_range(self) -> typing.Optional[DefiniteRange]:
+        return self._start if isinstance(self._start, DefiniteRange) else None
+
+    @start_definite_range.setter
+    def start_definite_range(self, value: DefiniteRange):
+        self._start = value
+
+    @property
+    def end(self) -> typing.Union[Number, IndefiniteRange, DefiniteRange]:
+        return self._end
+
+    @property
+    def end_number(self) -> typing.Optional[Number]:
+        return self._end if isinstance(self._end, Number) else None
+
+    @end_number.setter
+    def end_number(self, value: Number):
+        self._end = value
+
+    @property
+    def end_indefinite_range(self) -> typing.Optional[IndefiniteRange]:
+        return self._end if isinstance(self._end, IndefiniteRange) else None
+
+    @end_indefinite_range.setter
+    def end_indefinite_range(self, value: IndefiniteRange):
+        self._end = value
+
+    @property
+    def end_definite_range(self) -> typing.Optional[DefiniteRange]:
+        return self._end if isinstance(self._end, DefiniteRange) else None
+
+    @end_definite_range.setter
+    def end_definite_range(self, value: DefiniteRange):
+        self._end = value
+
     @staticmethod
     def field_names() -> typing.Iterable[str]:
-        return 'start', 'end'
+        raise NotImplementedError('Should not be called!')
 
     @classmethod
     def required_fields(cls) -> typing.Sequence[str]:
         raise NotImplementedError('Should not be called!')
 
+    def to_dict(self, out: typing.MutableMapping[str, typing.Any]):
+        # A rather verbose implementation.
+
+        # start
+        start = {}
+        self._start.to_dict(start)
+        if isinstance(self._start, Number):
+            name = 'start_number'
+        elif isinstance(self._start, IndefiniteRange):
+            name = 'start_indefinite_range'
+        elif isinstance(self._start, DefiniteRange):
+            name = 'start_definite_range'
+        else:
+            raise ValueError('Bug')
+        out[name] = start
+
+        # end
+        end = {}
+        self._end.to_dict(end)
+        if isinstance(self._end, Number):
+            name = 'end_number'
+        elif isinstance(self._end, IndefiniteRange):
+            name = 'end_indefinite_range'
+        elif isinstance(self._end, DefiniteRange):
+            name = 'end_definite_range'
+        else:
+            raise ValueError('Bug')
+        out[name] = end
+
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if any(field in values for field in cls._ONEOF_START_END_VALUES):
-            # TODO: this is a hard nut to crack
+        if any(f in values for f in cls._ONE_OF_START_FIELDS) \
+                and any(f in values for f in cls._ONE_OF_END_FIELDS):
+            if 'start_number' in values:
+                start = extract_message_scalar('start_number', Number, values)
+            elif 'start_indefinite_range' in values:
+                start = extract_message_scalar('start_indefinite_range', IndefiniteRange, values)
+            elif 'start_definite_range' in values:
+                start = extract_message_scalar('start_definite_range', DefiniteRange, values)
+            else:
+                raise ValueError('Bug')
+
+            if 'end_number' in values:
+                end = extract_message_scalar('end_number', Number, values)
+            elif 'end_indefinite_range' in values:
+                end = extract_message_scalar('end_indefinite_range', IndefiniteRange, values)
+            elif 'end_definite_range' in values:
+                end = extract_message_scalar('end_definite_range', DefiniteRange, values)
+            else:
+                raise ValueError('Bug')
+
             return SequenceInterval(
-                # This is a degenerate case, because `start` and `end` oneof fields consist of the same values.
-                # Protobuf solves this by appending the type to field name.
-                # For instance, it stores `start` in one of `startNumber`, `startIndefiniteRange`, `startDefiniteRange`
-                # depending on the type, and `end` as `endNumber`, `endIndefiniteRange`, `endDefiniteRange`
-                # for the other field.
-                start=extract_oneof_scalar(cls._ONEOF_START_END_VALUES, values),
-                end=extract_oneof_scalar(cls._ONEOF_START_END_VALUES, values),
+                start=start,
+                end=end,
             )
         else:
             raise ValueError(f'Missing one of required fields: `assay, value|complex_value` {values}')
@@ -459,8 +569,8 @@ class SequenceInterval(MessageMixin):
 
     @classmethod
     def from_message(cls, msg: Message):
-        # TODO:
-        pass
+        print(msg)
+        raise NotImplementedError()  # TODO: implement
 
     def __eq__(self, other):
         return isinstance(other, SequenceInterval) \
@@ -676,7 +786,7 @@ class DerivedSequenceExpression(MessageMixin):
     def __init__(
             self,
             location: SequenceLocation,
-            reverse_complement: bool,
+            reverse_complement: bool = False,
     ):
         self._location = location
         self._reverse_complement = reverse_complement
@@ -703,14 +813,14 @@ class DerivedSequenceExpression(MessageMixin):
 
     @classmethod
     def required_fields(cls) -> typing.Sequence[str]:
-        return 'location', 'reverse_complement'
+        return 'location',
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
         if cls._all_required_fields_are_present(values):
             return DerivedSequenceExpression(
                 location=extract_message_scalar('location', SequenceLocation, values),
-                reverse_complement=values['reverse_complement'],
+                reverse_complement=values['reverse_complement'] if 'reverse_complement' in values else False,
             )
         else:
             cls._complain_about_missing_field(values)
@@ -1634,6 +1744,12 @@ class VariationSet(MessageMixin):
 
         @variation_set.setter
         def variation_set(self, value):
+            """
+            Set the :class:`VariationSet` as the value. Setting value is a no-op if `value`
+            is not an instance of :class:`VariationSet`.
+
+            Note, there is no type annotation on this method, but it should
+            """
             if isinstance(value, VariationSet):
                 self._value = value
 
