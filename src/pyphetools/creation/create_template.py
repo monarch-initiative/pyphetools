@@ -57,7 +57,7 @@ class TemplateCreator:
         return hp_term_list
 
 
-    def create_template(self, disease_id:str, disease_label:str, HGNC_id:str, gene_symbol:str, transcript:str):
+    def create_template(self, disease_id:str, disease_label:str, HGNC_id:str, gene_symbol:str, transcript:str, append=False):
         """Create an Excel file that can be used to enter data as a pyphetools template
 
         :param disease_id: an OMIM, MONDO, or other similar CURIE identifier
@@ -104,6 +104,15 @@ class TemplateCreator:
             df.loc[len(df)] = new_row
         ## Output as excel
         fname = disease_id.replace(":", "_") + "_individuals.xlsx"
+
+        if os.path.isfile(fname):
+            if not append:
+                raise FileExistsError(f"Excel file '{fname}' already exists. Use 'append=True' \
+                                        to append HPO terms to the existing file.")
+            else:
+                print(f"[WARNING] Appending to existing file '{fname}'. This might lead to duplicate HPO terms. \
+                        It's recommended to create a new file instead.")
+
         df.to_excel(fname, index=False)
         print(f"Write excel pyphetools template file to {fname}")
 
