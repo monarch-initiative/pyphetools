@@ -1,5 +1,7 @@
 import os
 import json
+import re
+import datetime
 from typing import List, Dict
 
 from google.protobuf.json_format import Parse
@@ -108,8 +110,9 @@ class HpoaTableCreator:
         13. evidence
         14. biocuration
     These should be tab separated fields.
-
     """
+    DATE_REGEX = r"(\d{4}-\d{2}-\d{2})"
+
     def __init__(self, phenopacket_list, onset_term_d,  moi_d, created_by:str=None) -> None:
         """Constructor
 
@@ -192,6 +195,14 @@ class HpoaTableCreator:
             pmid = HpoaTableCreator.get_pmid(ppkt=ppkt)
             mdata = ppkt.meta_data
             created_by = mdata.created_by
+            created = mdata.created
+            match = re.search(HpoaTableCreator.DATE_REGEX, created)
+            if match:
+                ymd = match.group(1)
+                created_by = f"{created_by}[{ymd}]"
+            else:
+                today = datetime.today().strftime('%Y-%m-%d')
+                created_by = f"{created_by}[{today}]"
             biocurator_d[pmid] = created_by
         return biocurator_d
 
