@@ -195,10 +195,10 @@ class HpoaTableCreator:
             pmid = HpoaTableCreator.get_pmid(ppkt=ppkt)
             mdata = ppkt.meta_data
             created_by = mdata.created_by
-            created = mdata.created
-            match = re.search(HpoaTableCreator.DATE_REGEX, created)
-            if match:
-                ymd = match.group(1)
+            if mdata.HasField("created"):
+                created = mdata.created # created is a TimeStamp object
+                created_dt = created.ToDatetime()
+                ymd = created_dt.strftime('%Y-%m-%d')
                 created_by = f"{created_by}[{ymd}]"
             else:
                 today = datetime.today().strftime('%Y-%m-%d')

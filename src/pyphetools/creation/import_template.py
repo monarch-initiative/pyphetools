@@ -115,7 +115,7 @@ class TemplateImporter:
 
 
     def import_phenopackets_from_template(self,
-                                          deletions:typing.Set[str]=set(),
+                                        deletions:typing.Set[str]=set(),
                                         duplications:typing.Set[str]=set(),
                                         inversions:typing.Set[str]=set(),
                                         hemizygous:bool=False):
