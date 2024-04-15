@@ -292,7 +292,7 @@ class HpoaTableCreator:
 
 class HpoaTableBuilder:
 
-    def __init__(self, indir=None, phenopacket_list=None, created_by:str=None) -> None:
+    def __init__(self, indir=None, phenopacket_list=None, created_by:str=None, target=None) -> None:
         if indir is not None:
             if not os.path.isdir(indir):
                 raise ValueError(f"indir argument {indir} must be directory!")
@@ -307,7 +307,10 @@ class HpoaTableBuilder:
                         ppack = Parse(json.dumps(jsondata), PPKt.Phenopacket())
                         self._phenopackets.append(ppack)
         elif phenopacket_list is not None:
-            self._phenopackets = phenopacket_list
+            if target is not None:
+                self._phenopackets = HpoaTableBuilder.filter_diseases(target, phenopacket_list)
+            else:
+                self._phenopackets = phenopacket_list
         else:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)
@@ -320,6 +323,17 @@ class HpoaTableBuilder:
             for onset in onset_list:
                 tcounter.increment_term(onset)
             self._onset_term_d[pmid].extend(tcounter.get_counted_terms())
+
+    @staticmethod
+    def filter_diseases(disease_id, ppkt_list):
+        target_list = list()
+        for ppkt in ppkt_list:
+            for d in ppkt.diseases:
+                if d.term.id == disease_id:
+                    target_list.append(ppkt)
+                    break
+        print(f"[INFO] Extracted {(len(target_list))} from {(len(ppkt_list))} phenopackets with {disease_id}\n")
+        return target_list
 
     def autosomal_recessive(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0000007", label="Autosomal recessive inheritance")
