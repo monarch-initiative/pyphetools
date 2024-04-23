@@ -66,6 +66,8 @@ class TemplateCreator:
         :param gene_symbol: corresponding gene symbol, e.g., FBN1
         :transcript: transcript to be used for the HVGC nomenclature. Must be refseq with version number
         """
+        if disease_id is None:
+            self.preview()
         H1_Headers = REQUIRED_H1_FIELDS
         H2_Headers = REQUIRED_H2_FIELDS
         if len(H1_Headers) != len(H2_Headers):
@@ -107,5 +109,13 @@ class TemplateCreator:
         df.to_excel(fname, index=False)
         print(f"Write excel pyphetools template file to {fname}")
 
-
+    def preview(self):
+        """convenience function that writes empty command that can then be completed by the user.
+        This will be called if the user enters the create_template command with no arguments
+        """
+        print("""tc.create_template(disease_id=\”\”, 
+                                    disease_label=\”\”, 
+                                    HGNC_id=\”\”, 
+                                    gene_symbol=\”\”, 
+                                    transcript=\”\”)""")
 
