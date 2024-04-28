@@ -14,8 +14,8 @@ class TemplateImporter:
     ORCID_regex = r"^\d{4}-\d{4}-\d{4}-\d{4}$"
 
     def __init__(self,template:str,
-                hp_json:str,
-                created_by:str) -> None:
+                created_by:str,
+                hp_json:str=None) -> None:
         """Constructor
 
         :param template: path to Excel template file
@@ -36,7 +36,7 @@ class TemplateImporter:
         self._created_by = f"ORCID:{created_by}"
         if not os.path.isfile(template):
             raise FileNotFoundError(f"Could not find Excel template at {template}")
-        if not os.path.isfile(hp_json):
+        if hp_json is not None and not os.path.isfile(hp_json):
             raise FileNotFoundError(f"Could not find hp.json file at {hp_json}")
         self._template = template
         self._hp_json = hp_json

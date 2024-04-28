@@ -176,6 +176,12 @@ class Individual:
         """
         self._disease = disease
 
+    def disease_count(self):
+        if self._disease is None:
+            return 0
+        else:
+            return 1
+
     def set_hpo_terms(self, cleansed_hpo_terms:List[HpTerm]):
         """
         :param cleansed_hpo_terms: a list of HpTerm objects that has been cleansed by OntologyQC

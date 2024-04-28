@@ -32,7 +32,8 @@ class Category(IntEnum):
     NOT_MEASURED = 8
     OBSERVED_AND_EXCLUDED = 9
     DUPLICATE = 10
-    UNKNOWN = 11
+    INSUFFICIENT_DISEASE_COUNT = 11
+    UNKNOWN = 12
 
 
 class ValidationResult:
@@ -246,6 +247,12 @@ class ValidationResultBuilder:
         self._error_level = ErrorLevel.ERROR
         self._category = Category.MALFORMED_ID
         self._message = f"Malformed term {malformed_term.label} with invalid HPO id {malformed_term.id}"
+        return self
+    
+    def insufficient_disease_count(self, observed_count:int, minimum_count:int):
+        self._error_level = ErrorLevel.ERROR
+        self._category = Category.INSUFFICIENT_DISEASE_COUNT
+        self._message = f"Individual had {observed_count} disease annotation(s) but the mininum required count is {minimum_count}"
         return self
 
     def malformed_hpo_label(self, malformed_label, valid_term:HpTerm):

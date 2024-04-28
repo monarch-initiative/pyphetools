@@ -15,27 +15,53 @@ import pyphetools
 print(f"Using pyphetools version {pyphetools.__version__}")
 ```
 
-Import the [Human Phenotype Ontology (HPO)](https://hpo.jax.org/app/) hp.json file. Note that here we show code that assumes that the file is available in the enclosing directory. Update the ORCID identifier to your own [ORCID](https://orcid.org/){:target="_blank"}  id. Indicate
-the location of the template file.
+### Set paths and identifiers
+Update the ORCID identifier to your own [ORCID](https://orcid.org/){:target="_blank"}  id. 
+Update the path to the template file.
 
 ```python
 template = "input/BRD4_individuals.xlsx"
-hp_json = "../hp.json"
 created_by = "0000-0002-0736-9199"
 ```
 
-import the template file. The code returns the pyphetools Individual objects, each of which contains all of the information needed to create a phenopacket and which here can be used if desired for debugging or further analysis. The cvalidator object is used to display quality assessment information.
+### Import the template file. 
+The code returns the pyphetools Individual objects, each of which contains all of the information needed to create a phenopacket and which here can be used if desired for debugging or further analysis. The cvalidator object is used to display quality assessment information.
+Note that optionally you can provide an argument to the location of the hp.json file using the ``hp_json``argument. If no argument is provided, the hpo-toolkit library will download the latest version of
+hp.json to your user directory (.hpotk folder).
 
 ```
-timporter = TemplateImporter(template=template, hp_json=hp_json, created_by=created_by)
+timporter = TemplateImporter(template=template,  created_by=created_by)
 individual_list, cvalidator = timporter.import_phenopackets_from_template()
 ```
-Display quality assessment data.
+
+### Structural variants
+pyphetools will automatically retrieve information about small variants coded as HGVS strings using the
+[VariantValidator](https://variantvalidator.org/) API. Until very recently, it was challenging to determine the exact positions of larger structural variants, and for this reason, publications often described them
+using phrases such as "whole gene deletion" or "EX9-12DEL". If such as string is found in the template file,
+pyphetool will emit an error such as the following.
+
+<figure markdown>
+![Validation results](../img/deletion_error.png){ width="1000" }
+<figcaption>Validation Results.
+</figcaption>
+</figure>
+
+This can be fixed by passing an argument with a set of all strings that represent deletions (as in the following example), duplications, or inversions.
+
+```python title="Specifying structural variants"
+del_set = {"EX9-12DEL"}
+timporter = TemplateImporter(template=template, created_by=created_by)
+individual_list, cvalidator = timporter.import_phenopackets_from_template(deletions=del_set)
+```
+
+### Display quality assessment data.
 ```
 qc = QcVisualizer(cohort_validator=cvalidator)
 display(HTML(qc.to_summary_html()))
 ```
-Display summaries of each phenopacket. The command ``cvalidator.get_error_free_individual_list()``returns versions of the Individual objects
+### Display summaries of each phenopacket. 
+
+The command ``cvalidator.get_error_free_individual_list()``returns versions of the Individual objects
 in which errors such as redundancies have been removed; this is the data that gets transformed into phenopackets.
 
 

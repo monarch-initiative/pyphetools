@@ -120,13 +120,14 @@ class HpoaTableCreator:
         :param moi_d: Dictionary with key PMID and value Mode of inheritance
         """
         self._phenopackets = phenopacket_list
+        self._created_by = created_by
         self._all_hpo_d = self._get_all_hpos()
         self._disease = self._get_disease() # only allow one disease, therefore this is a scalar value (string)
         self._hpo_counter_d = self._count_hpos()
         self._biocurator_d = self._get_biocurator_d()
         self._onset_rows = self._add_age_of_onset_terms(onset_term_d)
         self._moi_rows = self._add_moi_rows(moi_d)
-        self._created_by = created_by
+        
 
     def _get_all_hpos(self) -> Dict[str,HpTerm]:
         """Get a dictionary of HpTerms, with key being HPO id and the value the corresponding HpTerm

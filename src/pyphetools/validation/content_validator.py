@@ -35,10 +35,11 @@ class ContentValidator(PhenopacketValidator):
     :param allelic_requirement: used to check number of alleles and variants
     :type allelic_requirement: AllelicRequirement
     """
-    def __init__(self, min_hpo: int, allelic_requirement: AllelicRequirement = None) -> None:
+    def __init__(self, min_hpo: int, allelic_requirement: AllelicRequirement = None, minimum_disease_count:int=1) -> None:
         super().__init__()
         self._min_hpo = min_hpo
         self._allelic_requirement = allelic_requirement
+        self._minimum_disease_count = minimum_disease_count
 
 
     def validate_individual(self, individual:Individual) -> List[ValidationResult]:
@@ -63,7 +64,8 @@ class ContentValidator(PhenopacketValidator):
                         n_alleles += 2
                     elif gtype.label == "hemizygous": # "GENO:0000134"
                         n_alleles += 1
-        return self._validate(pp_id=pp_id, n_hpo=n_pf, n_var=n_var, n_alleles=n_alleles)
+        disease_count =  individual.disease_count()
+        return self._validate(pp_id=pp_id, n_hpo=n_pf, disease_count=disease_count, n_var=n_var, n_alleles=n_alleles)
 
 
 
@@ -110,11 +112,12 @@ class ContentValidator(PhenopacketValidator):
                                     n_alleles += 2
                                 elif gtype.label == "hemizygous": # "GENO:0000134"
                                     n_alleles += 1
-        return self._validate(pp_id=pp_id, n_hpo=n_pf, n_var=n_var, n_alleles=n_alleles)
+        disease_count = len(phenopacket.diseases)
+        return self._validate(pp_id=pp_id, n_hpo=n_pf, disease_count=disease_count, n_var=n_var, n_alleles=n_alleles)
 
 
 
-    def _validate(self, pp_id:str, n_hpo:int, n_var:int=None, n_alleles:int=None):
+    def _validate(self, pp_id:str, n_hpo:int, disease_count:int, n_var:int=None, n_alleles:int=None):
         """
         private method called by validate_individual or validate_phenopacket.
         :param pp_id: phenopacket identifier
@@ -129,6 +132,9 @@ class ContentValidator(PhenopacketValidator):
         validation_results = []
         if n_hpo < self._min_hpo:
             validation_results.append(ValidationResultBuilder(phenopacket_id=pp_id).insufficient_hpos(min_hpo=self._min_hpo, n_hpo=n_hpo).build())
+        if disease_count < self._minimum_disease_count:
+            val_result = ValidationResultBuilder(phenopacket_id=pp_id).insufficient_disease_count(disease_count, self._minimum_disease_count).build()
+            validation_results.append(val_result)
         if self._allelic_requirement is None:
             return validation_results
         if self._allelic_requirement == AllelicRequirement.MONO_ALLELIC:
