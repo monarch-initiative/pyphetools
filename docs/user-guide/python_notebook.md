@@ -29,7 +29,7 @@ The code returns the pyphetools Individual objects, each of which contains all o
 Note that optionally you can provide an argument to the location of the hp.json file using the ``hp_json``argument. If no argument is provided, the hpo-toolkit library will download the latest version of
 hp.json to your user directory (.hpotk folder).
 
-```
+```python
 timporter = TemplateImporter(template=template,  created_by=created_by)
 individual_list, cvalidator = timporter.import_phenopackets_from_template()
 ```
