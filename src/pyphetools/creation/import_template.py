@@ -252,7 +252,7 @@ class TemplateImporter:
         if target is not None:
             ppkt_list = TemplateImporter.filter_diseases(target, ppkt_list)
         TemplateImporter.check_disease_entries(ppkt_list)
-        builder = HpoaTableBuilder(phenopacket_list=ppkt_list)
+        builder = HpoaTableBuilder(phenopacket_list=ppkt_list, created_by=self._created_by)
         if moi == "Autosomal dominant":
             builder.autosomal_dominant(pmid)
         elif moi == "Autosomal recessive":
