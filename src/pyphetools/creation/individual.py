@@ -219,7 +219,11 @@ class Individual:
                 ppkt_id = indi_id
         else:
             ppkt_id = phenopacket_id
-        ppkt_id = ppkt_id.replace(" ", "_")
+        # strip non alphanumeric characters
+        ppkt_id = ''.join(e if e.isalnum()  else "_" for e in ppkt_id)
+        ppkt_id = ppkt_id.replace("__", "_")
+        if ppkt_id.endswith("_"):
+            ppkt_id = ppkt_id[:-1]
         return ppkt_id
 
     def get_citation(self) -> Citation:
