@@ -40,6 +40,9 @@ class TemplateImporter:
             raise FileNotFoundError(f"Could not find hp.json file at {hp_json}")
         self._template = template
         self._hp_json = hp_json
+        # we keep a list of modes of inheritance.
+        # Most genetic diseases have one, but diseases with both austosomal dominant and recessive, e.g., OMIM:620647 are not very uncommon  
+        self._moi_list = list()
 
     @staticmethod
     def _get_data_from_template(df:pd.DataFrame) -> typing.Tuple[str,str,str,str,str]:
@@ -115,10 +118,11 @@ class TemplateImporter:
 
 
     def import_phenopackets_from_template(self,
-                                          deletions:typing.Set[str]=set(),
+                                        deletions:typing.Set[str]=set(),
                                         duplications:typing.Set[str]=set(),
                                         inversions:typing.Set[str]=set(),
-                                        hemizygous:bool=False):
+                                        hemizygous:bool=False,
+                                        leniant_MOI:bool=False):
         """Import the data from an Excel template and create a collection of Phenopackets
 
         Note that things will be completely automatic if the template just has HGNC encoding variants
@@ -132,6 +136,8 @@ class TemplateImporter:
         :type inversions: (typing.Set[str], optional
         :param hemizygous: Set this to true for X-chromosomal recessive conditions in which the genotype of affected males is hemizygous
         :type hemizygous: bool
+        :param leniant_MOI: Do not check allelic requirements. Use this if the disease being curated has more than one MOI. This may require manually adding the "second" MOI in PhenoteFX
+        :type leniant_MOI: bool
         :returns: tuple with individual list and CohortValidator that optionally can be used to display in a notebook
         :rtype: typing.Tuple[typing.List[pyphetools.creation.Individual], pyphetools.validation.CohortValidator]
         """
@@ -172,8 +178,14 @@ class TemplateImporter:
             print("Fix this error and then try again!")
             sys.exit(1)
         vman.add_variants_to_individuals(individuals, hemizygous=hemizygous)
-        all_req = TemplateImporter._get_allelic_requirement(df)
-        cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
+        if leniant_MOI:
+            # We need this in case a disease has more than one mode of inheritance/allelic requirement. In this case, we cannot distinguish
+            # between an mistake or a different MOI automatically, and we need to carefully chanck by hand. For instance, OMIM:620647 is both AD and AR
+            # and we have data with biallelic and monoallelic variants.
+            cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1)
+        else:
+            all_req = TemplateImporter._get_allelic_requirement(df)
+            cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
         if cvalidator.n_removed_individuals() > 0:
             print(f"Removed {cvalidator.n_removed_individuals()} individuals with unfixable errors")
         ef_individuals = cvalidator.get_error_free_individual_list()
@@ -228,7 +240,8 @@ class TemplateImporter:
 
     def create_hpoa_from_phenopackets(self,
                                     pmid:str,
-                                    moi:str, ppkt_dir:str="phenopackets",
+                                    moi:str, 
+                                    ppkt_dir:str="phenopackets",
                                     target:str=None) -> pd.DataFrame:
         """Create an HPO annotation (HPOA) file from the current cohort
 
