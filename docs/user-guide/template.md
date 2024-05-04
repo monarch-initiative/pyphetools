@@ -57,4 +57,15 @@ tcreator.create_template(disease_id=disease_id,
                          transcript=ofd1_transcript)
 ```
 
+The following snippet can be used as a "starter" by pasting it into the notebook.
+
+```python title="Starter"
+tc.create_template(disease_id="",
+                         disease_label="",
+                         gene_symbol="",
+                         HGNC_id="",
+                         transcript=""
+```)
+
+
 The script creates a file that can be opened in Excel and used for curation. Add additional HPO terms as necessary and remove terms that are not needed.
