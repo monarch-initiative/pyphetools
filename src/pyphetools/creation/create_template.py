@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from collections import defaultdict
 from .hpo_parser  import HpoParser
+from .hp_term import HpTerm
 from typing import List
 import hpotk
 from .case_template_encoder import REQUIRED_H1_FIELDS, REQUIRED_H2_FIELDS
@@ -111,7 +112,7 @@ class TemplateCreator:
         ## Output as excel
         fname = disease_id.replace(":", "_") + "_individuals.xlsx"
         df.to_excel(fname, index=False)
-        print(f"Write excel pyphetools template file to {fname}")
+        print(f"Wrote excel pyphetools template file to {fname}")
 
     def preview(self):
         """convenience function that writes empty command that can then be completed by the user.
@@ -121,5 +122,55 @@ class TemplateCreator:
                                     disease_label=\”\”, 
                                     HGNC_id=\”\”, 
                                     gene_symbol=\”\”, 
-                                    transcript=\”\”)""")
+                                    transcript=\”\)”)""")
+        
+    def create_from_phenopacket(self, ppkt) -> pd.DataFrame:
+        """
+        create pyphetools templates from an individual phenopacket.
+        This function is intended to accelerate the process of converting the LIRICAL phenopackets
+        to our current format and generally should not be used for new cases
+        """
+        id_to_observed = set()
+        id_to_excluded = set()
+        
+        for pf in ppkt.phenotypic_features:
+            hpt = HpTerm(hpo_id=pf.type.id, label=pf.type.label)
+            self._all_added_hp_term_set.add(hpt)
+            if pf.excluded:
+                id_to_excluded.add(pf.type.label)
+            else:
+                id_to_observed.add(pf.type.label)
+        H1_Headers = REQUIRED_H1_FIELDS
+        H2_Headers = REQUIRED_H2_FIELDS
+        if len(H1_Headers) != len(H2_Headers):
+            raise ValueError("Header lists must have same length")
+        EMPTY_STRING = ""
+        hp_term_list = self.arrange_terms()
+        for hpt in hp_term_list:
+            H1_Headers.append(hpt.label)
+            H2_Headers.append(hpt.id)
+        df = pd.DataFrame(columns=H1_Headers)
+        new_row = dict()
+        for i in range(len(H1_Headers)):
+            new_row[H1_Headers[i]] = H2_Headers[i]
+        df.loc[len(df)] = new_row
+        # add one row with some of the data from the phenopakcet
+        new_row = dict()
+        for i in range(len(H1_Headers)):
+            header_field = H1_Headers[i]
+            if header_field == "HPO":
+                new_row[header_field] = "na"
+            elif header_field in id_to_observed:
+                new_row[header_field] = "observed"
+            elif header_field in id_to_excluded:
+                new_row[header_field] = "excluded"
+            else:
+                new_row[header_field] = "?"
+        df.loc[len(df)] = new_row
+        ## Output as excel
+        ppkt_id = "".join(e for e in ppkt.id if e.isalnum())
+        fname = ppkt_id + "_phenopacket_template.xlsx"
+        df.to_excel(fname, index=False)
+        print(f"Wrote excel pyphetools template file to {fname}")
+
 
