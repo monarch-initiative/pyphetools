@@ -3,8 +3,8 @@ name: Generate phenopackets
 env:
   # We generate the phenopackets from this state
   # of the `phenopacket-store` repository.
-  PHENOPACKET_STORE_TAG: pyphe-ci-wip
-#  PHENOPACKET_STORE_TAG: c06a52e0  # State from Mar 5th, 2024
+  # State from May 8th, 2024
+  PHENOPACKET_STORE_TAG: 9fe73a29246bce4493d98e85efdd0f9f3cb56856
 
 on:
     push:
