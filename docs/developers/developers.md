@@ -5,8 +5,8 @@
 We recommend creating a local environment:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 ```
 
 You can then do a local/editable install:
