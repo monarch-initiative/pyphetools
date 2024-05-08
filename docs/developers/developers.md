@@ -9,13 +9,18 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
+and updating Python's `pip` tool:
+
+```bash
+python3 -m pip install --upgrade pip
+```
+
 You can then do a local/editable install:
+
 
 ```bash
 python3 -m pip install --editable ".[test]"
 ```
-
-Note this uses `pyproject.toml` to declare dependencies, so you will need pip ≥ 21.3 for this to work.
 
 After installation you should be able to run the test suite:
 
