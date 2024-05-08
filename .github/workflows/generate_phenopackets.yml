@@ -47,8 +47,8 @@ jobs:
             
             # Prepare the notebooks to run
             declare -a fbn1_notebooks=(
-              "FBN1/Comeglio_isolated_ectopia_lentis.ipynb" 
-              "FBN1/FBN1_lipodystrophy_Lin_2020.ipynb"
+              "FBN1/FBN1_isolated_ectopia_lentis_individuals.ipynb"
+              "FBN1/FBN1_lipodystropy_individuals.ipynb"
               "FBN1/Katzke_2002_Marfan.ipynb"
               "FBN1/LeGoff_FBN1_acromicric_and_geleophysic_dysplasia.ipynb"
               "FBN1/Loeys2010_stiff_skin_syndrome.ipynb"
