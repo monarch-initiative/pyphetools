@@ -230,6 +230,21 @@ class VariantManager:
             self._unmapped_alleles.remove(allele)
             self._var_d[allele] = var
 
+    def code_as_chromosomal_translocation(self, allele_set) -> None:
+        """
+        Code as Structural variants - chromosomal translocation (to be added to self._var_d)
+        :param allele_set: Set of alleles (strings) for coding as Structural variants (chromosomal inversion)
+        """
+        # first check that all of the alleles are in self._unmapped_alleles
+        if not allele_set.issubset(self._unmapped_alleles):
+            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
+        if self._gene_id is None or self._gene_symbol is None:
+            raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
+        for allele in allele_set:
+            var = StructuralVariant.chromosomal_translocation(cell_contents=allele, gene_symbol=self._gene_symbol, gene_id=self._gene_id)
+            self._unmapped_alleles.remove(allele)
+            self._var_d[allele] = var
+
 
     def to_summary(self) -> pd.DataFrame:
         """

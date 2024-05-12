@@ -121,6 +121,7 @@ class TemplateImporter:
                                         deletions:typing.Set[str]=set(),
                                         duplications:typing.Set[str]=set(),
                                         inversions:typing.Set[str]=set(),
+                                        translocations:typing.Set[str]=set(),
                                         hemizygous:bool=False,
                                         leniant_MOI:bool=False):
         """Import the data from an Excel template and create a collection of Phenopackets
@@ -134,6 +135,8 @@ class TemplateImporter:
         :type duplications: (typing.Set[str], optional
         :param inversions: Strings (identical to entries in the templates) that represent inversions.
         :type inversions: (typing.Set[str], optional
+        :param translocations: Strings (identical to entries in the templates) that represent translocations.
+        :type translocations: (typing.Set[str], optional
         :param hemizygous: Set this to true for X-chromosomal recessive conditions in which the genotype of affected males is hemizygous
         :type hemizygous: bool
         :param leniant_MOI: Do not check allelic requirements. Use this if the disease being curated has more than one MOI. This may require manually adding the "second" MOI in PhenoteFX
@@ -166,6 +169,8 @@ class TemplateImporter:
             vman.code_as_chromosomal_duplication(duplications)
         if len(inversions) > 0:
             vman.code_as_chromosomal_inversion(inversions)
+        if len(translocations) > 0:
+            vman.code_as_chromosomal_translocation(translocations)
         if vman.has_unmapped_alleles():
             mapped = vman.get_mapped_allele_count()
             print(f"We were able to map {mapped} alleles.")

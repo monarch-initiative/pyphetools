@@ -183,3 +183,30 @@ class StructuralVariant(Variant):
                                  sequence_ontology_id="SO:1000030",
                                  sequence_ontology_label="chromosomal_inversion",
                                  variant_id=variant_id)
+    
+    @staticmethod
+    def chromosomal_translocation(cell_contents,
+                              gene_symbol,
+                              gene_id,
+                              genotype,
+                              variant_id=None):
+        """
+        create a StructuralVariant object for a chromosomal translocation
+
+        :param cell_contents: the string from the original table that we want to map as a structural variant
+        :type cell_contents: str
+        :param gene_symbol: the gene affected by the structural variant, e.g., GLI3
+        :type gene_symbol: str
+        :param gene_id: the identifier (using HGNC) of the gene, e.g., GLI3 is HGNC:4319
+        :type gene_id: str
+        :param genotype: Genotype (heterozygous, homozygous, hemizygous) of this variant call
+        :type genotype: str
+        :param variant_id: an identifier for the variant
+        :type variant_id: str, optional
+        """
+        return StructuralVariant(cell_contents=cell_contents,
+                                 gene_symbol=gene_symbol,
+                                 gene_id=gene_id,
+                                 sequence_ontology_id="SO:1000044",
+                                 sequence_ontology_label="chromosomal_translocation",
+                                 variant_id=variant_id)
