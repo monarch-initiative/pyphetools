@@ -37,6 +37,7 @@ dependencies = [
     "phenopackets>=2.0.2",
     "protobuf>=3.15.0,<4.0.0",
     "requests>=2.25.0,<3.0",
+    "fasthpocr>=0.1.0"
 ]
 
 [project.optional-dependencies]

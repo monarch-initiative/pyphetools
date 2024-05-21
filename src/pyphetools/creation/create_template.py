@@ -8,11 +8,14 @@ from .case_template_encoder import REQUIRED_H1_FIELDS, REQUIRED_H2_FIELDS
 
 class TemplateCreator:
 
-    def __init__(self, hp_json:str) -> None:
+    def __init__(self, hp_json:str, hp_cr_index:str=None) -> None:
         if not os.path.isfile(hp_json):
             raise FileNotFoundError(f"Could not find hp.json file at {hp_json}")
+        if hp_cr_index:
+            if not os.path.isfile(hp_cr_index):
+                raise FileNotFoundError(f"Could not find the FastHPOCR index file at {hp_cr_index}")
         parser = HpoParser(hpo_json_file=hp_json)
-        self._hpo_cr = parser.get_hpo_concept_recognizer()
+        self._hpo_cr = parser.get_hpo_concept_recognizer(hp_cr_index=hp_cr_index)
         self._hpo_ontology = parser.get_ontology()
         self._all_added_hp_term_set = set()
 
