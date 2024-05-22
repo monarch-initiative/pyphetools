@@ -13,6 +13,8 @@ from .disease_id_column_mapper import DiseaseIdColumnMapper
 from .hgvs_variant import HgvsVariant
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_exact_cr import HpoExactConceptRecognizer
+from .hpo_fasthpocr_cr import HpoFastHPOCRConceptRecognizer
+from .hpo_base_cr import HpoBaseConceptRecognizer
 from .hpo_parser import HpoParser
 from .hp_term import HpTerm, HpTermBuilder
 from .import_template import TemplateImporter
@@ -48,7 +50,9 @@ __all__ = [
     "DiseaseIdColumnMapper",
     "HgvsVariant",
     "HpoConceptRecognizer",
+    "HpoBaseConceptRecognizer",
     "HpoExactConceptRecognizer",
+    "HpoFastHPOCRConceptRecognizer",
     "HpoParser",
     "HpTerm",
     "HpTermBuilder",
