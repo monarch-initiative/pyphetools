@@ -1,7 +1,7 @@
 # Data-Entry Template
 
 pyphetools offers two main ways to encode clinical data as phenopackets. The library provides various functions to encode data found in
-typical supplementary materials of publications about cohorts. This option, which is covered in more detail in TODO is intended for those
+typical supplementary materials of publications about cohorts. This option, which is covered in more detail [here](../developers/developers.md) is intended for those
 with skills in scripting with Python. Additionally, pyphetools can ingest data encoded in an Excel template that can be used without additional scripting.
 The template can be ingested using a standardized notebook. Alternatively, users are invited to work with the HPO team to enter the data into the HPO database.
 
@@ -56,5 +56,16 @@ tcreator.create_template(disease_id=disease_id,
                          HGNC_id=hgnc_id,
                          transcript=ofd1_transcript)
 ```
+
+The following snippet can be used as a "starter" by pasting it into the notebook.
+
+```python
+tc.create_template(disease_id="",
+                         disease_label="",
+                         gene_symbol="",
+                         HGNC_id="",
+                         transcript="")
+```
+
 
 The script creates a file that can be opened in Excel and used for curation. Add additional HPO terms as necessary and remove terms that are not needed.

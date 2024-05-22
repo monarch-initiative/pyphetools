@@ -388,7 +388,7 @@ class CaseTemplateEncoder:
         elif sex == "U":
             sex = Constants.UNKNOWN_SEX_SYMBOL
         else:
-            raise ValueError(f"Unrecognized sex symbol: {sex}")
+            raise ValueError(f"Unrecognized sex symbol: {sex} for individual \"{individual_id}\"")
         onset_age = data_items.get(AGE_OF_ONSET_FIELDNAME)
         if onset_age is not None and isinstance(onset_age, str):
             onset_age = PyPheToolsAge.get_age(onset_age)

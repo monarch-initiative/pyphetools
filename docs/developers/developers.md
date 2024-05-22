@@ -1,5 +1,35 @@
 # For developers
 
+## Local Installation
+
+We recommend creating a local environment:
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+and updating Python's `pip` tool:
+
+```bash
+python3 -m pip install --upgrade pip
+```
+
+You can then do a local/editable install:
+
+
+```bash
+python3 -m pip install --editable ".[test]"
+```
+
+After installation you should be able to run the test suite:
+
+```bash
+pytest
+```
+
+
+## Creating Phenopackets
 
 pyphetools provides two main ways of creating phenopackets.
 

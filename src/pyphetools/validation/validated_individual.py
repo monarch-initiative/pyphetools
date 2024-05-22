@@ -7,6 +7,11 @@ from .ontology_qc import OntologyQC
 import hpotk
 
 class ValidatedIndividual:
+    """
+    Class to coordinate quality assessment. In addition to ontology-based tests performed by the OntologyQC class,
+    we here test for a minimum number of HPO annotations, the present of at least one disease, and the correct
+    number of alleles.
+    """
 
     def __init__(self, individual:Individual) -> None:
         self._individual = individual
@@ -14,7 +19,7 @@ class ValidatedIndividual:
         self._validation_errors = []
 
 
-    def validate(self, ontology:hpotk.MinimalOntology, min_hpo:int, allelic_requirement:AllelicRequirement=None) -> None:
+    def validate(self, ontology:hpotk.MinimalOntology, min_hpo:int, allelic_requirement:AllelicRequirement=None, minimum_disease_count:int=1) -> None:
         """validate an Individual object for errors in the Ontology or the minimum number of HPO terms/alleles/variants
 
         :param ontology: HPO object
@@ -29,7 +34,7 @@ class ValidatedIndividual:
         self._validation_errors.extend(qc_validation_results)
         self._clean_terms = qc.get_clean_terms()
         self._individual.set_hpo_terms(self._clean_terms)
-        cvalidator = ContentValidator(min_hpo=min_hpo, allelic_requirement=allelic_requirement)
+        cvalidator = ContentValidator(min_hpo=min_hpo, allelic_requirement=allelic_requirement, minimum_disease_count=minimum_disease_count)
         validation_results = cvalidator.validate_individual(individual=self._individual)
         self._validation_errors.extend(validation_results)
         # The following checks for remaining errors that would force us to remove the patient from the cohort

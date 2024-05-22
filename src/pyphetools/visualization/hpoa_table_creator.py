@@ -1,8 +1,9 @@
 import os
 import json
-import re
-import datetime
+import typing
 from typing import List, Dict
+from datetime import datetime
+
 
 from google.protobuf.json_format import Parse
 
@@ -111,9 +112,13 @@ class HpoaTableCreator:
         14. biocuration
     These should be tab separated fields.
     """
-    DATE_REGEX = r"(\d{4}-\d{2}-\d{2})"
-
-    def __init__(self, phenopacket_list, onset_term_d,  moi_d, created_by:str=None) -> None:
+    def __init__(
+            self,
+            phenopacket_list,
+            onset_term_d,
+            moi_d,
+            created_by: str,
+    ) -> None:
         """Constructor
 
         :param phenopacket_list: List of GA4GH phenopackets
@@ -122,6 +127,9 @@ class HpoaTableCreator:
         :type: Dict[str, OnsetTerm]
         :param moi_d: Dictionary with key PMID and value Mode of inheritance
         """
+        todays_date = datetime.now().strftime("%Y-%m-%d")
+        self._created_by = created_by
+        self._todays_date = f"[{todays_date}]"
         self._phenopackets = phenopacket_list
         self._all_hpo_d = self._get_all_hpos()
         self._disease = self._get_disease() # only allow one disease, therefore this is a scalar value (string)
@@ -129,7 +137,6 @@ class HpoaTableCreator:
         self._biocurator_d = self._get_biocurator_d()
         self._onset_rows = self._add_age_of_onset_terms(onset_term_d)
         self._moi_rows = self._add_moi_rows(moi_d)
-        self._created_by = created_by
 
     def _get_all_hpos(self) -> Dict[str,HpTerm]:
         """Get a dictionary of HpTerms, with key being HPO id and the value the corresponding HpTerm
@@ -190,19 +197,18 @@ class HpoaTableCreator:
         :returns: dictionary with key=PMID, value=biocurator
         :rtype: Dict[str,str]
         """
-        biocurator_d = defaultdict()
+        biocurator_d = {}
         for ppkt in self._phenopackets:
             pmid = HpoaTableCreator.get_pmid(ppkt=ppkt)
             mdata = ppkt.meta_data
             created_by = mdata.created_by
             if mdata.HasField("created"):
-                created = mdata.created # created is a TimeStamp object
+                created = mdata.created  # created is a TimeStamp object
                 created_dt = created.ToDatetime()
                 ymd = created_dt.strftime('%Y-%m-%d')
                 created_by = f"{created_by}[{ymd}]"
             else:
-                today = datetime.today().strftime('%Y-%m-%d')
-                created_by = f"{created_by}[{today}]"
+                created_by = f"{created_by}{self._todays_date}"
             biocurator_d[pmid] = created_by
         return biocurator_d
 
@@ -249,7 +255,7 @@ class HpoaTableCreator:
             # If we add an MOI outside of the template, then it will not have a PMID
             # the template builder requires a created_by field which is designed for this.
             if biocurator is None:
-                biocurator = self._created_by
+                biocurator = f'{self._created_by}{self._todays_date}'
             for hpterm in hpterm_list:
                 row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=pmid, biocurator=biocurator)
                 moi_rows.append(row)
@@ -292,7 +298,13 @@ class HpoaTableCreator:
 
 class HpoaTableBuilder:
 
-    def __init__(self, indir=None, phenopacket_list=None, created_by:str=None, target=None) -> None:
+    def __init__(
+            self,
+            indir=None,
+            phenopacket_list=None,
+            created_by: typing.Optional[str] = None,
+            target: typing.Optional[str] = None,
+    ) -> None:
         if indir is not None:
             if not os.path.isdir(indir):
                 raise ValueError(f"indir argument {indir} must be directory!")
@@ -307,10 +319,11 @@ class HpoaTableBuilder:
                         ppack = Parse(json.dumps(jsondata), PPKt.Phenopacket())
                         self._phenopackets.append(ppack)
         elif phenopacket_list is not None:
-            if target is not None:
-                self._phenopackets = HpoaTableBuilder.filter_diseases(target, phenopacket_list)
-            else:
+            if target is None:
                 self._phenopackets = phenopacket_list
+            else:
+                self._phenopackets = HpoaTableBuilder.filter_diseases(target, phenopacket_list)
+
         else:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)

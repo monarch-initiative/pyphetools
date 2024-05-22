@@ -60,4 +60,10 @@ class TestValidationResult(unittest.TestCase):
         self.assertEqual("CONFLICT", vresult.category)
         self.assertFalse(vresult.is_unfixable_error())
 
+    def test_insufficient_disease(self):
+        vresult = ValidationResultBuilder("id3").insufficient_disease_count(observed_count=7, minimum_count=42).build()
+        self.assertEqual("ERROR", vresult.error_level)
+        self.assertEqual("INSUFFICIENT_DISEASE_COUNT", vresult.category)
+        self.assertFalse(vresult.is_unfixable_error())
+
 

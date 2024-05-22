@@ -1,20 +1,31 @@
 import os
+import typing
+
 import pandas as pd
 from collections import defaultdict
 from .hpo_parser  import HpoParser
+from .hp_term import HpTerm
 from typing import List
 import hpotk
 from .case_template_encoder import REQUIRED_H1_FIELDS, REQUIRED_H2_FIELDS
 
 class TemplateCreator:
 
-    def __init__(self, hp_json:str, hp_cr_index:str=None) -> None:
-        if not os.path.isfile(hp_json):
+    def __init__(
+            self,
+            hp_json: typing.Optional[str] = None,
+            hp_cr_index: typing.Optional[str] = None,
+    ) -> None:
+        if hp_json is None:
+            parser = HpoParser()
+        elif not os.path.isfile(hp_json):
             raise FileNotFoundError(f"Could not find hp.json file at {hp_json}")
-        if hp_cr_index:
+        else:
+            parser = HpoParser(hpo_json_file=hp_json)
+        if hp_cr_index is not None:
             if not os.path.isfile(hp_cr_index):
                 raise FileNotFoundError(f"Could not find the FastHPOCR index file at {hp_cr_index}")
-        parser = HpoParser(hpo_json_file=hp_json)
+
         self._hpo_cr = parser.get_hpo_concept_recognizer(hp_cr_index=hp_cr_index)
         self._hpo_ontology = parser.get_ontology()
         self._all_added_hp_term_set = set()
@@ -60,7 +71,7 @@ class TemplateCreator:
         return hp_term_list
 
 
-    def create_template(self, disease_id:str, disease_label:str, HGNC_id:str, gene_symbol:str, transcript:str, append=False):
+    def create_template(self, disease_id:str, disease_label:str, HGNC_id:str, gene_symbol:str, transcript:str):
         """Create an Excel file that can be used to enter data as a pyphetools template
 
         :param disease_id: an OMIM, MONDO, or other similar CURIE identifier
@@ -107,17 +118,56 @@ class TemplateCreator:
             df.loc[len(df)] = new_row
         ## Output as excel
         fname = disease_id.replace(":", "_") + "_individuals.xlsx"
-
         if os.path.isfile(fname):
-            if not append:
-                raise FileExistsError(f"Excel file '{fname}' already exists. Use 'append=True' \
-                                        to append HPO terms to the existing file.")
-            else:
-                print(f"[WARNING] Appending to existing file '{fname}'. This might lead to duplicate HPO terms. \
-                        It's recommended to create a new file instead.")
-
+            raise FileExistsError(f"Excel file '{fname}' already exists.")
         df.to_excel(fname, index=False)
-        print(f"Write excel pyphetools template file to {fname}")
+        print(f"Wrote Excel pyphetools template file to {fname}")
 
+    def create_from_phenopacket(self, ppkt):
+        """
+        create pyphetools templates from an individual phenopacket.
+        This function is intended to accelerate the process of converting the LIRICAL phenopackets
+        to our current format and generally should not be used for new cases
+        """
+        id_to_observed = set()
+        id_to_excluded = set()
 
-
+        for pf in ppkt.phenotypic_features:
+            hpt = HpTerm(hpo_id=pf.type.id, label=pf.type.label)
+            self._all_added_hp_term_set.add(hpt)
+            if pf.excluded:
+                id_to_excluded.add(pf.type.label)
+            else:
+                id_to_observed.add(pf.type.label)
+        H1_Headers = REQUIRED_H1_FIELDS
+        H2_Headers = REQUIRED_H2_FIELDS
+        if len(H1_Headers) != len(H2_Headers):
+            raise ValueError("Header lists must have same length")
+        EMPTY_STRING = ""
+        hp_term_list = self.arrange_terms()
+        for hpt in hp_term_list:
+            H1_Headers.append(hpt.label)
+            H2_Headers.append(hpt.id)
+        df = pd.DataFrame(columns=H1_Headers)
+        new_row = dict()
+        for i in range(len(H1_Headers)):
+            new_row[H1_Headers[i]] = H2_Headers[i]
+        df.loc[len(df)] = new_row
+        # add one row with some of the data from the phenopakcet
+        new_row = dict()
+        for i in range(len(H1_Headers)):
+            header_field = H1_Headers[i]
+            if header_field == "HPO":
+                new_row[header_field] = "na"
+            elif header_field in id_to_observed:
+                new_row[header_field] = "observed"
+            elif header_field in id_to_excluded:
+                new_row[header_field] = "excluded"
+            else:
+                new_row[header_field] = "?"
+        df.loc[len(df)] = new_row
+        ## Output as excel
+        ppkt_id = "".join(e for e in ppkt.id if e.isalnum())
+        fname = ppkt_id + "_phenopacket_template.xlsx"
+        df.to_excel(fname, index=False)
+        print(f"Wrote excel pyphetools template file to {fname}")
