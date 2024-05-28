@@ -64,7 +64,7 @@ class Serializable(metaclass=abc.ABCMeta):
         elif isinstance(field, enum.Enum):
             out[name] = field.name
         elif hasattr(field, 'seconds') and hasattr(field, 'nanos') and hasattr(field, 'as_str') and callable(field.as_str):
-            # This quack *exactly* as a Timestamp!
+            # This quacks *exactly* as a Timestamp!
             out[name] = field.as_str()
         else:
             raise ValueError(f'Unexpected field {field}')

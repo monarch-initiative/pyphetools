@@ -271,7 +271,6 @@ class CaseTemplateEncoder:
             h2 = header_2[i]
             if isinstance(h1, float) or len(h1) == 0:
                 raise ValueError(f"Error: Empty column header at column {i}")
-
             if h1 == "HPO":
                 in_hpo_range = True
                 index_to_decoder_d[i] = NullEncoder()
@@ -403,7 +402,7 @@ class CaseTemplateEncoder:
         vitStat = None
         if "deceased" in data_items:
             decsd = data_items.get("deceased")
-            if encounter_age.is_valid():
+            if decsd == "yes" and encounter_age.is_valid():
                 timeelem = encounter_age.to_ga4gh_time_element()
                 vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=timeelem)
             else:
@@ -512,7 +511,7 @@ class CaseTemplateEncoder:
             else:
                 pmid = pmid.replace(" ", "").replace(":", "_")
                 fname = pmid + "_" + individual.id
-            fname = re.sub('[^A-Za-z0-9_-]', '', fname)  # remove any illegal characters from filename
+            fname = re.sub('[^A-Za-z0-9\_\-]', '', fname)  # remove any illegal characters from filename
             fname = fname.replace(" ", "_") + ".json"
             outpth = os.path.join(outdir, fname)
             with open(outpth, "wt") as fh:

@@ -1,7 +1,8 @@
 import os
 import json
+import typing
 from typing import List, Dict
-from datetime import datetime as d
+from datetime import datetime
 
 
 from google.protobuf.json_format import Parse
@@ -110,9 +111,14 @@ class HpoaTableCreator:
         13. evidence
         14. biocuration
     These should be tab separated fields.
-
     """
-    def __init__(self, phenopacket_list, onset_term_d,  moi_d, created_by:str=None) -> None:
+    def __init__(
+            self,
+            phenopacket_list,
+            onset_term_d,
+            moi_d,
+            created_by: str,
+    ) -> None:
         """Constructor
 
         :param phenopacket_list: List of GA4GH phenopackets
@@ -121,19 +127,16 @@ class HpoaTableCreator:
         :type: Dict[str, OnsetTerm]
         :param moi_d: Dictionary with key PMID and value Mode of inheritance
         """
-        date = d.now()
-        todays_date = date.strftime("%Y-%m-%d")
+        todays_date = datetime.now().strftime("%Y-%m-%d")
+        self._created_by = created_by
         self._todays_date = f"[{todays_date}]"
         self._phenopackets = phenopacket_list
-        self._created_by = created_by
         self._all_hpo_d = self._get_all_hpos()
         self._disease = self._get_disease() # only allow one disease, therefore this is a scalar value (string)
         self._hpo_counter_d = self._count_hpos()
         self._biocurator_d = self._get_biocurator_d()
         self._onset_rows = self._add_age_of_onset_terms(onset_term_d)
         self._moi_rows = self._add_moi_rows(moi_d)
-        
-        
 
     def _get_all_hpos(self) -> Dict[str,HpTerm]:
         """Get a dictionary of HpTerms, with key being HPO id and the value the corresponding HpTerm
@@ -194,11 +197,18 @@ class HpoaTableCreator:
         :returns: dictionary with key=PMID, value=biocurator
         :rtype: Dict[str,str]
         """
-        biocurator_d = defaultdict()
+        biocurator_d = {}
         for ppkt in self._phenopackets:
             pmid = HpoaTableCreator.get_pmid(ppkt=ppkt)
             mdata = ppkt.meta_data
             created_by = mdata.created_by
+            if mdata.HasField("created"):
+                created = mdata.created  # created is a TimeStamp object
+                created_dt = created.ToDatetime()
+                ymd = created_dt.strftime('%Y-%m-%d')
+                created_by = f"{created_by}[{ymd}]"
+            else:
+                created_by = f"{created_by}{self._todays_date}"
             biocurator_d[pmid] = created_by
         return biocurator_d
 
@@ -217,10 +227,6 @@ class HpoaTableCreator:
                 if pf.excluded is not None and not pf.excluded:
                     hpo_counter.increment_observed(hpterm.id)
         return hpo_counter_d
-    
-    def _format_biocurator(self, bcurator):
-        return f"{bcurator}{self._todays_date}"
-
 
     def _add_age_of_onset_terms(self, onset_term_d) -> List[HpoaTableRow]:
         """
@@ -229,7 +235,7 @@ class HpoaTableCreator:
         """
         onset_rows  = list() # reset
         for pmid, oterm_list in onset_term_d.items():
-            biocurator = self._format_biocurator(self._biocurator_d.get(pmid))
+            biocurator = self._biocurator_d.get(pmid)
             for oterm in oterm_list:
                 hpo_onset_term = HpTerm(hpo_id=oterm.id, label=oterm.label)
                 row = HpoaTableRow(disease=self._disease, hpo_term=hpo_onset_term, publication=pmid, biocurator=biocurator, freq_num=oterm.numerator, freq_denom=oterm.denominator)
@@ -249,9 +255,7 @@ class HpoaTableCreator:
             # If we add an MOI outside of the template, then it will not have a PMID
             # the template builder requires a created_by field which is designed for this.
             if biocurator is None:
-                biocurator = biocurator = self._format_biocurator(self._created_by)
-            else:
-                biocurator = self._format_biocurator(biocurator)
+                biocurator = f'{self._created_by}{self._todays_date}'
             for hpterm in hpterm_list:
                 row = HpoaTableRow(disease=self._disease, hpo_term=hpterm, publication=pmid, biocurator=biocurator)
                 moi_rows.append(row)
@@ -265,7 +269,6 @@ class HpoaTableCreator:
                         "description", "publication","evidence", "biocuration"]
         for pmid, counter in self._hpo_counter_d.items():
             biocurator = self._biocurator_d.get(pmid)
-            biocurator = self._format_biocurator(biocurator)
             measured_d = counter.get_measured_d()
             observed_d = counter.get_observed_d()
             # by construction, there can be no term in observed_d that is not in measured_d
@@ -295,7 +298,13 @@ class HpoaTableCreator:
 
 class HpoaTableBuilder:
 
-    def __init__(self, created_by:str, indir=None, phenopacket_list=None) -> None:
+    def __init__(
+            self,
+            indir=None,
+            phenopacket_list=None,
+            created_by: typing.Optional[str] = None,
+            target: typing.Optional[str] = None,
+    ) -> None:
         if indir is not None:
             if not os.path.isdir(indir):
                 raise ValueError(f"indir argument {indir} must be directory!")
@@ -310,7 +319,11 @@ class HpoaTableBuilder:
                         ppack = Parse(json.dumps(jsondata), PPKt.Phenopacket())
                         self._phenopackets.append(ppack)
         elif phenopacket_list is not None:
-            self._phenopackets = phenopacket_list
+            if target is None:
+                self._phenopackets = phenopacket_list
+            else:
+                self._phenopackets = HpoaTableBuilder.filter_diseases(target, phenopacket_list)
+
         else:
             raise ValueError("A valid value must be supplied for either \"indir\" or \"phenopacket_list\"")
         self._onset_term_d = defaultdict(list)
@@ -323,6 +336,17 @@ class HpoaTableBuilder:
             for onset in onset_list:
                 tcounter.increment_term(onset)
             self._onset_term_d[pmid].extend(tcounter.get_counted_terms())
+
+    @staticmethod
+    def filter_diseases(disease_id, ppkt_list):
+        target_list = list()
+        for ppkt in ppkt_list:
+            for d in ppkt.diseases:
+                if d.term.id == disease_id:
+                    target_list.append(ppkt)
+                    break
+        print(f"[INFO] Extracted {(len(target_list))} from {(len(ppkt_list))} phenopackets with {disease_id}\n")
+        return target_list
 
     def autosomal_recessive(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0000007", label="Autosomal recessive inheritance")

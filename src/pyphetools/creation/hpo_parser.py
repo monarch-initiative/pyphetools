@@ -5,6 +5,7 @@ import hpotk
 
 from .hpo_cr import HpoConceptRecognizer
 from .hpo_exact_cr import HpoExactConceptRecognizer
+from .hpo_fasthpocr_cr import HpoFastHPOCRConceptRecognizer
 
 
 class HpoParser:
@@ -80,7 +81,13 @@ class HpoParser:
 
         return id_to_label_d
 
-    def get_hpo_concept_recognizer(self) -> HpoConceptRecognizer:
+    def get_hpo_concept_recognizer(self, hp_cr_index:str=None) -> HpoConceptRecognizer:
+        if hp_cr_index:
+            return HpoFastHPOCRConceptRecognizer(
+                label_to_id=self.get_label_to_id_map(),
+                id_to_primary_label=self.get_id_to_label_map(),
+                hp_cr_index=hp_cr_index
+            )
         return HpoExactConceptRecognizer(
             label_to_id=self.get_label_to_id_map(),
             id_to_primary_label=self.get_id_to_label_map(),

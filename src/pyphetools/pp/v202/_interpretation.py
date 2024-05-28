@@ -10,6 +10,7 @@ from ._vrsatile import VariationDescriptor
 from ._gene_descriptor import GeneDescriptor
 from .._api import MessageMixin
 from ..parse import extract_message_scalar, extract_message_sequence, extract_pb_message_scalar, extract_pb_message_seq
+from ..parse import extract_oneof_scalar, extract_pb_oneof_scalar
 
 
 class AcmgPathogenicityClassification(enum.Enum):
@@ -124,6 +125,11 @@ class VariantInterpretation(MessageMixin):
 
 
 class GenomicInterpretation(MessageMixin):
+    _ONEOF_CALL = {
+        'gene_descriptor': GeneDescriptor,
+        'variant_interpretation': VariantInterpretation,
+    }
+
     class InterpretationStatus(enum.Enum):
         UNKNOWN_STATUS = 0
         REJECTED = 1
@@ -135,25 +141,11 @@ class GenomicInterpretation(MessageMixin):
             self,
             subject_or_biosample_id: str,
             interpretation_status: InterpretationStatus,
-            gene_descriptor: typing.Optional[GeneDescriptor] = None,
-            variant_interpretation: typing.Optional[VariantInterpretation] = None,
+            call: typing.Union[GeneDescriptor, VariantInterpretation],
     ):
         self._subject_or_biosample_id = subject_or_biosample_id
         self._interpretation_status = interpretation_status
-        one_ofs = (gene_descriptor, variant_interpretation)
-        if sum(1 for arg in one_ofs if arg is not None) != 1:
-            cnt = sum(1 for arg in one_ofs if arg is not None)
-            raise ValueError(
-                f'GenomicInterpretation must be provided with exactly 1 argument but {cnt} arguments were provided!')
-
-        if gene_descriptor is not None:
-            self._discriminant = 0
-            self._call = gene_descriptor
-        elif variant_interpretation is not None:
-            self._discriminant = 1
-            self._call = variant_interpretation
-        else:
-            raise ValueError('Bug')  # TODO: wording
+        self._call = call
 
     @property
     def subject_or_biosample_id(self) -> str:
@@ -172,21 +164,23 @@ class GenomicInterpretation(MessageMixin):
         self._interpretation_status = value
 
     @property
+    def call(self) -> typing.Union[GeneDescriptor, VariantInterpretation]:
+        return self._call
+
+    @property
     def gene_descriptor(self) -> typing.Optional[GeneDescriptor]:
-        return self._call if self._discriminant == 0 else None
+        return self._call if isinstance(self._call, GeneDescriptor) else None
 
     @gene_descriptor.setter
     def gene_descriptor(self, value: GeneDescriptor):
-        self._discriminant = 0
         self._call = value
 
     @property
     def variant_interpretation(self) -> typing.Optional[VariantInterpretation]:
-        return self._call if self._discriminant == 1 else None
+        return self._call if isinstance(self._call, VariantInterpretation) else None
 
     @variant_interpretation.setter
     def variant_interpretation(self, value: VariantInterpretation):
-        self._discriminant = 1
         self._call = value
 
     @staticmethod
@@ -195,39 +189,25 @@ class GenomicInterpretation(MessageMixin):
 
     @classmethod
     def required_fields(cls) -> typing.Sequence[str]:
-        return 'subject_or_biosample_id', 'interpretation_status',
+        raise NotImplementedError('Should not be called!')
 
     @classmethod
     def from_dict(cls, values: typing.Mapping[str, typing.Any]):
-        if cls._all_required_fields_are_present(values):
-            if 'gene_descriptor' in values:
-                assert 'variant_interpretation' not in values, \
-                    'Variant interpretation must be unset when Gene descriptor is set!'
-                return GenomicInterpretation(
-                    subject_or_biosample_id=values['subject_or_biosample_id'],
-                    interpretation_status=MessageMixin._extract_enum_field(
-                        'interpretation_status', GenomicInterpretation.InterpretationStatus, values
-                    ),
-                    gene_descriptor=extract_message_scalar('gene_descriptor', GeneDescriptor, values),
-                )
-
-            elif 'variant_interpretation' in values:
-                assert 'gene_descriptor' not in values, \
-                    'Gene descriptor must be unset when Variant interpretation is set!'
-                return GenomicInterpretation(
-                    subject_or_biosample_id=values['subject_or_biosample_id'],
-                    interpretation_status=MessageMixin._extract_enum_field(
-                        'interpretation_status', GenomicInterpretation.InterpretationStatus, values
-                    ),
-                    variant_interpretation=extract_message_scalar(
-                        'variant_interpretation', VariantInterpretation, values
-                    ),
-                )
-
-            else:
-                raise ValueError('Either `gene_descriptor` or `variant_interpretation` must be set!')
+        if 'subject_or_biosample_id' in values \
+                and 'interpretation_status' in values \
+                and any(field in values for field in cls._ONEOF_CALL):
+            return GenomicInterpretation(
+                subject_or_biosample_id=values['subject_or_biosample_id'],
+                interpretation_status=MessageMixin._extract_enum_field(
+                    'interpretation_status', GenomicInterpretation.InterpretationStatus, values,
+                ),
+                call=extract_oneof_scalar(cls._ONEOF_CALL, values),
+            )
         else:
-            cls._complain_about_missing_field(values)
+            raise ValueError(
+                'Missing one of required fields: '
+                f'`subject_or_biosample_id, interpretation_status, gene_descriptor|variant_interpretation` in {values}'
+            )
 
     def to_message(self) -> Message:
         msg = pp202.GenomicInterpretation(
@@ -237,13 +217,12 @@ class GenomicInterpretation(MessageMixin):
             ),
         )
 
-        val = self._call.to_message()
-        if self._discriminant == 0:
-            msg.gene_descriptor.CopyFrom(val)
-        elif self._discriminant == 1:
-            msg.variant_interpretation.CopyFrom(val)
+        if isinstance(self._call, GeneDescriptor):
+            msg.gene_descriptor.CopyFrom(self._call.to_message())
+        elif isinstance(self._call, VariantInterpretation):
+            msg.variant_interpretation.CopyFrom(self._call.to_message())
         else:
-            raise ValueError(f'Invalid discriminant {self._discriminant}')
+            raise ValueError('Bug')
 
         return msg
 
@@ -253,30 +232,12 @@ class GenomicInterpretation(MessageMixin):
 
     @classmethod
     def from_message(cls, msg: Message):
-        if isinstance(msg, pp202.GenomicInterpretation):
-            subject_or_biosample_id = msg.subject_or_biosample_id
-            interpretation_status = GenomicInterpretation.InterpretationStatus(msg.interpretation_status)
-
-            case = msg.WhichOneof('call')
-            if case == 'gene_descriptor':
-                return GenomicInterpretation(
-                    subject_or_biosample_id=subject_or_biosample_id,
-                    interpretation_status=interpretation_status,
-                    gene_descriptor=extract_pb_message_scalar(
-                        'gene_descriptor', GeneDescriptor, msg
-                    ),
-                )
-            elif case == 'variant_interpretation':
-                return GenomicInterpretation(
-                    subject_or_biosample_id=subject_or_biosample_id,
-                    interpretation_status=interpretation_status,
-                    variant_interpretation=extract_pb_message_scalar(
-                        'variant_interpretation', VariantInterpretation, msg
-                    ),
-                )
-            else:
-                raise ValueError(f'Unknown one of field set {case}')
-
+        if isinstance(msg, cls.message_type()):
+            return GenomicInterpretation(
+                subject_or_biosample_id=msg.subject_or_biosample_id,
+                interpretation_status=GenomicInterpretation.InterpretationStatus(msg.interpretation_status),
+                call=extract_pb_oneof_scalar('call', cls._ONEOF_CALL, msg),
+            )
         else:
             cls.complain_about_incompatible_msg_type(msg)
 
@@ -284,21 +245,13 @@ class GenomicInterpretation(MessageMixin):
         return isinstance(other, GenomicInterpretation) \
             and self._subject_or_biosample_id == other._subject_or_biosample_id \
             and self._interpretation_status == other._interpretation_status \
-            and self._discriminant == other._discriminant \
             and self._call == other._call
 
     def __repr__(self):
-        if self._discriminant == 0:
-            val = f'gene_descriptor={self._call}'
-        elif self._discriminant == 1:
-            val = f'variant_interpretation={self._call}'
-        else:
-            raise ValueError(f'Invalid discriminant {self._discriminant}')
-
         return f'GenomicInterpretation(' \
                f'subject_or_biosample_id={self._subject_or_biosample_id}, ' \
                f'interpretation_status={self._interpretation_status}, ' \
-               f'{val})'
+               f'call={self._call})'
 
 
 class Diagnosis(MessageMixin):

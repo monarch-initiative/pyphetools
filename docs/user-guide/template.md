@@ -64,7 +64,7 @@ tc.create_template(disease_id="",
                          disease_label="",
                          gene_symbol="",
                          HGNC_id="",
-                         transcript=""
+                         transcript="")
 ```
 
 

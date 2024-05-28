@@ -1,4 +1,6 @@
 import os
+import typing
+
 import pandas as pd
 from collections import defaultdict
 from .hpo_parser  import HpoParser
@@ -9,15 +11,22 @@ from .case_template_encoder import REQUIRED_H1_FIELDS, REQUIRED_H2_FIELDS
 
 class TemplateCreator:
 
-    def __init__(self, hp_json:str=None) -> None:
+    def __init__(
+            self,
+            hp_json: typing.Optional[str] = None,
+            hp_cr_index: typing.Optional[str] = None,
+    ) -> None:
         if hp_json is None:
-            # This will use the hpotk store object
             parser = HpoParser()
+        elif not os.path.isfile(hp_json):
+            raise FileNotFoundError(f"Could not find hp.json file at {hp_json}")
         else:
-            if not os.path.isfile(hp_json):
-                raise FileNotFoundError(f"Could not find hp.json file at {hp_json}")
-            parser = HpoParser(hp_json)
-        self._hpo_cr = parser.get_hpo_concept_recognizer()
+            parser = HpoParser(hpo_json_file=hp_json)
+        if hp_cr_index is not None:
+            if not os.path.isfile(hp_cr_index):
+                raise FileNotFoundError(f"Could not find the FastHPOCR index file at {hp_cr_index}")
+
+        self._hpo_cr = parser.get_hpo_concept_recognizer(hp_cr_index=hp_cr_index)
         self._hpo_ontology = parser.get_ontology()
         self._all_added_hp_term_set = set()
 
@@ -71,8 +80,6 @@ class TemplateCreator:
         :param gene_symbol: corresponding gene symbol, e.g., FBN1
         :transcript: transcript to be used for the HVGC nomenclature. Must be refseq with version number
         """
-        if disease_id is None:
-            self.preview()
         H1_Headers = REQUIRED_H1_FIELDS
         H2_Headers = REQUIRED_H2_FIELDS
         if len(H1_Headers) != len(H2_Headers):
@@ -111,20 +118,12 @@ class TemplateCreator:
             df.loc[len(df)] = new_row
         ## Output as excel
         fname = disease_id.replace(":", "_") + "_individuals.xlsx"
+        if os.path.isfile(fname):
+            raise FileExistsError(f"Excel file '{fname}' already exists.")
         df.to_excel(fname, index=False)
-        print(f"Wrote excel pyphetools template file to {fname}")
+        print(f"Wrote Excel pyphetools template file to {fname}")
 
-    def preview(self):
-        """convenience function that writes empty command that can then be completed by the user.
-        This will be called if the user enters the create_template command with no arguments
-        """
-        print("""tc.create_template(disease_id=\”\”, 
-                                    disease_label=\”\”, 
-                                    HGNC_id=\”\”, 
-                                    gene_symbol=\”\”, 
-                                    transcript=\”\)”)""")
-        
-    def create_from_phenopacket(self, ppkt) -> pd.DataFrame:
+    def create_from_phenopacket(self, ppkt):
         """
         create pyphetools templates from an individual phenopacket.
         This function is intended to accelerate the process of converting the LIRICAL phenopackets
@@ -132,7 +131,7 @@ class TemplateCreator:
         """
         id_to_observed = set()
         id_to_excluded = set()
-        
+
         for pf in ppkt.phenotypic_features:
             hpt = HpTerm(hpo_id=pf.type.id, label=pf.type.label)
             self._all_added_hp_term_set.add(hpt)
@@ -172,5 +171,3 @@ class TemplateCreator:
         fname = ppkt_id + "_phenopacket_template.xlsx"
         df.to_excel(fname, index=False)
         print(f"Wrote excel pyphetools template file to {fname}")
-
-
