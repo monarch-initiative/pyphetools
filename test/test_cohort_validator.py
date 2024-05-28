@@ -1,7 +1,7 @@
 import hpotk
 import pytest
 
-from pyphetools.creation import Individual, HpTerm
+from pyphetools.creation import Disease,Individual, HpTerm
 from pyphetools.validation import CohortValidator
 
 
@@ -17,6 +17,7 @@ class TestCohortValidator:
         i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
         i.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
         i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        i.set_disease(disease=Disease(disease_id="OMIM:123456", disease_label="label"))
         return i
 
     @pytest.fixture
@@ -24,6 +25,7 @@ class TestCohortValidator:
         i = Individual(individual_id="B")
         i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
         i.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
+        i.set_disease(disease=Disease(disease_id="OMIM:123456", disease_label="label"))
         return i
 
     def test_redundant_term(
@@ -74,7 +76,7 @@ class TestCohortValidator:
         individual_C.add_hpo_term(HpTerm(hpo_id="HP:0011525", label="Iris nevus"))
         individual_C.add_hpo_term(HpTerm(hpo_id="HP:0430025", label="Bilateral facial palsy"))
         individual_C.add_hpo_term(HpTerm(hpo_id="HP:0010628", label="Facial palsy"))
-
+        individual_C.set_disease(disease=Disease(disease_id="OMIM:123456", disease_label="label"))
         cohort = [individual_C]
         cvalidator = CohortValidator(cohort=cohort, ontology=hpo, min_hpo=1)
         validated_individuals = cvalidator.get_validated_individual_list()
@@ -88,3 +90,16 @@ class TestCohortValidator:
 
         error = errors[0]
         assert error.message == "<b>Facial palsy</b> is redundant because of <b>Bilateral facial palsy</b>"
+
+    def test_error_if_no_disease(self, hpo: hpotk.Ontology):
+        individual_D = Individual(individual_id="D")
+        individual_D.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        cohort = [individual_D]
+        cvalidator = CohortValidator(cohort=cohort, ontology=hpo, min_hpo=1)
+        validated_individuals = cvalidator.get_validated_individual_list()
+        assert len(validated_individuals) == 1
+        individual_D = validated_individuals[0]
+        errors = individual_D.get_validation_errors()
+        assert len(errors) == 1
+        error = errors[0]
+        assert error.message == "Individual had 0 disease annotation(s) but the mininum required count is 1"
