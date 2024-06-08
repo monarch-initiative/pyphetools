@@ -280,7 +280,7 @@ class TemplateImporter:
         elif moi == "X-linked recessive inheritance":
             builder.x_linked_recessive(pmid)
         elif moi == "X-linked dominant inheritance":
-            builder.x_linked_dominant()
+            builder.x_linked_dominant(pmid)
         else:
             raise ValueError(f"Did not recognize mode of inheritance {moi}")
         hpoa_creator = builder.build()
