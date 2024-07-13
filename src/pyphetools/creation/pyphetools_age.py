@@ -17,6 +17,12 @@ HPO_ONSET_TERMS = {
     "Middle age onset": "HP:0003596",
     # Onset of symptoms after the age of 16 years.
     "Young adult onset":"HP:0011462",
+    # Onset of disease at an age of greater than or equal to 25 to under 40 years.
+    "Late young adult onset": "HP:0025710",
+    # Onset of disease at an age of greater than or equal to 19 to under 25 years.
+    "Intermediate young adult onset": "HP:0025709",
+    # Onset of disease at an age of greater than or equal to 16 to under 19 years.
+    "Early young adult onset": "HP:0025708",
     # Onset of disease after 16 years  .
     "Adult onset":  "HP:0003581",
     #Onset of signs or symptoms of disease between the age of 5 and 15 years.

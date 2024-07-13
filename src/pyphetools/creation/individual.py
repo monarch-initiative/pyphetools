@@ -376,6 +376,8 @@ class Individual:
         if not os.path.isdir(outdir):
             os.makedirs(outdir)
         written = 0
+        if not isinstance(metadata, MetaData):
+            raise ValueError(f"metadata argument must be pyphetools MetaData object (not GA4GH metadata message), but was {type(metadata)}")
         pmid = metadata.get_pmid()
         for individual in individual_list:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)

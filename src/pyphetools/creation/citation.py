@@ -10,7 +10,11 @@ class Citation:
     :type title: str
     """
 
-    def __init__(self, pmid, title) -> None:
+    def __init__(self, pmid:str, title:str) -> None:
+        if pmid is None or isinstance(pmid, float) or not pmid.startswith("PMID"):
+            raise ValueError(f"Could not find PubMed identifier")
+        if title is None or isinstance(title, float) or len(title) < 5:
+            raise ValueError(f"Could not find valid title")
         self._pmid = pmid
         self._title = title
 

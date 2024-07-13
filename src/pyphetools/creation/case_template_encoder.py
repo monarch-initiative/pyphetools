@@ -375,8 +375,14 @@ class CaseTemplateEncoder:
             raise ValueError(f"Insufficient data items: \"{data_items}\"")
         # If we get here, we can contruct an individual
         individual_id = data_items.get('individual_id')
+        if individual_id is None or isinstance(individual_id, float) or len(individual_id) == 0:
+            raise ValueError(f"Empty individual_id field for {row}")
         pmid = data_items.get("PMID")
         title = data_items.get("title")
+        if pmid is None or isinstance(pmid, float) or not pmid.startswith("PMID"):
+            raise ValueError(f"Could not find PubMed identifier for {individual_id}")
+        if title is None or isinstance(title, float) or len(title) < 5:
+            raise ValueError(f"Could not find valid title for {individual_id}")
         citation = Citation(pmid=pmid, title=title)
         sex = data_items.get("sex")
         if sex == "M":

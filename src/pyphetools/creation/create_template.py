@@ -51,7 +51,7 @@ class TemplateCreator:
         hp_term_list = list()
         ## Arrange hp_terms so that all terms that belong to a given top level term go together
         PHENO_ROOT_TERM_ID = "HP:0000118"
-        top_level_term_ids = self._hpo_ontology.graph.get_children(PHENO_ROOT_TERM_ID, False)
+        top_level_term_ids = self._hpo_ontology.graph.get_children(PHENO_ROOT_TERM_ID, True)
         top_level_term_ids = list(top_level_term_ids)
         top_level_d = defaultdict(list)
         for hpt in self._all_added_hp_term_set:

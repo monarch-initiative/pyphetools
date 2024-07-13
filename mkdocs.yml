@@ -37,6 +37,7 @@ nav:
     - 'user-guide/python_notebook.md'
     - 'user-guide/tips_for_curation.md'
     - 'user-guide/variant_notation.md'
+    - 'user-guide/discombobulator.md'
   - Coding tabular data with Python scripts:
       - Overview: 'tabular/overview.md'
       - Jupyter notebooks: 'tabular/jupyter.md'

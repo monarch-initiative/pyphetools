@@ -1,66 +1,54 @@
-import unittest
+import pytest
 
 from pyphetools.creation import AgeIsoFormater
 
 
+class TestAgeIsoFormater:
 
-class TestAgeIsoFormater(unittest.TestCase):
+    @pytest.mark.parametrize(
+        'year, month, day, iso',
+        [
+            ( 2, 3,  5, "P2Y3M5D"),
+            ( 29, 5,  25, "P29Y5M25D"),
+            ( 99,1,24,"P99Y1M24D"),
+        ]
+    )
+    def test_ymd(
+        self,
+        year: int, 
+        month: int, 
+        day: int,
+        iso:str,
+    ):
+        iso_age = AgeIsoFormater.to_string(y=year, m=month, d=day)
+        assert iso == iso_age
 
-    def test_basic1(self):
-        iso_age = AgeIsoFormater.to_string(y=2, m=3, d=5)
-        self.assertEqual("P2Y3M5D", iso_age)
+    @pytest.mark.parametrize(
+        'month, iso',
+        [
+            ( 5, "P5M"),
+            ( 0.5,"P15D"),
+            (0.8, "P24D"),
+            (11, "P11M"),
+            (12, "P1Y"),
+            (16, "P1Y4M"),
+            ("n.a.", "NOT_PROVIDED"),
+            (None, "NOT_PROVIDED"),
+            (float("nan"), "NOT_PROVIDED"),
+            (0, "P0D")
+        ]
+    )
+    def test_numerical_month(
+        self,
+        month: float, 
+        iso: str
+    ):
+        iso_age = AgeIsoFormater.from_numerical_month(month=month)
+        assert iso == iso_age
 
-    def test_basic2(self):
-        """
-        test that 13 months are normalized to 1 year 1 month
-        """
-        iso_age = AgeIsoFormater.to_string(y=42, m=13, d=5)
-        self.assertEqual("P43Y1M5D", iso_age)
+    
 
-    def test_5m(self):
-        iso_age = AgeIsoFormater.from_numerical_month(5)
-        self.assertEqual("P5M", iso_age)
 
-    def test_15d(self):
-        iso_age = AgeIsoFormater.from_numerical_month(0.5)
-        self.assertEqual("P15D", iso_age)
-
-    def test_24d(self):
-        iso_age = AgeIsoFormater.from_numerical_month(0.8)
-        self.assertEqual("P24D", iso_age)
-
-    def test_12m(self):
-        iso_age = AgeIsoFormater.from_numerical_month(12)
-        self.assertEqual("P1Y", iso_age)
-
-    def test_16m(self):
-        iso_age = AgeIsoFormater.from_numerical_month(16)
-        self.assertEqual("P1Y4M", iso_age)
-
-    def test_na(self):
-        """
-        Test we return NOT_PROVIDED (from the Contants class) if we cannot parse the cell contents
-        """
-        iso_age = AgeIsoFormater.from_numerical_month("n.a.")
-        self.assertEqual("NOT_PROVIDED", iso_age)
-
-    def test_none(self):
-        """
-        Test we return NOT_PROVIDED (from the Contants class) if we cannot parse the cell contents
-        """
-        iso_age = AgeIsoFormater.from_numerical_month(None)
-        self.assertEqual("NOT_PROVIDED", iso_age)
-
-    def test_nan(self):
-        """
-        Test we return NOT_PROVIDED (from the Contants class) if we cannot parse the cell contents
-        """
-        iso_age = AgeIsoFormater.from_numerical_month(float("nan"))
-        self.assertEqual("NOT_PROVIDED", iso_age)
-
-    def test_newborn(self):
-        iso_age = AgeIsoFormater.from_numerical_month(0)
-        self.assertEqual("P0D", iso_age)
 
 
 

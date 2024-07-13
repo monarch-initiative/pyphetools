@@ -8,7 +8,7 @@ The following sections explain how to use Python code to create phenopackets fro
 We first import the TemplateImporter to import the data and create phenopackets, and several classes to visualize the data.
 
 ```python
-from pyphetools.creation import TemplateImporter
+from pyphetools.creation import TemplateImporter, Moi
 from pyphetools.visualization import IndividualTable, QcVisualizer
 from IPython.display import display, HTML
 import pyphetools
@@ -78,11 +78,11 @@ the mode of inheritance (MOI) and then indicate the MOI. If multiple distinct di
 Check results of variant encoding.
 ```python
 pmid = "PMID:36333996"
-timporter.create_hpoa_from_phenopackets(pmid=pmid, moi="Autosomal recessive")
+df = timporter.create_hpoa_from_phenopackets(pmid=pmid, mode_of_inheritance=Moi.AR)
 ```
 or
 
 ```python
 pmid = "PMID:36333996"
-timporter.create_hpoa_from_phenopackets(pmid=pmid, moi="Autosomal recessive", target="OMIM:620427")
+df = timporter.create_hpoa_from_phenopackets(pmid=pmid, mode_of_inheritance=Moi.AD, target="OMIM:620427")
 ```
