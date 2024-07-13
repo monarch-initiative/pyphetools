@@ -11,6 +11,7 @@ from ..creation.disease import Disease
 from ..creation.hp_term import HpTerm
 from ..creation.individual import Individual
 from ..creation.metadata import MetaData
+from ..creation.mode_of_inheritance import Moi
 from .counted_hpo_term import CountedHpoTerm, CohortTermCounter
 from .onset_calculator import OnsetCalculator
 
@@ -347,6 +348,13 @@ class HpoaTableBuilder:
                     break
         print(f"[INFO] Extracted {(len(target_list))} from {(len(ppkt_list))} phenopackets with {disease_id}\n")
         return target_list
+    
+    def add_moi(self, mode_of_inheritance:Moi, pmid:str):
+        """
+        Use this method to add mode of inheritance (MOI) data from a publication with the indicated pmid
+        """
+        self._moi_d[pmid].append(mode_of_inheritance)
+
 
     def autosomal_recessive(self, pmid):
         moi_term = HpTerm(hpo_id="HP:0000007", label="Autosomal recessive inheritance")

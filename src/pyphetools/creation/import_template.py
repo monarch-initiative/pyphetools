@@ -3,6 +3,7 @@ import pandas as pd
 from collections import defaultdict
 import typing
 import phenopackets as PPKt
+from .mode_of_inheritance import Moi
 
 
 class TemplateImporter:
@@ -245,15 +246,15 @@ class TemplateImporter:
 
     def create_hpoa_from_phenopackets(self,
                                     pmid:str,
-                                    moi:str, 
+                                    mode_of_inheritance:Moi, 
                                     ppkt_dir:str="phenopackets",
                                     target:str=None) -> pd.DataFrame:
         """Create an HPO annotation (HPOA) file from the current cohort
 
         :param pmid: PubMed id for the mode of inheritance
         :type pmid: str
-        :param moi: Mode of inheritance (Autosomal dominant, Autosomal recessive, etc)
-        :type moi: str
+        :param mode_of_inheritance: Mode of inheritance (enumeration)
+        :type mode_of_inheritance: Moi
         :param ppkt_dir: Directory with phenopackets Defaults to "phenopackets".
         :param target: Disease id (e.g., OMIM:600123) to select only phenopackets with this disease. Defaults to None.
         :type target: str
@@ -271,18 +272,7 @@ class TemplateImporter:
             ppkt_list = TemplateImporter.filter_diseases(target, ppkt_list)
         TemplateImporter.check_disease_entries(ppkt_list)
         builder = HpoaTableBuilder(phenopacket_list=ppkt_list, created_by=self._created_by)
-        if moi == "Autosomal dominant":
-            builder.autosomal_dominant(pmid)
-        elif moi == "Autosomal recessive":
-            builder.autosomal_recessive(pmid)
-        elif moi == "X-linked inheritance":
-            builder.x_linked(pmid)
-        elif moi == "X-linked recessive inheritance":
-            builder.x_linked_recessive(pmid)
-        elif moi == "X-linked dominant inheritance":
-            builder.x_linked_dominant(pmid)
-        else:
-            raise ValueError(f"Did not recognize mode of inheritance {moi}")
+        builder.add_moi(mode_of_inheritance=mode_of_inheritance, pmid=pmid)
         hpoa_creator = builder.build()
         hpoa_creator.write_data_frame()
         return hpoa_creator.get_dataframe()
