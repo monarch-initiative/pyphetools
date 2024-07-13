@@ -353,7 +353,7 @@ class HpoaTableBuilder:
         """
         Use this method to add mode of inheritance (MOI) data from a publication with the indicated pmid
         """
-        self._moi_d[pmid].append(mode_of_inheritance)
+        self._moi_d[pmid].append(mode_of_inheritance.to_HPO())
 
 
     def autosomal_recessive(self, pmid):
