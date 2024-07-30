@@ -3,9 +3,7 @@ from .column_mapper import ColumnMapper
 from .thresholder import Thresholder
 from typing import List
 import pandas as pd
-import pkg_resources
 from collections import defaultdict
-import math
 
 
 class ThresholdedColumnMapper(ColumnMapper):
