@@ -191,7 +191,7 @@ class VariantManager:
         if not allele_set.issubset(self._unmapped_alleles):
             for a in allele_set:
                 if not a in self._unmapped_alleles:
-                    print(f"Could not find allele {a}")
+                    print(f"Could not find allele \"{a}\"")
             raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
             raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
