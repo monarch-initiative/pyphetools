@@ -53,6 +53,10 @@ class PhenopacketIngestor:
             patient = SimplePatient(ga4gh_phenopacket=ppack)
             patient_d[patient.get_subject_id()] = patient
         return patient_d
+    
+    def get_simple_patient_list(self) -> typing.List[SimplePatient]:
+        sp_d = self.get_simple_patient_dictionary()
+        return list(sp_d.values())
 
 
     def get_phenopacket_dictionary(self) -> typing.Dict:
