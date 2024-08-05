@@ -31,10 +31,11 @@ theme:
 
 nav:
   - Home: 'index.md'
-  - Data Entry Template:
+  - User guide:
     - 'user-guide/template.md'
     - 'user-guide/excel.md'
     - 'user-guide/python_notebook.md'
+    - 'user-guide/summary.md'
     - 'user-guide/tips_for_curation.md'
     - 'user-guide/variant_notation.md'
     - 'user-guide/discombobulator.md'
