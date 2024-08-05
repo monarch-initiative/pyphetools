@@ -1,5 +1,8 @@
 from .simple_patient import SimplePatient
+from ..creation.hpo_parser import HpoParser
 import pandas as pd
+import phenopackets as PPKt
+import typing
 from .hpo_category import HpoCategorySet
 from hpotk.model import TermId
 from collections import defaultdict
@@ -16,27 +19,27 @@ class DetailedSupplTable:
     are shown as columns.
     """
 
-    def __init__(self, patient_d, hp_ontology) -> None:
+    def __init__(self, patient_list: typing.List[PPKt.Phenopacket], hp_json:str=None) -> None:
         """
         :param patient_d: dictionary of patients to display
         :type patient_d: map with key string and value SimplePatient
         """
-        if not isinstance(patient_d, dict):
-            raise ValueError(f"patient_d argument must be dictionary but was {type(patient_d)}")
-        my_simple_patient_d = defaultdict(SimplePatient)
-        for k, v in patient_d.items():
+        parser = HpoParser(hpo_json_file=hp_json)
+        hp_ontology = parser.get_ontology()
+        if not isinstance(patient_list, list):
+            raise ValueError(f"patient_list argument must be dictionary but was {type(patient_list)}")
+        self._simple_patient_list = list()
+        for v in patient_list:
             if str(type(v)) == "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":
-                my_simple_patient_d[k] = SimplePatient(ga4gh_phenopacket=v)
+                self._simple_patient_list.append(SimplePatient(ga4gh_phenopacket=v))
             else:
                 raise ValueError(f"patient_d values must be GA4GH Phenopackets but was {type(v)}")
-        self._patient_d = patient_d  # GA4GH phenopackets 
-        self._simple_patient_d = my_simple_patient_d # SimplePatients
         self._hp_ontology = hp_ontology
         self._total_counts = defaultdict(int)
         self._total_counts_propagated = defaultdict(int)
         sex_d = defaultdict(int)
         var_d = defaultdict(int)
-        for pat_id, pat in self._simple_patient_d.items():
+        for pat in self._simple_patient_list:
             sex_d[pat.get_sex()] += 1
             hpo_terms = pat.get_observed_hpo_d()
             anc_set = set() # graph with ancestors induced by all terms of the patient
@@ -99,7 +102,7 @@ class DetailedSupplTable:
     def _get_counts(hpo_term_id:str, counts_d:dict):
         M = len(counts_d)
         N = 0
-        for k, v in counts_d.items():
+        for _, v in counts_d.items():
             if v.contains_observed_term_id(hpo_term_id):
                 N += 1
         return N, M
@@ -122,7 +125,7 @@ class DetailedSupplTable:
         by_pmid_d = defaultdict(list)
         all_observed_hpo = defaultdict(int) # HPO ids observed in our cohort
         hpo_id_to_display_d = defaultdict()
-        for pat in self._simple_patient_d.values():
+        for pat in self._simple_patient_list:
             observed_hpo_d = pat.get_observed_hpo_d()
             for hpo_term in observed_hpo_d.values():
                 hpo_term_id = hpo_term.id

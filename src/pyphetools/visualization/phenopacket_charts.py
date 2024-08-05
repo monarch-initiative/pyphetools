@@ -7,10 +7,13 @@ import numpy as np
 
 
 class PhenopacketCharts:
+    """
+    Convenience class that displays a few simple matplotlib bar charts to display a summary of a cohort of phenopackets.
+    """
 
     def __init__(self, indir) -> None:
         ingestor = PhenopacketIngestor(indir=indir)
-        simple_patient_list = list(ingestor.get_simple_patient_dictionary().values())
+        simple_patient_list = list(ingestor.get_simple_patient_list())
         self._disease_d = defaultdict(int)
         self._pmid_d = defaultdict(int)
         self._hpo_count_d = defaultdict(int) # total count
@@ -89,6 +92,9 @@ class PhenopacketCharts:
         return ax
 
     def most_common_hpo_terms(self, max_terms_to_show=10):
+        """
+        Display counts of explicitly annotated HPO terms, showing only the most commonly used ones.
+        """
         sorted_terms = sorted(self._term_count_d.items(), key=lambda x:x[1], reverse=True)
         if len(sorted_terms) > max_terms_to_show:
             sorted_terms = sorted_terms[:max_terms_to_show]
