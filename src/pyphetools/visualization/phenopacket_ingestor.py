@@ -3,7 +3,7 @@ from collections import defaultdict
 import json
 from google.protobuf.json_format import Parse
 from .simple_patient import SimplePatient
-from typing import Dict
+import typing
 import phenopackets as PPKt
 
 class PhenopacketIngestor:
@@ -47,16 +47,25 @@ class PhenopacketIngestor:
         return False
 
 
-    def get_simple_patient_dictionary(self) -> Dict:
+    def get_simple_patient_dictionary(self) -> typing.Dict:
         patient_d = defaultdict(SimplePatient)
         for ppack in self._phenopackets:
             patient = SimplePatient(ga4gh_phenopacket=ppack)
             patient_d[patient.get_subject_id()] = patient
         return patient_d
+    
+    def get_simple_patient_list(self) -> typing.List[SimplePatient]:
+        sp_d = self.get_simple_patient_dictionary()
+        return list(sp_d.values())
 
 
-    def get_phenopacket_dictionary(self) -> Dict:
+    def get_phenopacket_dictionary(self) -> typing.Dict:
         patient_d = defaultdict(SimplePatient)
         for ppack in self._phenopackets:
             patient_d[ppack.id] = ppack
         return patient_d
+    
+    def get_phenopacket_list(self) -> typing.List:
+        ppktd = self.get_phenopacket_dictionary()
+        return list(ppktd.values())
+
