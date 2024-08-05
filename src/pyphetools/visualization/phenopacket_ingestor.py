@@ -18,7 +18,7 @@ class PhenopacketIngestor:
     :type disease_id: str
     """
 
-    def __init__(self, indir, recursive:bool=False, disease_id:str=None) -> None:
+    def __init__(self, indir="phenopackets", recursive:bool=False, disease_id:str=None) -> None:
         if not os.path.isdir(indir):
             raise ValueError(f"indir argument {indir} must be directory!")
         self._indir = indir
