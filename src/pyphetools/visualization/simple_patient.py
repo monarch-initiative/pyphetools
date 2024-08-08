@@ -6,6 +6,7 @@ from collections import defaultdict
 from ..creation.constants import Constants
 from ..creation.hp_term import HpTerm
 from .simple_variant import SimpleVariant
+from ..pp.v202 import VitalStatus
 
 class SimplePatient:
     """
@@ -53,6 +54,23 @@ class SimplePatient:
             self._sex = "OTHER"
         else:
             self._sex = "UNKNOWN"
+        ## get vital status if possible
+        self._vstat = None
+        self._age_last_encounter = None
+        self._survival_time_in_days = None
+        self._cause_of_death = None
+        if ppack.HasField("vital_status"):
+            vstat = ppack.vital_status
+            if vstat.status == VitalStatus.Status.DECEASED:
+                self._vstat = "DECEASED"
+            elif vstat.status == VitalStatus.Status.ALIVE:
+                self._vstat = "ALIVE"
+            else:
+                pass # keep self._vstat as None
+            if vstat.survival_time_in_days is not None:
+                self._survival_time_in_days = vstat.survival_time_in_days
+            self._cause_of_death = vstat.cause_of_death
+       
         for pf in ppack.phenotypic_features:
             hpterm = HpTerm(hpo_id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
             if pf.excluded:

@@ -69,7 +69,6 @@ class Individual:
             self._interpretation_list = interpretation_list
         self._disease = disease
         self._citation = citation
-        self._vital_status = None
 
     @property
     def id(self):
@@ -204,6 +203,9 @@ class Individual:
         if not isinstance(vstatus, VitalStatus):
             raise ValueError(f"vstatus argument must be pyphetools.pp.v202.VitalStatus but was{type(vstatus)}")
         self._vital_status = vstatus
+
+    def get_vital_status(self) -> VitalStatus:
+        return self._vital_status
 
     def get_phenopacket_id(self, phenopacket_id=None) -> str:
         """
