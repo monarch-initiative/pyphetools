@@ -1,10 +1,17 @@
 import math
 import abc
 import re
+import typing
+
 DAYS_IN_WEEK = 7
 AVERAGE_DAYS_IN_MONTH = 30.437
 AVERAGE_DAYS_IN_YEAR = 365.25
 import phenopackets as PPKt
+
+from ..pp.v202 import GestationalAge as GestationalAge202
+from ..pp.v202 import OntologyClass as OntologyClass202
+from ..pp.v202 import TimeElement as TimeElement202
+from ..pp.v202 import Age as Age202
 
 from .constants import Constants
 
@@ -93,6 +100,35 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         else:
             return Constants.NOT_PROVIDED
 
+
+
+    @staticmethod
+    def get_age_pp201(age_string:str) -> typing.Optional[TimeElement202]:
+        """
+        Encode the age string as a TimeElement if possible
+        """
+        if age_string is None or len(age_string) == 0:
+            return None
+        if isinstance(age_string, float) and math.isnan(age_string):
+            return None # sometimes pandas returns an empty cell as a float NaN
+        if age_string.startswith("P"):
+            return TimeElement202(Age202(age_string))
+        elif age_string in HPO_ONSET_TERMS:
+            hpo_id = HPO_ONSET_TERMS.get(age_string)
+            onsetClz = OntologyClass202(id=hpo_id, label=age_string)
+            return TimeElement202(onsetClz)
+        elif GestationalAge.is_gestational_age(age_string):
+            ga = GestationalAge(age_string)
+            ga202 = GestationalAge202(weeks=ga.weeks, days=ga.days)
+            return TimeElement202(ga202)
+        else:
+            # only warn if the user did not enter na=not available
+            if age_string != 'na':
+                raise ValueError(f"Could not parse \"{age_string}\" as age.")
+            return NoneAge
+
+
+
     @staticmethod
     def get_age(age_string) -> "PyPheToolsAge":
         """Return an appropriate subclass of PyPheToolsAge or None
@@ -120,6 +156,20 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
             if age_string != 'na':
                 raise ValueError(f"Could not parse \"{age_string}\" as age.")
             return NoneAge(age_string=age_string)
+    
+    @staticmethod
+    def age_key_to_ga4gh(age_string) :
+        """
+        Transform an age key such as either an iso8601 string (e.g. P41Y) or an HPO Onset label (e.g., Congenital onset) into a TimeElement
+        The age keys are used in the Excel template files. Currently, only iso8601 and HPO Onset are supported.
+        """
+        if not isinstance(age_string, str):
+            raise ValueError(f"age_string argument {age_string} must be a string but was {type(age_string)}")
+        
+        age_obj = PyPheToolsAge.get_age(age_string=age_string)
+        if not age_obj.is_valid():
+            raise ValueError(f"Could not parse age key \"{age_string}\"")
+        return age_obj.to_ga4gh_time_element()
 
 
 
@@ -323,6 +373,15 @@ class GestationalAge(PyPheToolsAge):
         else:
             raise ValueError(f"Could not extract gestation age from \"{age_string}\".")
 
+
+    @property
+    def weeks(self):
+        return self._weeks
+
+    @property
+    def days(self):
+        return self._days
+
     def is_valid(self):
         return True
 
@@ -365,3 +424,7 @@ class GestationalAge(PyPheToolsAge):
             return True
         else:
             return False
+        
+
+    
+

@@ -1,11 +1,10 @@
 import hpotk
 from collections import Counter
-from typing import List, Optional, Set
+from typing import List, Optional
 from ..creation.hp_term import HpTerm
 from .validation_result import ValidationResult, ValidationResultBuilder
 from collections import defaultdict
 from ..creation.individual import Individual
-from ..creation.constants import Constants
 
 
 
@@ -18,7 +17,11 @@ class OntologyQC:
 
     """
 
-    def __init__(self, ontology:hpotk.MinimalOntology, individual:Individual, fix_conflicts=True, fix_redundancies=True):
+    def __init__(self,
+                 ontology:hpotk.MinimalOntology,
+                 individual:Individual,
+                 fix_conflicts=True,
+                 fix_redundancies=True):
         self._ontology = ontology
         self._individual = individual
         self._phenopacket_id = individual.get_phenopacket_id()
@@ -28,7 +31,9 @@ class OntologyQC:
         self._clean_hpo_terms = self._clean_terms()
 
 
-    def _fix_conflicts(self, observed_hpo_terms:List[HpTerm], excluded_hpo_terms) -> List[HpTerm]:
+    def _fix_conflicts(self,
+                       observed_hpo_terms:List[HpTerm],
+                       excluded_hpo_terms) -> List[HpTerm]:
         """
         This class detects excluded superclasses that have observed subclasses -- a conflict.
 
@@ -72,7 +77,8 @@ class OntologyQC:
 
 
 
-    def _fix_redundancies(self, hpo_terms:List[HpTerm]) -> List[HpTerm]:
+    def _fix_redundancies(self,
+                          hpo_terms:List[HpTerm]) -> List[HpTerm]:
         """
         Remove redundant terms from a list of HPO terms.
 
@@ -108,7 +114,8 @@ class OntologyQC:
         return non_redundant_terms
 
 
-    def _check_term_ids_and_labels(self, hpo_terms:List[HpTerm]) -> None:
+    def _check_term_ids_and_labels(self,
+                                   hpo_terms:List[HpTerm]) -> None:
         """
         Check whether the term identifiers (e.g., HP:0001234) are present in the ontology as primary ids and whether
         the label matches the current priumary label; if not, flag the errors in self._errors
@@ -140,8 +147,8 @@ class OntologyQC:
             if not term.measured:
                 self._errors.append(ValidationResultBuilder(self._phenopacket_id).not_measured(term=term).build())
             else:
-                if term.onset.is_valid():
-                    by_age_dictionary[term.onset.age_string].append(term)
+                if term.onset is not None:
+                    by_age_dictionary[term.onset].append(term)
                 else:
                     if term.observed:
                         observed_terms_without_onset.append(term)

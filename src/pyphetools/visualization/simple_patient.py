@@ -1,10 +1,14 @@
 import os
 import phenopackets
 from google.protobuf.json_format import Parse
+import typing
 import json
+import typing
 from collections import defaultdict
 from ..creation.constants import Constants
 from ..creation.hp_term import HpTerm
+from ..creation.individual import Individual
+from ..creation.pyphetools_age import IsoAge, NoneAge
 from .simple_variant import SimpleVariant
 from ..pp.v202 import VitalStatus
 
@@ -25,8 +29,8 @@ class SimplePatient:
             raise ValueError(f"phenopacket argument must be GA4GH Phenopacket Schema Phenopacket but was {type(ga4gh_phenopacket)}")
         else:
             ppack = ga4gh_phenopacket
-        observed_hpo_terms = defaultdict(HpTerm)
-        excluded_hpo_terms = defaultdict(HpTerm)
+        self._observed_hpo_terms = defaultdict(HpTerm)
+        self._excluded_hpo_terms = defaultdict(HpTerm)
         self._by_age_dictionary = defaultdict(list)
         self._phenopacket_id = ppack.id
         if not ppack.HasField("subject"):
@@ -56,11 +60,10 @@ class SimplePatient:
             self._sex = "UNKNOWN"
         ## get vital status if possible
         self._vstat = None
-        self._age_last_encounter = None
         self._survival_time_in_days = None
         self._cause_of_death = None
-        if ppack.HasField("vital_status"):
-            vstat = ppack.vital_status
+        if ppack.subject.HasField("vital_status"):
+            vstat = ppack.subject.vital_status
             if vstat.status == VitalStatus.Status.DECEASED:
                 self._vstat = "DECEASED"
             elif vstat.status == VitalStatus.Status.ALIVE:
@@ -74,19 +77,17 @@ class SimplePatient:
         for pf in ppack.phenotypic_features:
             hpterm = HpTerm(hpo_id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
             if pf.excluded:
-                excluded_hpo_terms[pf.type.id] = hpterm
+                self._excluded_hpo_terms[pf.type.id] = hpterm
             else:
-                observed_hpo_terms[pf.type.id] = hpterm
+                self._observed_hpo_terms[pf.type.id] = hpterm
             if pf.onset is not None and pf.onset.age is not None and pf.onset.age.iso8601duration:
                 term_onset = pf.onset.age.iso8601duration
             else:
                 term_onset = Constants.NOT_PROVIDED
             self._by_age_dictionary[term_onset].append(hpterm)
-        for k, v in observed_hpo_terms.items():
-            if k in excluded_hpo_terms:
-                excluded_hpo_terms.pop(k) # remove observed terms that may have been excluded at other occasion
-        self._observed = observed_hpo_terms
-        self._excluded = excluded_hpo_terms
+        for k, v in self._observed_hpo_terms.items():
+            if k in self._excluded_hpo_terms:
+                self._excluded_hpo_terms.pop(k) # remove observed terms that may have been excluded at other occasion
         # Add information about variants
         self._variant_list = []
         self._disease = None
@@ -113,7 +114,7 @@ class SimplePatient:
             self._pmid = eref.id
 
     @staticmethod
-    def from_file(phenopacket_file):
+    def from_file(phenopacket_file: str) -> "SimplePatient":
         """
         Return a SimplePatient object that corresponds to a phenopacket (JSON) file
         :param phenopacket_file: A phenopacket file (JSON format)
@@ -129,7 +130,7 @@ class SimplePatient:
 
 
     @staticmethod
-    def from_individual(individual, metadata):
+    def from_individual(individual: Individual, metadata):
         """
         Return a SimplePatient object that corresponds to a pyphetools Individual object
         :param individual: Am Individual object
@@ -150,8 +151,30 @@ class SimplePatient:
     def get_sex(self):
         return self._sex
 
-    def get_age(self)-> str:
-        return self._time_at_last_encounter or "n/a"
+    def get_age(self)-> typing.Optional[str]:
+        return self._time_at_last_encounter
+    
+    @staticmethod
+    def age_in_years(iso_age:str) -> typing.Optional[float]:
+        if iso_age is None:
+            return None
+        if isinstance(iso_age, NoneAge):
+            return None
+        if len(iso_age) == 0:
+            return None
+        if not iso_age.startswith("P"):
+            print(f"ERROR-isoage malformed: {iso_age}")
+            return None
+        ppt_age = IsoAge.from_iso8601(iso_age=iso_age)
+        years = ppt_age.years + (1/12) * ppt_age.months + (1/365) * ppt_age.days
+        return years
+        
+    
+    def get_age_in_years(self) -> typing.Optional[float]:
+        if self._time_at_last_encounter is None or not self._time_at_last_encounter:
+            return None
+        return SimplePatient.age_in_years(iso_age=self._time_at_last_encounter)
+       
 
     def get_disease(self) -> str:
         return self._disease or "n/a"
@@ -160,20 +183,20 @@ class SimplePatient:
         """
         returns map of observed phenotypic features with key (string) HP id, value, HpTerm from creation submodule
         """
-        return self._observed
+        return self._observed_hpo_terms
 
     def get_excluded_hpo_d(self):
         """
         :return: map of excluded phenotypic features with key (string) HP id, value, HpTerm from creation submodule
         """
-        return self._excluded
+        return self._excluded_hpo_terms
 
     def get_total_hpo_count(self):
         """
         :return: total count of HPO terms (observed and excluded)
         :rtype: int
         """
-        return len(self._observed) + len(self._excluded)
+        return len(self._observed_hpo_terms) + len(self._excluded_hpo_terms)
 
     def get_variant_list(self):
         return self._variant_list
@@ -184,9 +207,21 @@ class SimplePatient:
     def get_pmid(self):
         return self._pmid
 
-    def contains_observed_term_id(self, hpo_term_id):
-        return hpo_term_id in self._observed
+    def contains_observed_term_id(self, hpo_term_id) -> bool:
+        return hpo_term_id in self._observed_hpo_terms
 
+    def contains_excluded_term_id(self, hpo_term_id) -> bool:
+        return hpo_term_id in self._excluded_hpo_terms
+    
+    def get_observed_term_by_id(self, hpo_term_id) -> typing.Optional[HpTerm]:
+        return self._observed_hpo_terms.get(hpo_term_id)
+    
+    def get_excluded_term_by_id(self, hpo_term_id)-> typing.Optional[HpTerm]:
+        return self._excluded_hpo_terms.get(hpo_term_id)
+    
+    
     def get_term_by_age_dict(self):
         return self._by_age_dictionary
+    
+
 

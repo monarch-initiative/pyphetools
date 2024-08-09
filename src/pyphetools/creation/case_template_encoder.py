@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, List
+import typing
 from pyphetools.creation.citation import Citation
 from pyphetools.creation.constants import Constants
 from pyphetools.creation.disease import Disease
@@ -8,6 +8,7 @@ from pyphetools.creation.metadata import MetaData
 from pyphetools.creation.hp_term import HpTerm
 from pyphetools.creation.individual import Individual
 from pyphetools.creation.pyphetools_age import NoneAge, PyPheToolsAge
+from ..pp.v202 import TimeElement as TimeElement202
 import os
 import re
 import pandas as pd
@@ -54,10 +55,10 @@ class DataEncoder(CellEncoder):
     def __init__(self, h1:str, h2:str):
         super().__init__(name=h1)
 
-    def encode(self, cell_contents):
+    def encode(self, cell_contents) -> str:
         return str(cell_contents)
 
-    def columntype(self):
+    def columntype(self) -> "CellType":
         return CellType.DATA
 
 class HpoEncoder(CellEncoder):
@@ -112,7 +113,7 @@ class HpoEncoder(CellEncoder):
     def get_error(self) -> str:
         return self._error
 
-    def encode(self, cell_contents) -> None:
+    def encode(self, cell_contents) -> typing.Optional[HpTerm]:
         """
         Parses one cell from the template. Valid entries are observed, excluded, na, and ISO8601 age strings.
         Any other entry will lead to raising an Exception, probably the user entered something erroneous.
@@ -126,9 +127,11 @@ class HpoEncoder(CellEncoder):
             return None
         elif len(cell_contents) > 0:
             try:
-                onset = PyPheToolsAge.get_age(cell_contents)
-                if onset.is_valid(): # valid OSO8601 age of onset
+                onset = PyPheToolsAge.get_age_pp201(cell_contents)
+                if onset is not None: # valid age of onset
                     return HpTerm(hpo_id=self._hpo_id, label=self._hpo_label, onset=onset)
+                else:
+                    raise ValueError(f"Could not code age of onset {cell_contents}")
             except Exception as parse_error:
                 raise ValueError(f"Could not parse HPO column cell_contents: \”{str(parse_error)}\"")
             # if we cannot parse successfully, there is probably an error in the format. Drop down to end of function to warn user
@@ -142,7 +145,7 @@ class MiscEncoder(CellEncoder):
         super().__init__(name="Miscellaneous HPO column")
         self._hpo_cr = hpo_cr
 
-    def encode(self, cell_contents):
+    def encode(self, cell_contents) -> typing.List[HpTerm]:
         if isinstance(cell_contents, float):
             return []
         cell_contents = str(cell_contents)
@@ -170,10 +173,10 @@ class NullEncoder(CellEncoder):
     def __init__(self, h1=None, h2=None):
         super().__init__(name="Begin of HPO column")
 
-    def encode(self, cell_contents):
+    def encode(self, cell_contents) -> None:
         return None
 
-    def columntype(self):
+    def columntype(self) -> "CellType":
         return CellType.NULL
 
 EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "disease_label",
@@ -263,7 +266,10 @@ class CaseTemplateEncoder:
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
 
-    def  _process_header(self, header_1:List, header_2:List, hpo_cr:HpoConceptRecognizer) -> Dict[int, CellEncoder]:
+    def  _process_header(self, 
+                         header_1:typing.List[str], 
+                         header_2:typing.List[str], 
+                         hpo_cr:HpoConceptRecognizer) -> typing.Dict[int, CellEncoder]:
         index_to_decoder_d = {}
         in_hpo_range = False
         for i in range(self._n_columns):
@@ -307,7 +313,8 @@ class CaseTemplateEncoder:
                 print(f"ERROR: {e}")
         return index_to_decoder_d
 
-    def _check_for_duplicate_individual_ids(self, df:pd.DataFrame) -> None:
+    def _check_for_duplicate_individual_ids(self, 
+                                            df:pd.DataFrame) -> None:
         """Check that no two individuals in the dataframe have the same identifier
         Duplicate identifiers can lead to other errors in the code
         An identifier is made from the combination of PMID and individual_id and must be unique
@@ -332,9 +339,13 @@ class CaseTemplateEncoder:
             raise ValueError(err_str)
         # else, all is OK, no duplicate ids
 
-    def _parse_individual(self, row:pd.Series):
+    def _parse_individual(self, 
+                          row:pd.Series) -> Individual:
+        """
+        Parse one row of the Data ingest (Excel) template, corresponding to one individual
+        """
         if not isinstance(row, pd.Series):
-            raise ValueError(f"argument df must be pandas DSeriestaFrame but was {type(row)}")
+            raise ValueError(f"argument df must be pandas Series but was {type(row)}")
         data = row.values.tolist()
         if len(data) != self._n_columns:
             # Should never happen
@@ -345,9 +356,9 @@ class CaseTemplateEncoder:
             encoder = self._index_to_decoder.get(i)
             cell_contents = data[i]
             if encoder is None:
-                print(f"Encoder {i} was None for data \"{cell_contents}\"")
+                print(f"Encoder for column {i} was None for data \"{cell_contents}\"")
                 self._debug_row(i, row)
-                raise ValueError(f"Encoder {i} was None for data \"{cell_contents}\"")
+                raise ValueError(f"Encoder for column {i} was None for data \"{cell_contents}\"")
             elif encoder.columntype == CellType.NTR:
                 continue ## cannot be use yet because new term request.
             encoder_type = encoder.columntype()
@@ -438,22 +449,22 @@ class CaseTemplateEncoder:
             else:
                 print(f"[{j}] {hdr}={row_items[j]}")
 
-    def get_individuals(self) -> List[Individual]:
+    def get_individuals(self) -> typing.List[Individual]:
         return self._individuals
 
-    def get_allele1_d(self)-> Dict[str,str]:
+    def get_allele1_d(self)-> typing.Dict[str,str]:
         return self._allele1_d
 
-    def get_allele2_d(self)-> Dict[str,str]:
+    def get_allele2_d(self)-> typing.Dict[str,str]:
         return self._allele2_d
 
     def _is_biallelic(self) -> bool:
         return self._is_biallelic
 
-    def get_metadata_d(self) -> Dict[str,MetaData]:
+    def get_metadata_d(self) -> typing.Dict[str,MetaData]:
         return self._metadata_d
 
-    def get_phenopackets(self) -> List[PPKt.Phenopacket]:
+    def get_phenopackets(self) -> typing.List[PPKt.Phenopacket]:
         ppack_list = []
         for individual in self._individuals:
             cite = individual._citation
@@ -465,7 +476,8 @@ class CaseTemplateEncoder:
 
 
 
-    def _transform_individuals_to_phenopackets(self, individual_list:List[Individual]):
+    def _transform_individuals_to_phenopackets(self, 
+                                               individual_list:typing.List[Individual]):
         """Create one phenopacket for each of the individuals
 
         :param individual_list: List of individual objects
@@ -486,7 +498,9 @@ class CaseTemplateEncoder:
             ppkt_list.append(phenopckt)
         return ppkt_list
 
-    def output_individuals_as_phenopackets(self, individual_list:List[Individual], outdir="phenopackets") -> None:
+    def output_individuals_as_phenopackets(self, 
+                                           individual_list:typing.List[Individual], 
+                                           outdir:str="phenopackets") -> None:
         """write a list of Individual objects to file in GA4GH Phenopacket format
         Note that the individual_list needs to be passed to this object, because we expect that
         the QC code will have been used to cleanse the data of redundancies etc before output.
@@ -526,7 +540,8 @@ class CaseTemplateEncoder:
         print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
 
 
-    def print_individuals_as_phenopackets(self, individual_list:List[Individual]) -> None:
+    def print_individuals_as_phenopackets(self, 
+                                          individual_list:typing.List[Individual]) -> None:
         """Function designed to show all phenopackets in a notebook for Q/C
         :param individual_list: List of individual objects
         :type individual_list:List[Individual]

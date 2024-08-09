@@ -2,6 +2,7 @@ from .detailed_suppl_table import DetailedSupplTable
 from .focus_count_table import FocusCountTable
 from .hpoa_table_creator import HpoaTableCreator, HpoaTableBuilder
 from .individual_table import IndividualTable
+from .kaplan_meier_visualizer import KaplanMeierVisualizer
 from .phenopacket_charts import PhenopacketCharts
 from .phenopacket_ingestor import PhenopacketIngestor
 from .phenopacket_table import PhenopacketTable

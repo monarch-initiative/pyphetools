@@ -10,7 +10,7 @@ from .hp_term import HpTerm
 from .hgvs_variant import Variant
 from .metadata import MetaData, Resource
 from .pyphetools_age import PyPheToolsAge, NoneAge, IsoAge
-from ..pp.v202 import VitalStatus
+from ..pp.v202 import OntologyClass, TimeElement, VitalStatus
 
 class Individual:
     """
@@ -35,8 +35,8 @@ class Individual:
                 hpo_terms:List[HpTerm]=None,
                 citation:Citation=None,
                 sex:str=Constants.NOT_PROVIDED,
-                age_of_onset:str=NoneAge("na"),
-                age_at_last_encounter:str=NoneAge("na"),
+                age_of_onset:PyPheToolsAge=NoneAge("na"),
+                age_at_last_encounter:PyPheToolsAge=NoneAge("na"),
                 vital_status:VitalStatus=None,
                 interpretation_list:List[PPKt.VariantInterpretation]=None,
                 disease:Disease=None):
@@ -90,36 +90,21 @@ class Individual:
         self._sex = sex
 
     @property
-    def age_of_onset(self):
+    def age_of_onset(self) -> PyPheToolsAge:
         """
-        :returns: an iso8601 representation of age or HPO term label
-        :rtype: str
+        :returns: a representation of age when the disease first manifested
+        :rtype: PyPheToolsAge
         """
         return self._age_of_onset
 
     @property
-    def age_at_last_encounter(self):
+    def age_at_last_encounter(self) -> PyPheToolsAge:
         """
-        :returns: an iso8601 representation of age or HPO term label
-        :rtype: str
+        :returns: a representation of age when the individual was last seen in a medical context
+        :rtype: PyPheToolsAge
         """
         return self._age_at_last_encounter
 
-    def set_age_of_onset(self, age):
-        """
-        :param age: iso8601 string or HPO onset label
-        :type age: str
-        """
-        if not isinstance(age, str):
-            raise ValueError(f"age argument must be a string but was {type(age)}")
-        self._age_of_onset = PyPheToolsAge.get_age(age)
-
-    def set_age_at_last_encounter(self, age):
-        """
-        :param age: iso8601 string or HPO onset label
-        :type age: str
-        """
-        self._age_at_last_encounter = age
 
     @property
     def hpo_terms(self):
@@ -303,7 +288,10 @@ class Individual:
         elif self._sex == Constants.UNKNOWN_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
         if self._vital_status is not None:
+            print("DATA TYPE OF SELV VS", type(self._vital_status))
+            print("DATA TYPE OF php.subject.vital_status", type(php.subject.vital_status))
             vs = self._vital_status.to_message()
+            print("DATA TYPE OF vs", type(vs), " for ", php.id)
             php.subject.vital_status.CopyFrom(vs)
         disease_object = self._get_disease_object()
         php.diseases.append(disease_object)
@@ -354,6 +342,13 @@ class Individual:
             metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php
+    
+
+
+ 
+
+
+
 
     def __str__(self):
         hpo_list = [t.to_string() for t in self._hpo_terms]
