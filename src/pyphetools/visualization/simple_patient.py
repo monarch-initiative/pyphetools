@@ -13,6 +13,7 @@ from .simple_variant import SimpleVariant
 from ..pp.v202 import TimeElement as TimeElement202
 from ..pp.v202 import VitalStatus as VitalStatus202
 
+
 class SimplePatient:
     """
     This class flattens all observed terms into a set and also recorded variants, sex, identifier, and age
@@ -24,6 +25,10 @@ class SimplePatient:
     :param ga4gh_phenopacket: A Phenopacket object representing one individual
     :type ga4gh_phenopacket: phenopackets.schema.v2.phenopackets_pb2.Phenopacket
     """
+
+    CONST_DECEASED = "deceased"
+    CONST_ALIVE = "alive"
+    CONST_UNKNOWN_VITAL_STATUS = "unknown vital status"
 
     def __init__(self, ga4gh_phenopacket) -> None:
         if str(type(ga4gh_phenopacket)) != "<class 'phenopackets.schema.v2.phenopackets_pb2.Phenopacket'>":
@@ -56,14 +61,15 @@ class SimplePatient:
         ## get vital status if possible
         self._survival_time_in_days = None
         self._cause_of_death = None
+        self._vstat = None
         if ppack.subject.HasField("vital_status"):
             vstat = VitalStatus202.from_message(ppack.subject.vital_status)
             if vstat.status == VitalStatus202.Status.DECEASED:
-                self._vstat = "DECEASED"
+                self._vstat = SimplePatient.CONST_DECEASED
             elif vstat.status == VitalStatus202.Status.ALIVE:
-                self._vstat = "ALIVE"
+                self._vstat = SimplePatient.CONST_ALIVE
             else:
-                self._vstat = None
+                self._vstat = SimplePatient.CONST_UNKNOWN_VITAL_STATUS
             if vstat.survival_time_in_days is not None:
                 self._survival_time_in_days = vstat.survival_time_in_days
             self._cause_of_death = vstat.cause_of_death
@@ -208,5 +214,10 @@ class SimplePatient:
     def get_term_by_age_dict(self):
         return self._by_age_dictionary
     
+    def is_deceased(self) -> bool:
+        return self._vstat == SimplePatient.CONST_DECEASED
+    
+    def is_alive(self) -> bool:
+        return self._vstat == SimplePatient.CONST_ALIVE
 
 

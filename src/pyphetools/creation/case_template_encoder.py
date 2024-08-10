@@ -421,8 +421,10 @@ class CaseTemplateEncoder:
             decsd = data_items.get("deceased")
             if decsd == "yes" and encounter_age is not None:
                 vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=encounter_age)
+            elif decsd == "no":
+                vitStat = VitalStatus(status=VitalStatus.Status.ALIVE)
             else:
-                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED)
+                vitStat = VitalStatus(status=VitalStatus.Status.UNKNOWN_STATUS)
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         # common error -- e.g. PMID: 3000312 or OMIM: 600123 (whitespace after colon)
