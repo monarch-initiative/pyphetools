@@ -2,6 +2,7 @@ import hpotk
 import pytest
 
 from pyphetools.creation import Citation, Disease,Individual, HpTerm
+from pyphetools.pp.v202 import VitalStatus, TimeElement, Age, OntologyClass
 
 
 
@@ -34,6 +35,25 @@ class TestIndividual:
         i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
         i.set_disease(disease=Disease(disease_id="OMIM:123456", disease_label="label"))
         return i
+    
+    @pytest.fixture
+    def ind_d(self) -> Individual:
+        cite = Citation(pmid="PMID:36446582", title="some title")
+        time_at_last_encounter=TimeElement(
+            element=Age(
+                iso8601duration='P6M',
+            )
+        )
+        vital_status=VitalStatus(
+            status=VitalStatus.Status.DECEASED,
+            time_of_death=TimeElement(element=Age(iso8601duration='P1Y')),
+            cause_of_death=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+            survival_time_in_days=180,
+        )
+        i = Individual(individual_id="Low, 2016_P17 (10)", age_at_last_encounter=time_at_last_encounter, vital_status=vital_status, citation=cite)
+        i.add_hpo_term(HpTerm(hpo_id="HP:0000490", label="Deeply set eye"))
+        i.set_disease(disease=Disease(disease_id="OMIM:123456", disease_label="label"))
+        return i
 
 
     
@@ -56,3 +76,20 @@ class TestIndividual:
         phenopacket_id = ind_c.get_phenopacket_id()
         expected = "PMID_36446582_Low_2016_P17_10"
         assert expected == phenopacket_id
+
+    def test_phenopacket_vital_status(self, ind_d: Individual):
+        vstat = ind_d.get_vital_status()
+        assert vstat is not None
+        assert vstat.status == VitalStatus.Status.DECEASED
+        assert 180 == vstat.survival_time_in_days
+        #  cause_of_death=OntologyClass(id='NCIT:C7541', label='Retinoblastoma'),
+        assert "NCIT:C7541" == vstat.cause_of_death.id
+        assert "Retinoblastoma" == vstat.cause_of_death.label
+
+    def test_phenopacket_last_encounter(self, ind_d: Individual):
+        last_encounter = ind_d.age_at_last_encounter
+        assert last_encounter is not None 
+        assert last_encounter.age is not None
+        assert last_encounter.age_range is None 
+        age = last_encounter.age
+        assert age.iso8601duration == "P6M"

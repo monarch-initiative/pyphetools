@@ -126,6 +126,8 @@ class TemplateImporter:
                                         hemizygous:bool=False,
                                         leniant_MOI:bool=False):
         """Import the data from an Excel template and create a collection of Phenopackets
+        This method writes the individuals as Phenopackets to file and also returns Individuals and the CValidator.
+        ToDo -- refactor to avoid side effects.
 
         Note that things will be completely automatic if the template just has HGNC encoding variants
         If there are structural variants, we need to encode them by hand by passing them as

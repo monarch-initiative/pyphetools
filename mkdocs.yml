@@ -52,6 +52,9 @@ nav:
       - Cohort encoder: 'tabular/cohort_encoder.md'
       - Validation: 'tabular/validation.md'
       - Visualization: 'tabular/visualization.md'
+  - Visualization:
+    - Overview: 'visualization/index.md'
+    - Kaplan Meier: 'visualization/kaplan_meier_visualizer.md'
   - Developers:
     - For developers: 'developers/developers.md'
     - Installation: 'developers/installation.md'
@@ -75,7 +78,6 @@ nav:
       - HpoParser: "api/creation/hpo_parser.md"
       - HpTerm: "api/creation/hp_term.md"
       - Individual: "api/creation/individual.md"
-      - IsoAge: "api/creation/iso_age.md"
       - MetaData: "api/creation/metadata.md"
       - OptionColumnMapper: "api/creation/option_column_mapper.md"
       - SexColumnMapper: "api/creation/sex_column_mapper.md"

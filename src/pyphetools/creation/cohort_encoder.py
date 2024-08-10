@@ -1,16 +1,14 @@
 import pandas as pd
 from math import isnan
-from typing import Dict, List
+import typing
 
 from .abstract_encoder import AbstractEncoder
 from .age_column_mapper import AgeColumnMapper
-from .citation import Citation
 from .column_mapper import ColumnMapper
 from .constants import Constants
 from .disease import Disease
 from .hpo_cr import HpoConceptRecognizer
 from .individual import Individual
-from .pyphetools_age import NoneAge
 from .sex_column_mapper import SexColumnMapper
 from .variant_column_mapper import VariantColumnMapper
 
@@ -50,16 +48,16 @@ class CohortEncoder(AbstractEncoder):
     """
 
     def __init__(self,
-                df:pd.DataFrame,
-                hpo_cr: HpoConceptRecognizer,
-                column_mapper_list:List[ColumnMapper],
-                individual_column_name:str,
-                metadata,
-                age_of_onset_mapper:AgeColumnMapper=AgeColumnMapper.not_provided(),
-                age_at_last_encounter_mapper:AgeColumnMapper=AgeColumnMapper.not_provided(),
-                sexmapper:SexColumnMapper=SexColumnMapper.not_provided(),
-                variant_mapper:VariantColumnMapper=None,
-                delimiter:str=None):
+                 df: pd.DataFrame,
+                 hpo_cr: HpoConceptRecognizer,
+                 column_mapper_list: typing.List[ColumnMapper],
+                 individual_column_name: str,
+                 metadata,
+                 age_of_onset_mapper: AgeColumnMapper = AgeColumnMapper.not_provided(),
+                 age_at_last_encounter_mapper: AgeColumnMapper = AgeColumnMapper.not_provided(),
+                 sexmapper: SexColumnMapper = SexColumnMapper.not_provided(),
+                 variant_mapper: VariantColumnMapper = None,
+                 delimiter: str = None):
         """Constructor
         """
         super().__init__(metadata=metadata)
@@ -117,14 +115,14 @@ class CohortEncoder(AbstractEncoder):
                 hpo_terms.extend(terms)
             hpo_string = "\n".join([h.to_string() for h in hpo_terms])
             d = {'id': individual_id,
-                'sex': sex,
-                'age': age,
-                'phenotypic features': hpo_string}
+                 'sex': sex,
+                 'age': age,
+                 'phenotypic features': hpo_string}
             individuals.append(d)
         df = pd.DataFrame(individuals)
         return df.set_index('id')
 
-    def set_disease(self, disease:Disease):
+    def set_disease(self, disease: Disease):
         """Set the disease diagnosis for all patients in the cohort
 
         If all patients in the cohort have the same disease we can set it with this method
@@ -134,7 +132,8 @@ class CohortEncoder(AbstractEncoder):
         self._disease = disease
         self._disease_dictionary = None
 
-    def set_disease_dictionary(self, disease_d:Dict[str, Disease]):
+    def set_disease_dictionary(self,
+                               disease_d: typing.Dict[str, Disease]):
         """Set the dictionary of disease ontology terms
 
         For tables with multiple different diseases, we provide a dictionary that has as key
@@ -143,24 +142,22 @@ class CohortEncoder(AbstractEncoder):
         self._disease_dictionary = disease_d
         self._disease = None
 
-
-    def _get_age(row:pd.Series, mapper:AgeColumnMapper):
+    def _get_age(row: pd.Series, mapper: AgeColumnMapper):
         import math
         column_name = mapper.get_column_name()
         if column_name == Constants.NOT_PROVIDED:
-            return NoneAge("na")
+            return None
         age_cell_contents = row[column_name]
         if isinstance(age_cell_contents, float) and math.isnan(age_cell_contents):
-            return NoneAge("na")
+            return None
         try:
             age = mapper.map_cell(age_cell_contents)
         except Exception as ee:
             print(f"Warning: Could not parse age {ee}. Setting age to \"not provided\"")
-            age = NoneAge("na")
+            age = None
         return age
 
-
-    def get_individuals(self) -> List[Individual]:
+    def get_individuals(self) -> typing.List[Individual]:
         """Get a list of all Individual objects in the cohort
 
         :returns: a list of all Individual objects in the cohort
@@ -214,22 +211,22 @@ class CohortEncoder(AbstractEncoder):
                     raise ValueError(f"Could not find disease link for {individual_id}")
                 disease = self._disease_dictionary.get(individual_id)
                 indi = Individual(individual_id=individual_id,
-                                sex=sex,
-                                age_of_onset=age_of_onset,
-                                age_at_last_encounter=age_last_encounter,
-                                hpo_terms=hpo_terms,
-                                citation=self._metadata.get_citation(),
-                                interpretation_list=interpretation_list,
-                                disease=disease)
+                                  sex=sex,
+                                  age_of_onset=age_of_onset,
+                                  age_at_last_encounter=age_last_encounter,
+                                  hpo_terms=hpo_terms,
+                                  citation=self._metadata.get_citation(),
+                                  interpretation_list=interpretation_list,
+                                  disease=disease)
             elif self._disease_dictionary is None and self._disease is not None:
                 indi = Individual(individual_id=individual_id,
-                                sex=sex,
-                                age_of_onset=age_of_onset,
-                                age_at_last_encounter=age_last_encounter,
-                                hpo_terms=hpo_terms,
-                                citation=self._metadata.get_citation(),
-                                interpretation_list=interpretation_list,
-                                disease=self._disease)
+                                  sex=sex,
+                                  age_of_onset=age_of_onset,
+                                  age_at_last_encounter=age_last_encounter,
+                                  hpo_terms=hpo_terms,
+                                  citation=self._metadata.get_citation(),
+                                  interpretation_list=interpretation_list,
+                                  disease=self._disease)
             else:
                 raise ValueError(f"Could not find disease data for '{individual_id}'")
             individuals.append(indi)

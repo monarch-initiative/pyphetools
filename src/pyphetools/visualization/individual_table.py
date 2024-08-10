@@ -126,7 +126,8 @@ class IndividualTable:
         """
         row_items = []
         # Patient information
-        pat_info = spat.get_subject_id() + " (" + spat.get_sex() + "; " + spat.get_age() + ")"
+        age_string = spat.get_age() or "age: n/a"
+        pat_info = spat.get_subject_id() + " (" + spat.get_sex() + "; " + age_string + ")"
         row_items.append( pat_info)
         row_items.append( spat.get_disease())
         # Variant information
