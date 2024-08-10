@@ -82,6 +82,8 @@ class VitalStatus(MessageMixin):
             survival_time_in_days: typing.Optional[int] = None,
     ):
         self._status = status
+        if time_of_death is not None:
+            assert isinstance(time_of_death, TimeElement)
         self._time_of_death = time_of_death
         self._cause_of_death = cause_of_death
         self._survival_time_in_days = survival_time_in_days

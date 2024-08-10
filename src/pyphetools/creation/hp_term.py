@@ -1,8 +1,10 @@
+import typing
 import pandas as pd
 import phenopackets as PPKt
-from .constants import Constants
-from .pyphetools_age import HpoAge, IsoAge, NoneAge, PyPheToolsAge
+from .pyphetools_age import PyPheToolsAge
+from ..pp.v202 import TimeElement as TimeElement202
 import hpotk
+
 
 class HpTerm:
     """
@@ -21,7 +23,14 @@ class HpTerm:
     :param resolution: an ISO8601 string representing the age of resolution, optional
     :type resolution: str
     """
-    def __init__(self, hpo_id:str, label:str, observed:bool=True, measured:bool=True, onset=NoneAge("na"), resolution=NoneAge("na")):
+
+    def __init__(self,
+                 hpo_id: str,
+                 label: str,
+                 observed: bool = True,
+                 measured: bool = True,
+                 onset: TimeElement202 = None,
+                 resolution: TimeElement202 = None):
         if hpo_id is None or len(hpo_id) == 0 or not hpo_id.startswith("HP"):
             raise ValueError(f"invalid id argument: '{hpo_id}'")
         if label is None or len(label) == 0:
@@ -30,8 +39,8 @@ class HpTerm:
         self._label = label
         self._observed = observed
         self._measured = measured
-        if not isinstance(onset, PyPheToolsAge):
-            raise ValueError(f"onset argument must be PyPheToolsAge or subclass but was {type(onset)}")
+        #if not onset is None or str(type(onset)) != "<class 'pyphetools.pp.v202._base.TimeElement'>":
+        #    raise ValueError(f"onset argument must be TimeElement202 or None but was {type(onset)}")
         self._onset = onset
         self._resolution = resolution
 
@@ -77,24 +86,23 @@ class HpTerm:
         return self._measured
 
     @property
-    def onset(self) -> PyPheToolsAge:
+    def onset(self) -> typing.Optional[TimeElement202]:
         """
         :returns: A PyPheToolsAge object representing the age this abnormality first was observed
-        :rtype: PyPheToolsAge
+        :rtype: typing.Optional[TimeElement202]
         """
         return self._onset
 
-    def set_onset(self, onset:PyPheToolsAge) -> None:
-        if not isinstance(onset, PyPheToolsAge):
-            raise ValueError(f"argument of set_onset but be PyPheToolsAge but was {type(onset)}")
+    def set_onset(self, onset: TimeElement202) -> None:
+        if not isinstance(onset, TimeElement202):
+            raise ValueError(f"argument of set_onset but be TimeElement202 but was {type(onset)}")
         self._onset = onset
 
-
     @property
-    def resolution(self) -> PyPheToolsAge:
+    def resolution(self) -> typing.Optional[TimeElement202]:
         """
         :returns: A PyPheToolsAge object representing the age this abnormality resolved
-        :rtype: PyPheToolsAge
+        :rtype: typing.Optional[TimeElement202]
         """
         return self._resolution
 
@@ -120,8 +128,8 @@ class HpTerm:
         return f"{self._label} ({self._id})"
 
     def _term_and_id_with_onset(self) -> str:
-        if self._onset is not None and self._onset.is_valid():
-            return f"{self.hpo_term_and_id}: onset {self._onset.age_string}"
+        if self._onset is not None:
+            return f"{self.hpo_term_and_id}: onset {self._onset}"
         else:
             return self.hpo_term_and_id
 
@@ -152,12 +160,11 @@ class HpTerm:
         pf.type.label = self._label
         if not self._observed:
             pf.excluded = True
-        if self._onset.is_valid():
-            pf.onset.CopyFrom(self._onset.to_ga4gh_time_element())
-        if self._resolution.is_valid():
-            pf.resolution.CopyFrom(self._resolution.to_ga4gh_time_element())
+        if self._onset is not None:
+            pf.onset.CopyFrom(self._onset.to_message())
+        if self._resolution is not None:
+            pf.resolution.CopyFrom(self._resolution.to_message())
         return pf
-
 
     @staticmethod
     def term_list_to_dataframe(hpo_list) -> pd.DataFrame:
@@ -171,12 +178,12 @@ class HpTerm:
             return pd.DataFrame(columns=['Col1', 'Col2', 'Col3'])
         items = []
         for hp in hpo_list:
-            d = { "id": hp.id, "label": hp.label, "observed":hp.observed, "measured": hp.measured }
+            d = {"id": hp.id, "label": hp.label, "observed": hp.observed, "measured": hp.measured}
             items.append(d)
         return pd.DataFrame(items)
 
     @staticmethod
-    def from_hpo_tk_term(hpotk_term:hpotk.Term) -> "HpTerm":
+    def from_hpo_tk_term(hpotk_term: hpotk.Term) -> "HpTerm":
         """Create a pyphetools HpTerm object from an hpo-toolkit Term object
 
         :param hpotk_term: A term from the HPO toolkit
@@ -191,10 +198,12 @@ class HpTerm:
 
 class HpTermBuilder:
 
-    def __init__(self, hpo_id:str, hpo_label:str):
+    def __init__(self,
+                 hpo_id: str,
+                 hpo_label: str):
         if not hpo_id.startswith("HP:"):
             raise ValueError(f"Malformed HPO id {hpo_id}")
-        if not len(hpo_id) == 10:
+        if len(hpo_id) != 10:
             raise ValueError(f"Malformed HPO id with length {len(hpo_id)}: {hpo_id}")
         self._hpo_id = hpo_id
         if hpo_label is None or len(hpo_label) < 3:
@@ -202,8 +211,8 @@ class HpTermBuilder:
         self._hpo_label = hpo_label
         self._observed = True
         self._measured = True
-        self._onset = NoneAge("na")
-        self._resolution = NoneAge("na")
+        self._onset = None
+        self._resolution = None
 
     def excluded(self):
         self._observed = False
@@ -218,98 +227,96 @@ class HpTermBuilder:
         """
         if not isinstance(onset, str):
             raise ValueError(f"onset argument must be iso8601 string but was {type(onset)}")
-        self._onset = IsoAge.from_iso8601(onset)
+        self._onset = PyPheToolsAge.get_age_pp201(onset)
         return self
 
     def embryonal_onset(self):
         """Onset of disease at up to 8 weeks following fertilization (corresponding to 10 weeks of gestation).
         """
-        self._onsetTerm = HpoAge("Embryonal onset") # HP:0011460
+        self._onsetTerm = PyPheToolsAge.get_age_pp201("Embryonal onset")  # HP:0011460
         return self
 
     def fetal_onset(self):
         """Onset prior to birth but after 8 weeks of embryonic development (corresponding to a gestational age of 10 weeks).
         """
-        self._onset = HpoAge("Fetal onset") # HP:0011461
+        self._onset = PyPheToolsAge.get_age_pp201("Fetal onset")  # HP:0011461
         return self
 
     def second_trimester_onset(self):
         """second trimester, which comprises the range of gestational ages from 14 0/7 weeks to 27 6/7 (inclusive)
         """
-        self._onset = HpoAge("Second trimester onset") # HP:0034198
+        self._onset = PyPheToolsAge.get_age_pp201("Second trimester onset")  # HP:0034198
         return self
 
     def late_first_trimester_onset(self):
         """late first trimester during the early fetal period, which is defined as 11 0/7 to 13 6/7 weeks of gestation (inclusive).
         """
-        self._onset = HpoAge("Late first trimester onset") # HP:0034199
+        self._onset = PyPheToolsAge.get_age_pp201("Late first trimester onset")  # HP:0034199
         return self
 
     def third_trimester_onset(self):
         """third trimester, which is defined as 28 weeks and zero days (28+0) of gestation and beyond.
         """
-        self._onset = HpoAge("Third trimester onset") # HP:0034197
+        self._onset = PyPheToolsAge.get_age_pp201("Third trimester onset")  # HP:0034197
         return self
 
     def antenatal_onset(self):
         """onset prior to birth
         """
-        self._onset = HpoAge("Antenatal onset") # HP:0030674
+        self._onset = PyPheToolsAge.get_age_pp201("Antenatal onset")  # HP:0030674
         return self
 
     def congenital_onset(self):
         """A phenotypic abnormality that is present at birth.
         """
-        self._onset = HpoAge("Congenital onset") # HP:0003577
+        self._onset = PyPheToolsAge.get_age_pp201("Congenital onset")  # HP:0003577
         return self
 
     def neonatal_onset(self):
         """Onset of signs or symptoms of disease within the first 28 days of life.
         """
-        self._onset = HpoAge("Neonatal onset") # HP:0003623)
+        self._onset = PyPheToolsAge.get_age_pp201("Neonatal onset")  # HP:0003623)
         return self
-
 
     def infantile_onset(self):
         """Onset of signs or symptoms of disease between 28 days to one year of life.
         """
-        self._onset = HpoAge("Infantile onset") # HP:0003593
+        self._onset = PyPheToolsAge.get_age_pp201("Infantile onset")  # HP:0003593
         return self
 
     def childhood_onset(self):
         """Onset of disease at the age of between 1 and 5 years.
         """
-        self._onset = HpoAge("Childhood onset") # HP:0011463
+        self._onset = PyPheToolsAge.get_age_pp201("Childhood onset")  # HP:0011463
         return self
 
     def juvenile_onset(self):
         """Onset of signs or symptoms of disease between the age of 5 and 15 years.
         """
-        self._onset = HpoAge("Juvenile onset") # HP:0003621
+        self._onset = PyPheToolsAge.get_age_pp201("Juvenile onset")  # HP:0003621
         return self
 
     def young_adult_onset(self):
         """Onset of disease at the age of between 16 and 40 years.
         """
-        self._onset = HpoAge("Young adult onset") # HP:0011462
+        self._onset = PyPheToolsAge.get_age_pp201("Young adult onset")  # HP:0011462
         return self
 
     def middle_age_onset(self):
         """onset of symptoms at the age of 40 to 60 years.
         """
-        self._onset = HpoAge("Middle age onset") # HP:0003596
+        self._onset = PyPheToolsAge.get_age_pp201("Middle age onset")  # HP:0003596
         return self
 
     def late_onset(self):
         """Onset of symptoms after the age of 60 years.
         """
-        self._onset = HpoAge("Late onset") # HP:0003584
+        self._onset = PyPheToolsAge.get_age_pp201("Late onset")  # HP:0003584
         return self
 
     def build(self) -> HpTerm:
         return HpTerm(hpo_id=self._hpo_id,
-                    label=self._hpo_label,
-                    observed=self._observed,
-                    measured=self._measured,
-                    onset=self._onset)
-
+                      label=self._hpo_label,
+                      observed=self._observed,
+                      measured=self._measured,
+                      onset=self._onset)

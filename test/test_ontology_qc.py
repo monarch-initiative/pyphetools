@@ -1,7 +1,7 @@
 import hpotk
 import pytest
 
-from pyphetools.creation import HpTerm, Individual, IsoAge
+from pyphetools.creation import HpTerm, Individual, PyPheToolsAge
 from pyphetools.validation import OntologyQC
 
 
@@ -122,7 +122,7 @@ class TestOntologyQC:
         Myoclonic seizure HP:0032794 ("grandchild" of Seizure)
         Seizure HP:0001250
         """
-        onset = IsoAge.from_iso8601("P1Y")
+        onset = PyPheToolsAge.get_age_pp201("P1Y")
         myoclonic_seiz = HpTerm(hpo_id="HP:0032794", label="Myoclonic seizure", observed=True, onset=onset)
         seiz = HpTerm(hpo_id="HP:0001250", label="Seizure", observed=True)
         hpo_terms = [myoclonic_seiz, seiz]

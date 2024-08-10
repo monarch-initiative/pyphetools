@@ -4,9 +4,9 @@ from typing import Optional
 from .age_isoformater import AgeIsoFormater
 from .constants import Constants
 
-from pyphetools.pp.v202 import VitalStatus as pptVitalStatus
-from pyphetools.pp.v202 import TimeElement as pptTimeElement
-from pyphetools.pp.v202 import Age as pptAge
+from pyphetools.pp.v202 import VitalStatus as VitalStatus202
+from pyphetools.pp.v202 import TimeElement as TimeElement202
+from pyphetools.pp.v202 import Age as Age202
 
 
 class AgeOfDeathColumnMapper:
@@ -26,7 +26,7 @@ class AgeOfDeathColumnMapper:
         self._column_name = column_name
         self._string_to_iso_d = string_to_iso_d
 
-    def map_cell_to_vital_status(self, cell_contents) -> Optional[pptVitalStatus]:
+    def map_cell_to_vital_status(self, cell_contents) -> Optional[VitalStatus202]:
 
         """
         Map a single cell of the table
@@ -39,9 +39,9 @@ class AgeOfDeathColumnMapper:
         if contents not in self._string_to_iso_d:
             return None
         # Wrap the Age (iso8601) in a TimeElement.
-        iso_age = pptAge(self._string_to_iso_d.get(contents))
-        telem = pptTimeElement(iso_age)
-        vstatus = pptVitalStatus(status=pptVitalStatus.Status.DECEASED, time_of_death=telem)
+        iso_age = Age202(self._string_to_iso_d.get(contents))
+        telem = TimeElement202(iso_age)
+        vstatus = VitalStatus202(status=VitalStatus202.Status.DECEASED, time_of_death=telem)
         return vstatus
 
     @property
