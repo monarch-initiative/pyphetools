@@ -7,7 +7,7 @@ import numpy as np
 DAYS_IN_WEEK = 7
 AVERAGE_DAYS_IN_MONTH = 30.437
 AVERAGE_DAYS_IN_YEAR = 365.25
-import phenopackets as PPKt
+
 
 from ..pp.v202 import OntologyClass as OntologyClass202
 from ..pp.v202 import TimeElement as TimeElement202
@@ -87,44 +87,106 @@ class AgeSorter:
         "Late onset": 60 * 365.25,
     }
 
+    HPO_AGE_TO_YEARS = {
+        "Antenatal onset": 0,
+        "Embryonal onset": 0,
+        "Fetal onset": 0,
+        "Late first trimester onset": 0,
+        "Second trimester onset": 0,
+        "Third trimester onset": 0,
+        "Congenital onset": 0,
+        "Neonatal onset": 0,
+        "Pediatrial onset": 0,
+        "Infantile onset": 0,
+        "Childhood onset": 1,
+        "Juvenile onset": 5,
+        "Adult onset": 16,
+        "Young adult onset": 16,
+        "Early young adult onset": 16 ,
+        "Intermediate young adult onset": 19,
+        "Late young adult onset": 25 ,
+        "Middle age onset": 40 ,
+        "Late onset": 60,
+    }
+
     def __init__(self,
-                element: typing.Union[
+                time_element: typing.Union[
                     GestationalAge202, Age202, AgeRange202, OntologyClass202, Timestamp202, TimeInterval202]
         ):
-        self._element = element
+        if not isinstance(time_element, TimeElement202):
+            time_element = TimeElement202.from_message(time_element)
+        element = time_element.element
         if isinstance(element, GestationalAge202):
             days = 7 * element.weeks + element.days
             self._num_days = -1 * days
+            self._num_years = 0
         elif isinstance(element, Age202):
             age_str = element.iso8601duration
             match = re.search(AgeSorter.ISO8601_REGEX, age_str)
             if match:
-                years = int(match.group(1))
-                months = int(match.group(2))
-                days = int(match.group(3))
-                self._num_days = years * 365.25 + months * 30.436875 + days
+                years = match.group(1)
+                months = match.group(2)
+                days = match.group(3)
+                self._num_days = AgeSorter.get_days_from_match(years, months, days)
+                self._num_years = AgeSorter.get_years_from_match(years, months, days)
             else:
                 self._num_days = 0
+                self._num_years = 0
         elif isinstance(element, AgeRange202):
             age_str = element.start.iso8601duration
             match = re.search(AgeSorter.ISO8601_REGEX, age_str)
             if match:
-                years = int(match.group(1))
-                months = int(match.group(2))
-                days = int(match.group(3))
-                self._num_days = years * 365.25 + months * 30.436875 + days
+                years = match.group(1)
+                months = match.group(2)
+                days = match.group(3)
+                self._num_days = AgeSorter.get_days_from_match(years, months, days)
+                self._num_years = AgeSorter.get_years_from_match(years, months, days)
             else:
                 self._num_days = 0
+                self._num_years = 0
         elif isinstance(element, OntologyClass202):
             if element.label not in AgeSorter.HPO_AGE_TO_DAYS:
                 raise ValueError(f"Could not find HPO class for {element.label}")
-            self._num_days = AgeSorter.HPO_AGE_TO_DAYS[element.label]
+            self._num_days = AgeSorter.HPO_AGE_TO_DAYS.get(element.label)
+            self._num_years = AgeSorter.HPO_AGE_TO_YEARS.get(element.label)
         elif isinstance(element, Timestamp202):
             self._num_days = AgeSorter.MOST_NEGATIVE_INT32
+            self._num_years = AgeSorter.MOST_NEGATIVE_INT32
         elif isinstance(element, TimeInterval202):
             self._num_days = AgeSorter.MOST_NEGATIVE_INT32
+            self._num_years = AgeSorter.MOST_NEGATIVE_INT32
         else:
-            raise ValueError(f"Unknown element type: {type(element)}")
+            print(f"[WARN] Unknown element type: {type(element)}")
+            self._num_days = None
+            self._num_years = None
+        
+    @staticmethod
+    def get_days_from_match(years: typing.Optional[str],
+                            months: typing.Optional[str],
+                            days: typing.Optional[str]) -> int:
+        total_days = 0
+        if years is not None:
+            # years with be something like 42Y
+            total_days += 365.25 * int(years[:-1])
+        if months is not None:
+            total_days += int(months[:-1]) * 30.436875
+        if days is not None:
+            total_days += int(days[:-1])
+        return int(total_days)
+    
+    @staticmethod
+    def get_years_from_match(years: typing.Optional[str],
+                            months: typing.Optional[str],
+                            days: typing.Optional[str]) -> float:
+        total_years = 0
+        if years is not None:
+            # years with be something like 42Y
+            total_years += float(years[:-1])
+        if months is not None:
+            total_years += float(months[:-1])/12
+        if days is not None:
+            total_years += float(days[:-1])/365.25
+        return total_years
 
     @property
     def element(self) -> typing.Union[
@@ -134,6 +196,15 @@ class AgeSorter:
     @property
     def num_days(self) -> int:
         return self._num_days
+    
+    @property
+    def num_years(self) -> float:
+        return self._num_years
+    
+    @staticmethod
+    def convert_to_years(time_elem:TimeElement202) -> float:
+        age_sorter = AgeSorter(time_element=time_elem)
+        return age_sorter.num_years
 
     @staticmethod
     def sort_by_age(onset_list: typing.List[TimeElement202]) -> typing.List[TimeElement202]:
@@ -151,13 +222,6 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
     def __init__(self, age_string) -> None:
         self._age_string = age_string
 
-    @abc.abstractmethod
-    def to_ga4gh_time_element(self) -> PPKt.TimeElement:
-        """
-        :returns: a representation of Age formated as one of the options of GA4GH TimeElement
-        :rtype: PPKt.TimeElement
-        """
-        pass
 
     @abc.abstractmethod
     def is_valid(self) -> bool:
@@ -179,12 +243,7 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         """
         pass
 
-    @property
-    def age_string(self):
-        if self.is_valid():
-            return self._age_string
-        else:
-            return Constants.NOT_PROVIDED
+
 
     @staticmethod
     def get_age_pp201(age_string: str) -> typing.Optional[TimeElement202]:
@@ -211,49 +270,6 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
                 raise ValueError(f"Could not parse \"{age_string}\" as age.")
             return None
 
-    """
-    @staticmethod
-    def get_age(age_string) -> "PyPheToolsAge":
-    Return an appropriate subclass of PyPheToolsAge or None
-        - if starts with P interpret as an ISO 8601 age string
-        - if starts with HP interpret as an HPO Onset term
-        - if is a string such as 34+2 interpret as a gestation age
-        - If we cannot parse, return a NoneAge obejct, a signal that no age is available
-        :returns:PyPheToolsAge object (one of the subclasses)
-        :rtype: PyPheToolsAge
-        
-        if age_string is None:
-            return NoneAge("na")
-        if isinstance(age_string, float) and math.isnan(age_string):
-            return NoneAge("na") # sometimes pandas returns an empty cell as a float NaN
-        if len(age_string) == 0:
-            return NoneAge("na")
-        elif age_string.startswith("P"):
-            return IsoAge.from_iso8601(age_string)
-        elif age_string in HPO_ONSET_TERMS:
-            return HpoAge(hpo_onset_label=age_string)
-        elif GestationalAge.is_gestational_age(age_string):
-            return GestationalAge(age_string)
-        else:
-            # only warn if the user did not enter na=not available
-            if age_string != 'na':
-                raise ValueError(f"Could not parse \"{age_string}\" as age.")
-            return NoneAge(age_string=age_string)
-    """
-
-    @staticmethod
-    def age_key_to_ga4gh(age_string):
-        """
-        Transform an age key such as either an iso8601 string (e.g. P41Y) or an HPO Onset label (e.g., Congenital onset) into a TimeElement
-        The age keys are used in the Excel template files. Currently, only iso8601 and HPO Onset are supported.
-        """
-        if not isinstance(age_string, str):
-            raise ValueError(f"age_string argument {age_string} must be a string but was {type(age_string)}")
-
-        age_obj = PyPheToolsAge.get_age(age_string=age_string)
-        if not age_obj.is_valid():
-            raise ValueError(f"Could not parse age key \"{age_string}\"")
-        return age_obj.to_ga4gh_time_element()
 
 
 class IsoAge(PyPheToolsAge):
@@ -351,17 +367,6 @@ class IsoAge(PyPheToolsAge):
         else:
             raise ValueError(f"[ERROR] Could not calculate HpoAge for {self.age_string}")
 
-    def to_ga4gh_time_element(self) -> PPKt.TimeElement:
-        """
-        :returns: a representation of Age formated as one of the options of GA4GH TimeElement
-        :rtype: PPKt.TimeElement
-        """
-        time_elem = PPKt.TimeElement()
-        iso8601_age = self.to_iso8601()
-        if iso8601_age is None:
-            raise ValueError(f"iso8601 was None")
-        time_elem.age.iso8601duration = iso8601_age
-        return time_elem
 
     @staticmethod
     def from_iso8601(iso_age: str):
@@ -407,18 +412,6 @@ class HpoAge(PyPheToolsAge):
         self._onset_label = hpo_onset_label
         self._onset_id = HPO_ONSET_TERMS.get(hpo_onset_label)
 
-    def to_ga4gh_time_element(self) -> PPKt.TimeElement:
-        """
-        :returns: a representation of Age formated as an OntologyClass (HPO Onset term)
-        :rtype: PPKt.TimeElement
-        """
-        time_elem = PPKt.TimeElement()
-        clz = PPKt.OntologyClass()
-        clz.id = self._onset_id
-        clz.label = self._onset_label
-        time_elem.ontology_class.CopyFrom(clz)
-        return time_elem
-
     def to_hpo_age(self):
         """Return self, this is already an HpoAge object
         """
@@ -450,17 +443,6 @@ class GestationalAge(PyPheToolsAge):
     def is_valid(self):
         return True
 
-    def to_ga4gh_time_element(self) -> PPKt.TimeElement:
-        """
-        :returns: a representation of Age formated as an OntologyClass (HPO Onset term)
-        :rtype: PPKt.TimeElement
-        """
-        time_elem = PPKt.TimeElement()
-        gest_age = PPKt.GestationalAge()
-        gest_age.weeks = self._weeks
-        gest_age.days = self._days
-        time_elem.age.gestational_age.CopyFrom(gest_age)
-        return time_elem
 
     def to_hpo_age(self):
         """Return self, this is already an HpoAge object

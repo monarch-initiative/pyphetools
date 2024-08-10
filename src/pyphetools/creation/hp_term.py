@@ -128,7 +128,7 @@ class HpTerm:
         return f"{self._label} ({self._id})"
 
     def _term_and_id_with_onset(self) -> str:
-        if self._onset is not None and self._onset.is_valid():
+        if self._onset is not None:
             return f"{self.hpo_term_and_id}: onset {self._onset}"
         else:
             return self.hpo_term_and_id

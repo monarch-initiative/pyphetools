@@ -62,7 +62,7 @@ __all__ = [
     "Individual",
     "MetaData",
     "OptionColumnMapper",
-    "PyPheToolsAge", "IsoAge", "HpoAge", "GestationalAge", "HPO_ONSET_TERMS",
+    "PyPheToolsAge", "AgeSorter", "HPO_ONSET_TERMS",
     "SexColumnMapper",
     "SimpleColumnMapper",
     "SimpleColumnMapperGenerator",

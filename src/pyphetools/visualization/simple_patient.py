@@ -8,9 +8,10 @@ from collections import defaultdict
 from ..creation.constants import Constants
 from ..creation.hp_term import HpTerm
 from ..creation.individual import Individual
-from ..creation.pyphetools_age import IsoAge
+from ..creation.pyphetools_age import AgeSorter
 from .simple_variant import SimpleVariant
-from ..pp.v202 import VitalStatus
+from ..pp.v202 import TimeElement as TimeElement202
+from ..pp.v202 import VitalStatus as VitalStatus202
 
 class SimplePatient:
     """
@@ -43,13 +44,7 @@ class SimplePatient:
             self._subject_id = subj.id
         self._time_at_last_encounter = None
         if subj.HasField("time_at_last_encounter"):
-            time_at_last_encounter = phenopackets.TimeElement()
-            time_at_last_encounter.CopyFrom(subj.time_at_last_encounter)
-            if time_at_last_encounter.HasField("age"):
-                self._time_at_last_encounter = time_at_last_encounter.age.iso8601duration
-            elif time_at_last_encounter.HasField("ontology_class"):
-                clz = time_at_last_encounter.ontology_class
-                self._time_at_last_encounter = f"{clz.label} ({clz.id})"
+            self._time_at_last_encounter = TimeElement202.from_message(subj.time_at_last_encounter)
         if ppack.subject.sex == phenopackets.MALE:
             self._sex = "MALE"
         elif ppack.subject.sex == phenopackets.FEMALE:
@@ -59,32 +54,31 @@ class SimplePatient:
         else:
             self._sex = "UNKNOWN"
         ## get vital status if possible
-        self._vstat = None
         self._survival_time_in_days = None
         self._cause_of_death = None
         if ppack.subject.HasField("vital_status"):
-            vstat = ppack.subject.vital_status
-            if vstat.status == VitalStatus.Status.DECEASED:
+            vstat = VitalStatus202.from_message(ppack.subject.vital_status)
+            if vstat.status == VitalStatus202.Status.DECEASED:
                 self._vstat = "DECEASED"
-            elif vstat.status == VitalStatus.Status.ALIVE:
+            elif vstat.status == VitalStatus202.Status.ALIVE:
                 self._vstat = "ALIVE"
             else:
-                pass # keep self._vstat as None
+                self._vstat = None
             if vstat.survival_time_in_days is not None:
                 self._survival_time_in_days = vstat.survival_time_in_days
             self._cause_of_death = vstat.cause_of_death
        
         for pf in ppack.phenotypic_features:
-            hpterm = HpTerm(hpo_id=pf.type.id, label=pf.type.label, observed=not pf.excluded)
+            hpterm = HpTerm(hpo_id=pf.type.id, label=pf.type.label, onset=pf.onset, observed=not pf.excluded)
             if pf.excluded:
                 self._excluded_hpo_terms[pf.type.id] = hpterm
             else:
                 self._observed_hpo_terms[pf.type.id] = hpterm
-            if pf.onset is not None and pf.onset.age is not None and pf.onset.age.iso8601duration:
-                term_onset = pf.onset.age.iso8601duration
+            if pf.onset is not None:
+                telem = TimeElement202.from_message(pf.onset)
+                self._by_age_dictionary[telem].append(hpterm)
             else:
-                term_onset = Constants.NOT_PROVIDED
-            self._by_age_dictionary[term_onset].append(hpterm)
+                self._by_age_dictionary[Constants.NOT_PROVIDED].append(hpterm)
         for k, v in self._observed_hpo_terms.items():
             if k in self._excluded_hpo_terms:
                 self._excluded_hpo_terms.pop(k) # remove observed terms that may have been excluded at other occasion
@@ -148,30 +142,23 @@ class SimplePatient:
     def get_subject_id(self) -> str:
         return self._subject_id
 
-    def get_sex(self):
+    def get_sex(self) -> str:
         return self._sex
 
-    def get_age(self)-> typing.Optional[str]:
+    def get_age(self)-> typing.Optional[TimeElement202]:
         return self._time_at_last_encounter
     
     @staticmethod
-    def age_in_years(iso_age:str) -> typing.Optional[float]:
-        if iso_age is None:
+    def age_in_years(time_elem:TimeElement202) -> typing.Optional[float]:
+        if time_elem is None:
             return None
-        if len(iso_age) == 0:
-            return None
-        if not iso_age.startswith("P"):
-            print(f"ERROR-isoage malformed: {iso_age}")
-            return None
-        ppt_age = IsoAge.from_iso8601(iso_age=iso_age)
-        years = ppt_age.years + (1/12) * ppt_age.months + (1/365) * ppt_age.days
-        return years
+        return AgeSorter.convert_to_years(time_elem)
         
     
     def get_age_in_years(self) -> typing.Optional[float]:
-        if self._time_at_last_encounter is None or not self._time_at_last_encounter:
+        if self._time_at_last_encounter is None:
             return None
-        return SimplePatient.age_in_years(iso_age=self._time_at_last_encounter)
+        return SimplePatient.age_in_years(time_elem=self._time_at_last_encounter)
        
 
     def get_disease(self) -> str:

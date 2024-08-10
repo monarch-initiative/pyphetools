@@ -91,6 +91,9 @@ class OntologyClass(MessageMixin):
             and self._id == other._id \
             and self._label == other._label
 
+    def __hash__(self):
+        return hash((self._id, self._label,))
+
     def __repr__(self):
         return f'OntologyClass(id={self._id}, label={self._label})'
 
