@@ -7,7 +7,7 @@ from pyphetools.creation.hpo_cr import HpoConceptRecognizer
 from pyphetools.creation.metadata import MetaData
 from pyphetools.creation.hp_term import HpTerm
 from pyphetools.creation.individual import Individual
-from pyphetools.creation.pyphetools_age import NoneAge, PyPheToolsAge
+from pyphetools.creation.pyphetools_age import PyPheToolsAge
 from ..pp.v202 import TimeElement as TimeElement202
 import os
 import re
@@ -408,20 +408,19 @@ class CaseTemplateEncoder:
             raise ValueError(f"Unrecognized sex symbol: {sex} for individual \"{individual_id}\"")
         onset_age = data_items.get(AGE_OF_ONSET_FIELDNAME)
         if onset_age is not None and isinstance(onset_age, str):
-            onset_age = PyPheToolsAge.get_age(onset_age)
+            onset_age = PyPheToolsAge.get_age_pp201(onset_age)
         else:
-            onset_age = NoneAge("na")
+            onset_age = None
         encounter_age = data_items.get(AGE_AT_LAST_ENCOUNTER_FIELDNAME)
         if encounter_age is not None and isinstance(encounter_age, str):
-            encounter_age = PyPheToolsAge.get_age(encounter_age)
+            encounter_age = PyPheToolsAge.get_age_pp201(encounter_age)
         else:
-            encounter_age = NoneAge("na")
+            encounter_age = None
         vitStat = None
         if "deceased" in data_items:
             decsd = data_items.get("deceased")
-            if decsd == "yes" and encounter_age.is_valid():
-                timeelem = encounter_age.to_ga4gh_time_element()
-                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=timeelem)
+            if decsd == "yes" and encounter_age is not None:
+                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=encounter_age)
             else:
                 vitStat = VitalStatus(status=VitalStatus.Status.DECEASED)
         disease_id = data_items.get("disease_id")

@@ -173,24 +173,6 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
 
 
 
-class NoneAge(PyPheToolsAge):
-    """class to be used if no age information was available
-    """
-    def __init__(self, age_string:str):
-        super().__init__(age_string)
-
-    def to_ga4gh_time_element(self):
-        return None
-
-    def is_valid(self):
-        return False
-
-    def to_hpo_age(self):
-        """There is no information about age, so return the NoneAge object to denote this.
-        Client code should always check the is_valid function
-        """
-        return self
-
 
 class IsoAge(PyPheToolsAge):
     """Class to record and sort ages formated according to iso8601

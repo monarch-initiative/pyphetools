@@ -1,3 +1,5 @@
+import typing
+
 import phenopackets as PPKt
 import re
 import os
@@ -9,8 +11,11 @@ from .disease import Disease
 from .hp_term import HpTerm
 from .hgvs_variant import Variant
 from .metadata import MetaData, Resource
-from .pyphetools_age import PyPheToolsAge, NoneAge, IsoAge
-from ..pp.v202 import OntologyClass, TimeElement, VitalStatus
+from .pyphetools_age import PyPheToolsAge
+from ..pp.v202 import TimeElement as TimeElement202
+from ..pp.v202 import VitalStatus as VitalStatus202
+from ..pp.v202 import OntologyClass as OntologyClass202
+
 
 class Individual:
     """
@@ -31,15 +36,15 @@ class Individual:
     """
 
     def __init__(self,
-                individual_id:str,
-                hpo_terms:List[HpTerm]=None,
-                citation:Citation=None,
-                sex:str=Constants.NOT_PROVIDED,
-                age_of_onset:PyPheToolsAge=NoneAge("na"),
-                age_at_last_encounter:PyPheToolsAge=NoneAge("na"),
-                vital_status:VitalStatus=None,
-                interpretation_list:List[PPKt.VariantInterpretation]=None,
-                disease:Disease=None):
+                 individual_id: str,
+                 hpo_terms: List[HpTerm] = None,
+                 citation: Citation = None,
+                 sex: str = Constants.NOT_PROVIDED,
+                 age_of_onset: TimeElement202 = None,
+                 age_at_last_encounter: TimeElement202 = None,
+                 vital_status: VitalStatus202 = None,
+                 interpretation_list: List[PPKt.VariantInterpretation] = None,
+                 disease: Disease = None):
         """Constructor
         """
         if isinstance(individual_id, int):
@@ -90,7 +95,7 @@ class Individual:
         self._sex = sex
 
     @property
-    def age_of_onset(self) -> PyPheToolsAge:
+    def age_of_onset(self) -> typing.Optional[TimeElement202]:
         """
         :returns: a representation of age when the disease first manifested
         :rtype: PyPheToolsAge
@@ -98,13 +103,12 @@ class Individual:
         return self._age_of_onset
 
     @property
-    def age_at_last_encounter(self) -> PyPheToolsAge:
+    def age_at_last_encounter(self) -> typing.Optional[TimeElement202]:
         """
         :returns: a representation of age when the individual was last seen in a medical context
         :rtype: PyPheToolsAge
         """
         return self._age_at_last_encounter
-
 
     @property
     def hpo_terms(self):
@@ -122,7 +126,7 @@ class Individual:
         """
         return self._interpretation_list
 
-    def add_variant(self, v:Union[Variant, PPKt.VariantInterpretation], acmg:str=None):
+    def add_variant(self, v: Union[Variant, PPKt.VariantInterpretation], acmg: str = None):
         """
         :param v: A Variant obeserved in this individual
         :type v: Union[Variant, PPKt.VariantInterpretation]
@@ -136,11 +140,10 @@ class Individual:
         if isinstance(variant, PPKt.VariantInterpretation):
             self._interpretation_list.append(variant)
         else:
-            raise ValueError(f"variant argument must be pyphetools Variant or GA4GH VariantInterpretation but was {type(variant)}")
+            raise ValueError(
+                f"variant argument must be pyphetools Variant or GA4GH VariantInterpretation but was {type(variant)}")
 
-
-
-    def add_hpo_term(self, term:HpTerm) -> None:
+    def add_hpo_term(self, term: HpTerm) -> None:
         """
         Adds one HPO term to the current individual.
         :param term: An HPO term (observed or excluded, potentially with Age of observation
@@ -150,7 +153,7 @@ class Individual:
             raise ValueError(f"\"term\" argument must be HpTerm but was {type(term)}")
         self._hpo_terms.append(term)
 
-    def set_disease(self, disease:Disease) -> None:
+    def set_disease(self, disease: Disease) -> None:
         """
         This method is typically useful for a cohort with multiple diagnoses; otherwise, the disease can be set by the
         CohortEncoder
@@ -166,7 +169,7 @@ class Individual:
         else:
             return 1
 
-    def set_hpo_terms(self, cleansed_hpo_terms:List[HpTerm]):
+    def set_hpo_terms(self, cleansed_hpo_terms: List[HpTerm]):
         """
         :param cleansed_hpo_terms: a list of HpTerm objects that has been cleansed by OntologyQC
         :type cleansed_hpo_terms: List[pyphetools.creation.HpTerm]
@@ -177,19 +180,19 @@ class Individual:
     def pmid(self):
         return self._citation.pmid
 
-    def set_citation(self, citation:Citation):
+    def set_citation(self, citation: Citation):
         """
         :param citation: Object with the title and PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
         :type citation: Citation
         """
         self._citation = citation
 
-    def set_vital_status(self, vstatus:VitalStatus):
-        if not isinstance(vstatus, VitalStatus):
+    def set_vital_status(self, vstatus: VitalStatus202):
+        if not isinstance(vstatus, VitalStatus202):
             raise ValueError(f"vstatus argument must be pyphetools.pp.v202.VitalStatus but was{type(vstatus)}")
         self._vital_status = vstatus
 
-    def get_vital_status(self) -> VitalStatus:
+    def get_vital_status(self) -> VitalStatus202:
         return self._vital_status
 
     def get_phenopacket_id(self, phenopacket_id=None) -> str:
@@ -207,7 +210,7 @@ class Individual:
         else:
             ppkt_id = phenopacket_id
         # strip non alphanumeric characters
-        ppkt_id = ''.join(e if e.isalnum()  else "_" for e in ppkt_id)
+        ppkt_id = ''.join(e if e.isalnum() else "_" for e in ppkt_id)
         ppkt_id = ppkt_id.replace("__", "_")
         if ppkt_id.endswith("_"):
             ppkt_id = ppkt_id[:-1]
@@ -220,8 +223,7 @@ class Individual:
         """
         return self._citation
 
-
-    def _get_onset(self) -> Union[PyPheToolsAge,str]:
+    def _get_onset(self) -> typing.Optional[TimeElement202]:
         """The assumption of this method is that if we have a valid age of onset field, use this.
         Otherwise, try to find an age of onset from the phenotypic features and take the youngest age
         """
@@ -233,15 +235,16 @@ class Individual:
                 if not hp.measured:
                     continue
                 pf = hp.to_ga4gh_phenotypic_feature()
-                if pf.onset.age.iso8601duration is None and self._age_of_onset != Constants.NOT_PROVIDED:
-                    phenotypic_feature_onsets.add(pf.onset.age.iso8601duration)
+                if pf.onset.age.iso8601duration is None:
+                    phenotypic_feature_onsets.add(pf.onset)
         if len(phenotypic_feature_onsets) == 0:
-            return Constants.NOT_PROVIDED
-        age_format_list = list()
-        for o in phenotypic_feature_onsets:
-            age_format_list.append(IsoAge.from_iso8601(o))
-        sorted_age = sorted(age_format_list, lambda x: x.total_days)
-        youngest_age = sorted_age[0]
+            return None
+        age_format_list = list(phenotypic_feature_onsets)
+        #for o in phenotypic_feature_onsets:
+        #    age_format_list.append(IsoAge.from_iso8601(o))
+        #sorted_age = sorted(age_format_list, lambda x: x.total_days)
+        # TODO SORT!!!!!!!!!!!!!!!!!!!!!!!
+        youngest_age = age_format_list[0]
         return youngest_age
 
     def _get_disease_object(self):
@@ -256,13 +259,11 @@ class Individual:
             print("[WARNING] could not find disease information")
         disease_object = PPKt.Disease()
         disease_object.term.CopyFrom(disease_term)
-        if self.age_of_onset is not None and self.age_of_onset.is_valid():
-            disease_object.onset.CopyFrom(self.age_of_onset.to_ga4gh_time_element())
-        if iso_age is not None and iso_age.is_valid():
-            disease_object.onset.CopyFrom(iso_age.to_ga4gh_time_element())
+        if self.age_of_onset is not None:
+            disease_object.onset.CopyFrom(self.age_of_onset.to_message())
+        if iso_age is not None:
+            disease_object.onset.CopyFrom(iso_age.to_message())
         return disease_object
-
-
 
     def to_ga4gh_phenopacket(self, metadata, phenopacket_id=None) -> PPKt.Phenopacket:
         """
@@ -273,12 +274,13 @@ class Individual:
         if isinstance(metadata, MetaData):
             metadata = metadata.to_ga4gh()
         if not isinstance(metadata, PPKt.MetaData):
-            raise ValueError(f"metadata argument must be pyphetools.MetaData or GA4GH MetaData but was {type(metadata)}")
+            raise ValueError(
+                f"metadata argument must be pyphetools.MetaData or GA4GH MetaData but was {type(metadata)}")
         php = PPKt.Phenopacket()
         php.id = self.get_phenopacket_id(phenopacket_id=phenopacket_id)
         php.subject.id = self._individual_id
-        if self._age_at_last_encounter is not None and self._age_at_last_encounter.is_valid():
-            php.subject.time_at_last_encounter.CopyFrom(self._age_at_last_encounter.to_ga4gh_time_element())
+        if self._age_at_last_encounter is not None:
+            php.subject.time_at_last_encounter.CopyFrom(self._age_at_last_encounter.to_message())
         if self._sex == Constants.MALE_SYMBOL:
             php.subject.sex = PPKt.Sex.MALE
         elif self._sex == Constants.FEMALE_SYMBOL:
@@ -288,10 +290,7 @@ class Individual:
         elif self._sex == Constants.UNKNOWN_SEX_SYMBOL:
             php.subject.sex = PPKt.Sex.UNKNOWN_SEX
         if self._vital_status is not None:
-            print("DATA TYPE OF SELV VS", type(self._vital_status))
-            print("DATA TYPE OF php.subject.vital_status", type(php.subject.vital_status))
             vs = self._vital_status.to_message()
-            print("DATA TYPE OF vs", type(vs), " for ", php.id)
             php.subject.vital_status.CopyFrom(vs)
         disease_object = self._get_disease_object()
         php.diseases.append(disease_object)
@@ -342,13 +341,6 @@ class Individual:
             metadata.external_references.append(extref)
         php.meta_data.CopyFrom(metadata)
         return php
-    
-
-
- 
-
-
-
 
     def __str__(self):
         hpo_list = [t.to_string() for t in self._hpo_terms]
@@ -356,7 +348,7 @@ class Individual:
         return f"{self._individual_id}: {self._age_of_onset}, {self._sex}: {self._disease} {hpo_str}"
 
     @staticmethod
-    def output_individuals_as_phenopackets(individual_list, metadata:MetaData, outdir="phenopackets"):
+    def output_individuals_as_phenopackets(individual_list, metadata: MetaData, outdir="phenopackets"):
         """write a list of Individual objects to file in GA4GH Phenopacket format
 
         This methods depends on the MetaData object having a PMID and will fail otherwise
@@ -374,7 +366,8 @@ class Individual:
             os.makedirs(outdir)
         written = 0
         if not isinstance(metadata, MetaData):
-            raise ValueError(f"metadata argument must be pyphetools MetaData object (not GA4GH metadata message), but was {type(metadata)}")
+            raise ValueError(
+                f"metadata argument must be pyphetools MetaData object (not GA4GH metadata message), but was {type(metadata)}")
         pmid = metadata.get_pmid()
         for individual in individual_list:
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
@@ -392,13 +385,11 @@ class Individual:
                 written += 1
         print(f"We output {written} GA4GH phenopackets to the directory {outdir}")
 
-
-
     @staticmethod
-    def from_ga4gh_metadata(mdata:PPKt.MetaData) -> MetaData:
+    def from_ga4gh_metadata(mdata: PPKt.MetaData) -> MetaData:
         created_by = mdata.created_by
         created_time = str(mdata.created)
-        if len (mdata.external_references) > 1:
+        if len(mdata.external_references) > 1:
             raise ValueError("multiple external references not supported")
         elif len(mdata.external_references) == 0:
             id = None
@@ -411,13 +402,14 @@ class Individual:
             description = eref.description
         resource_list = []
         for resource in mdata.resources:
-            resource_id=resource.id
+            resource_id = resource.id
             name = resource.name
             namespace_prefix = resource.namespace_prefix
             iri_prefix = resource.iri_prefix
             url = resource.url
             version = resource.version
-            r = Resource(resource_id=resource_id,name=name, namespace_prefix=namespace_prefix, iriprefix=iri_prefix, url=url, version=version)
+            r = Resource(resource_id=resource_id, name=name, namespace_prefix=namespace_prefix, iriprefix=iri_prefix,
+                         url=url, version=version)
             resource_list.append(r)
         cite = Citation(pmid=id, title=description)
         metadata = MetaData(created_by=created_by, citation=cite)
@@ -426,7 +418,7 @@ class Individual:
         return metadata
 
     @staticmethod
-    def get_variants_and_disease(ppkt:PPKt.Phenopacket):
+    def get_variants_and_disease(ppkt: PPKt.Phenopacket):
         """extract the pyphetools Disease object and the VariantInterpretation objects that can be used to construct an Individual
 
         :param ppkt: a GA4GH phenopacket
@@ -438,7 +430,8 @@ class Individual:
             print(f"No interpretation found for {ppkt.id}")
             return None, []
         if len(ppkt.interpretations) > 1:
-            raise ValueError(f"pyphetools dpoes not currently support multiple Interpretation messages in one phenopacket but we found {len(ppkt.interpretations)}")
+            raise ValueError(
+                f"pyphetools dpoes not currently support multiple Interpretation messages in one phenopacket but we found {len(ppkt.interpretations)}")
         interpretation = ppkt.interpretations[0]
         if interpretation.HasField("diagnosis") and interpretation.diagnosis.HasField("disease"):
             d = interpretation.diagnosis.disease
@@ -447,17 +440,16 @@ class Individual:
             disease = None
         if len(interpretation.diagnosis.genomic_interpretations) == 0:
             return disease, []
-        else :
+        else:
             variant_list = []
             for gen_interpretation in interpretation.diagnosis.genomic_interpretations:
                 variant_list.append(gen_interpretation.variant_interpretation)
             return disease, variant_list
 
-
     @staticmethod
-    def from_ga4gh_phenopacket(ppkt:PPKt.Phenopacket):
+    def from_ga4gh_phenopacket(ppkt: PPKt.Phenopacket):
         """
-        Transform a GA4GH Phenopacket into an Individual obect -- useful for testing
+        Transform a GA4GH Phenopacket into an Individual object -- useful for testing
         :returns:  an individual object corresponding to the GA4GH Phenopacket
         :rtype: Individual
         """
@@ -465,33 +457,31 @@ class Individual:
             raise ValueError(f"argument must be a GA4GH Phenopacket Message but was {type(ppkt)}")
         #metadata = ppkt.meta_data
         #pypt_metadata = Individual.from_ga4gh_metadata(mdata=metadata)
-        subject_id =  ppkt.subject.id
+        subject_id = ppkt.subject.id
         sex = ppkt.subject.sex
         age_at_last_encounter = ppkt.subject.time_at_last_encounter.age.iso8601duration
-        age_of_onset = NoneAge("na")
+        age_of_onset = None
         if len(ppkt.diseases) > 0:
             d = ppkt.diseases[0]
             if d.HasField("onset") and d.onset.HasField("age"):
-                age_of_onset = d.onset.age
+                age_of_onset = TimeElement202.from_message(d.onset.age)
         hpo_terms = []
         for pf in ppkt.phenotypic_features:
             hpo_id = pf.type.id
             hpo_label = pf.type.label
             observed = not pf.excluded
-            onset_age = NoneAge("na")
+            onset_age = None
             if pf.HasField("onset"):
-                onset = pf.onset
-                if onset.HasField("age") and onset.age.HasField("iso8601duration"):
-                        onset_age = pf.onset.age.iso8601duration
+                onset_age = TimeElement202.from_message(pf.onset)
             hpo_terms.append(HpTerm(hpo_id=hpo_id, label=hpo_label, observed=observed, onset=onset_age))
         disease, var_list = Individual.get_variants_and_disease(ppkt)
         indi = Individual(individual_id=subject_id,
-                            hpo_terms=hpo_terms,
-                            citation=None,
-                            sex=sex,
-                            age_of_onset=age_of_onset,
-                            age_at_last_encounter=age_at_last_encounter,
-                            interpretation_list=var_list)
+                          hpo_terms=hpo_terms,
+                          citation=None,
+                          sex=sex,
+                          age_of_onset=age_of_onset,
+                          age_at_last_encounter=age_at_last_encounter,
+                          interpretation_list=var_list)
         if disease is not None:
             indi.set_disease(disease=disease)
         return indi

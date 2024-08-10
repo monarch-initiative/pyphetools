@@ -8,7 +8,7 @@ from collections import defaultdict
 from ..creation.constants import Constants
 from ..creation.hp_term import HpTerm
 from ..creation.individual import Individual
-from ..creation.pyphetools_age import IsoAge, NoneAge
+from ..creation.pyphetools_age import IsoAge
 from .simple_variant import SimpleVariant
 from ..pp.v202 import VitalStatus
 
@@ -157,8 +157,6 @@ class SimplePatient:
     @staticmethod
     def age_in_years(iso_age:str) -> typing.Optional[float]:
         if iso_age is None:
-            return None
-        if isinstance(iso_age, NoneAge):
             return None
         if len(iso_age) == 0:
             return None

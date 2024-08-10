@@ -343,6 +343,9 @@ class GestationalAge(MessageMixin):
             and self._weeks == other._weeks \
             and self._days == other._days
 
+    def __hash__(self):
+        return hash((self._weeks, self._days))
+
     def __repr__(self):
         return f'GestationalAge(weeks={self._weeks}, days={self._days})'
 
@@ -399,6 +402,9 @@ class Age(MessageMixin):
     def __eq__(self, other):
         return isinstance(other, Age) \
             and self._iso8601duration == other._iso8601duration
+
+    def __hash__(self):
+        return hash((self._iso8601duration,))
 
     def __repr__(self):
         return f'Age(iso8601duration={self._iso8601duration})'
@@ -473,6 +479,9 @@ class AgeRange(MessageMixin):
             and self._start == other._start \
             and self._end == other._end
 
+    def __hash__(self):
+        return hash((self._start, self._end))
+
     def __repr__(self):
         return f'AgeRange(start={self._start}, end={self._end})'
 
@@ -545,6 +554,9 @@ class TimeInterval(MessageMixin):
         return isinstance(other, TimeInterval) \
             and self._start == other._start \
             and self._end == other._end
+
+    def __hash__(self):
+        return hash((self._start, self._end))
 
     def __repr__(self):
         return f'TimeInterval(start={self._start}, end={self._end})'
@@ -678,6 +690,9 @@ class TimeElement(MessageMixin):
 
     def __eq__(self, other):
         return isinstance(other, TimeElement) and self._element == other._element
+
+    def __hash__(self):
+        return hash((self._element,))
 
     def __repr__(self):
         return f'TimeElement(element={self._element})'

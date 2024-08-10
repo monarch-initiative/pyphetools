@@ -138,7 +138,7 @@ class OntologyQC:
         :returns: list of HPO terms without redundancies/conflicts
         :rtype hpo_terms: List[HpTerm]
         """
-        by_age_dictionary =  defaultdict(list)
+        by_age_dictionary = defaultdict(list)
         # collect all terms without a defined age of onset
         # We will assume these terms exist at all specific ages of onset, thus we need this to calculate redundancy
         observed_terms_without_onset = list()
