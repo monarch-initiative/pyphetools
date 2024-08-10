@@ -1,3 +1,0 @@
-# IsoAge
-
-::: pyphetools.creation.IsoAge
