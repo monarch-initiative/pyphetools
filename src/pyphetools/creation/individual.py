@@ -11,7 +11,7 @@ from .disease import Disease
 from .hp_term import HpTerm
 from .hgvs_variant import Variant
 from .metadata import MetaData, Resource
-from .pyphetools_age import PyPheToolsAge
+from .pyphetools_age import PyPheToolsAge, AgeSorter
 from ..pp.v202 import TimeElement as TimeElement202
 from ..pp.v202 import VitalStatus as VitalStatus202
 from ..pp.v202 import OntologyClass as OntologyClass202
@@ -240,11 +240,8 @@ class Individual:
         if len(phenotypic_feature_onsets) == 0:
             return None
         age_format_list = list(phenotypic_feature_onsets)
-        #for o in phenotypic_feature_onsets:
-        #    age_format_list.append(IsoAge.from_iso8601(o))
-        #sorted_age = sorted(age_format_list, lambda x: x.total_days)
-        # TODO SORT!!!!!!!!!!!!!!!!!!!!!!!
-        youngest_age = age_format_list[0]
+        sorted_age_list = AgeSorter.sort_by_age(age_format_list)
+        youngest_age = sorted_age_list[0]
         return youngest_age
 
     def _get_disease_object(self):

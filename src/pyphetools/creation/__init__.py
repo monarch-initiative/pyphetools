@@ -23,7 +23,7 @@ from .individual import Individual
 from .metadata import MetaData
 from .mode_of_inheritance import Moi
 from .option_column_mapper import OptionColumnMapper
-from .pyphetools_age import PyPheToolsAge, IsoAge, HpoAge, GestationalAge, HPO_ONSET_TERMS
+from .pyphetools_age import PyPheToolsAge, AgeSorter, HPO_ONSET_TERMS
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
 from .scm_generator import SimpleColumnMapperGenerator

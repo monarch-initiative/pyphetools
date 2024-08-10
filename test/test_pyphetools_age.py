@@ -1,27 +1,28 @@
 import unittest
 import pytest
-from pyphetools.creation import PyPheToolsAge, HpoAge, IsoAge
+from pyphetools.creation import PyPheToolsAge
+from pyphetools.pp.v202 import TimeElement as TimeElement202
 
 
 class TestSimpleAge(unittest.TestCase):
     #'age_of_onset': 'Infantile onset', 'age_at_last_encounter': 'P3Y9M', 'sex': 'M'}
     def test_infantile_onset(self):
-        onset_age = PyPheToolsAge.get_age('Infantile onset')
+        onset_age = PyPheToolsAge.get_age_pp201('Infantile onset')
         self.assertIsNotNone(onset_age)
-        self.assertEqual('Infantile onset', onset_age.age_string)
-        self.assertTrue(isinstance(onset_age, HpoAge))
+        self.assertEqual('Infantile onset', onset_age.ontology_class.label)
+        self.assertTrue(isinstance(onset_age, TimeElement202))
 
     def test_3m9m(self):
-        onset_age = PyPheToolsAge.get_age('P3Y9M')
+        onset_age = PyPheToolsAge.get_age_pp201('P3Y9M')
         self.assertIsNotNone(onset_age)
-        self.assertEqual('P3Y9M', onset_age.age_string)
-        self.assertTrue(isinstance(onset_age, IsoAge))
+        self.assertEqual('P3Y9M', onset_age.age.iso8601duration)
+        self.assertTrue(isinstance(onset_age, TimeElement202))
 
     def test_2m(self):
-        onset_age = PyPheToolsAge.get_age('P2M')
+        onset_age = PyPheToolsAge.get_age_pp201('P2M')
         self.assertIsNotNone(onset_age)
-        self.assertEqual('P2M', onset_age.age_string)
-        self.assertTrue(isinstance(onset_age, IsoAge))
+        self.assertEqual('P2M', onset_age.age.iso8601duration)
+        self.assertTrue(isinstance(onset_age, TimeElement202))
 
 
     def test_age_key_converter_iso(self):
