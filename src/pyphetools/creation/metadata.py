@@ -157,7 +157,7 @@ class MetaData:
                                             url="http://purl.obolibrary.org/obo/mondo.obo",
                                             version=version)
 
-    def sequence_ontology(self, version=default_versions.get("so")):
+    def sequence_ontology(self, version=default_versions.get("so")) -> Resource:
         self._resource_d["so"] = Resource(resource_id="so",
                                             name="Sequence types and features ontology",
                                             namespace_prefix="SO",

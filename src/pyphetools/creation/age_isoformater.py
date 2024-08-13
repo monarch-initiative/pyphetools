@@ -48,7 +48,7 @@ class AgeIsoFormater:
         self._months = months
         self._days = days
 
-    def to_iso8601(self):
+    def to_iso8601(self) -> str:
         components = ["P"]
         if self._years > 0:
             components.append(f"{self._years}Y")
@@ -62,7 +62,7 @@ class AgeIsoFormater:
             return "".join(components)
 
     @staticmethod
-    def to_string(y=None, m=None, w=None, d=None):
+    def to_string(y=None, m=None, w=None, d=None) -> str:
         """
         :param y: years
         :type y: Union(int,str), optional
@@ -80,7 +80,7 @@ class AgeIsoFormater:
 
 
     @staticmethod
-    def from_numerical_month(month):
+    def from_numerical_month(month) -> str:
         """
         decode entries such as 18 or 0.7 (number of months)
         """
