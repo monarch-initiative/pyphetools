@@ -70,6 +70,7 @@ nav:
       - CohortEncoder: "api/creation/cohort_encoder.md"
       - ColumnMapper: "api/creation/column_mapper.md"
       - ConstantColumnMapper: "api/creation/constant_column_mapper.md"
+      - Disease: "api/creation/discombobulator.md"
       - Disease: "api/creation/disease.md"
       - DiseaseIdColumnMapper: "api/creation/disease_id_column_mapper.md"
       - HgvsVariant: "api/creation/hgvs_variant.md"
