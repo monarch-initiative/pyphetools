@@ -1,12 +1,14 @@
 from collections import defaultdict
 import phenopackets as PPKt
-from typing import Dict, List, Set
-import sys
+import typing
+
 
 from ..creation.constants import Constants
 from ..creation import Individual, HpTerm, MetaData
 from .simple_patient import SimplePatient
 from .html_table_generator import HtmlTableGenerator
+from ..pp.v202 import display_time_element, time_element_to_days
+from ..pp.v202 import TimeElement as TimeElement202
 
 
 class Age2Day:
@@ -38,8 +40,9 @@ class IndividualTable:
         table = PhenopacketTable.from_individuals(individual_list=individuals, metadata=metadata)
         display(HTML(table.to_html()))
     """
-    def __init__(self,  individual_list:List[Individual],
-                        metadata:MetaData=None) -> None:
+    def __init__(self,  
+                individual_list: typing.List[Individual],
+                metadata: MetaData=None) -> None:
         """
         :param individual_list: List of Indidivual objects to be displayed
         :type individual_list: List[Individual]
@@ -74,7 +77,7 @@ class IndividualTable:
                 self._caption = f"{n_phenopackets} phenopackets - {pmid_str}"
 
 
-    def to_html(self):
+    def to_html(self) -> str:
         header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
         rows = []
         for spat in self._spat_list:
@@ -83,7 +86,7 @@ class IndividualTable:
         return generator.get_html()
 
 
-    def _individual_to_phenopacket(self, individual, metadata):
+    def _individual_to_phenopacket(self, individual, metadata) -> PPKt.Phenopacket:
         """Create a phenopacket with the information from this individual
 
         We try to get information about the publication from the Individual object first. If this is not
@@ -118,7 +121,7 @@ class IndividualTable:
         metadata.external_references.append(extref)
         return individual.to_ga4gh_phenopacket(metadata=metadata)
 
-    def _simple_patient_to_table_row(self, spat:SimplePatient) -> List[str]:
+    def _simple_patient_to_table_row(self, spat:SimplePatient) -> typing.List[str]:
         """
         private method intended to create one table row that represents one individual
         :param spat: An object that represents one individual
@@ -126,8 +129,15 @@ class IndividualTable:
         """
         row_items = []
         # Patient information
-        age_string = spat.get_age() or "age: n/a"
-        pat_info = spat.get_subject_id() + " (" + spat.get_sex() + "; " + age_string + ")"
+        time_element = spat.get_age()
+        if time_element is None:
+            age_string = None
+        else:
+            age_string = display_time_element(time_element=time_element)
+        if age_string is None:
+            pat_info = spat.get_subject_id() + " (" + spat.get_sex() +  ")"
+        else:
+            pat_info = spat.get_subject_id() + " (" + spat.get_sex() + "; " + age_string + ")"
         row_items.append( pat_info)
         row_items.append( spat.get_disease())
         # Variant information
@@ -150,7 +160,8 @@ class IndividualTable:
         return row_items
 
 
-    def get_hpo_cell(self, term_by_age_dict:Dict[str,HpTerm]) -> str:
+    def get_hpo_cell(self, 
+                     term_by_age_dict: typing.Dict[str, HpTerm]) -> str:
         """
         :param term_by_age_dict: A dictionary with key - ISO8601 string, value - list of HpTerm objects
         :type term_by_age_dict: Dict[str,HpTerm]
@@ -163,55 +174,32 @@ class IndividualTable:
         for onset in sorted_age:
             hpo_list = term_by_age_dict.get(onset.key)
             hpos = "; ".join([hpo.__str__() for hpo in hpo_list])
-            if onset.key == Constants.NOT_PROVIDED:
+            if onset.key.element is None:
                 lines.append(hpos)
             else:
                 lines.append(f"<b>{onset.key}</b>: {hpos}")
         return "<br/>".join(lines)
 
-    @staticmethod
-    def iso_to_days(iso_age:str) -> int:
-        """
-        Transform the ISO8601 age strings (e.g., P3Y2M) into the corresponding number of days to facilitate sorting.
 
-        Note that if age is not provided we want to sort it to the end of the list so we transform to a very high number of days.
-
-        :param iso_age: ISO8601 age string (e.g., P3Y2M)
-        :type iso_age: str
-        :returns: number of days
-        :rtype: int
-        """
-        if iso_age == Constants.NOT_PROVIDED:
-            days = sys.maxsize
-        elif not iso_age.startswith("P"):
-            raise ValueError(f"Invlaid age string: {age}")
-        else:
-            days = 0
-            age = iso_age[1:]
-            N = len(age)
-            y = age.find("Y")
-            if y != -1:
-                days = days + int(365.25*int(age[:y]))
-                age = age[y+1:]
-            m = age.find("M")
-            if m != -1:
-                days = days + int(30.436875*int(age[:m]))
-                age = age[m+1:]
-            d = age.find("D")
-            if d != -1:
-                days = days + int(age[:d])
-        return days
 
     @staticmethod
-    def get_sorted_age2data_list(ages:Set[str]) -> List[Age2Day]:
+    def get_sorted_age2data_list(ages: typing.Set[typing.Union[str,TimeElement202]]) -> typing.List[Age2Day]:
         """
-        Create a sorted list of Age2Day objects that we use to display the age in the HTML output.
+        Create a sorted list of Age2Day objects that we use to display the age in the HTML output. We show terms without age of onset before all other terms.
 
         :param ages: A set of ISO 8601 age strings
         :type ages: Set[str]
         :returns: A list of sorted Age2Day objects
         :rtype:  List[Age2Day]
         """
-        age2day_list = list(Age2Day(age, IndividualTable.iso_to_days(age)) for age in ages)
+        age_to_days_dict = dict()
+        for age in ages:
+            if isinstance(age, str):
+                days = -2
+            else:
+                days = time_element_to_days(time_element=age)
+            age_to_days_dict[age] = days
+
+        age2day_list = list(Age2Day(age, age_to_days_dict.get(age)) for age in ages)
         sorted_list = sorted(age2day_list, key=lambda x: x.days)
         return sorted_list

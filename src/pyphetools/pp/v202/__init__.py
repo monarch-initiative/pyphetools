@@ -4,7 +4,7 @@ A package with types corresponding to the `v2.0.2` release of the Phenopacket Sc
 
 # The private package members structure mimic the structure of the protobuf files of the `phenopacket-schema`.
 
-from ._base import OntologyClass, ExternalReference, Evidence, Procedure
+from ._base import OntologyClass, ExternalReference, Evidence, Procedure, display_time_element, time_element_to_days
 # We re-export Timestamp
 from ._base import GestationalAge, Age, AgeRange, TimeInterval, TimeElement, Timestamp, File
 from ._biosample import Biosample
@@ -41,4 +41,6 @@ __all__ = [
     'SequenceLocation', 'SequenceState', 'LiteralSequenceExpression', 'DerivedSequenceExpression',
     'RepeatedSequenceExpression', 'CytobandInterval', 'ChromosomeLocation', 'Allele', 'Haplotype', 'CopyNumber',
     'VariationSet', 'Variation',
+    # functions
+    'display_time_element', 'time_element_to_days'
 ]

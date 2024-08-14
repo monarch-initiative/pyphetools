@@ -170,19 +170,19 @@ class SimplePatient:
     def get_disease(self) -> str:
         return self._disease or "n/a"
 
-    def get_observed_hpo_d(self):
+    def get_observed_hpo_d(self) -> typing.Dict[str, HpTerm]:
         """
         returns map of observed phenotypic features with key (string) HP id, value, HpTerm from creation submodule
         """
         return self._observed_hpo_terms
 
-    def get_excluded_hpo_d(self):
+    def get_excluded_hpo_d(self) -> typing.Dict[str, HpTerm]:
         """
         :return: map of excluded phenotypic features with key (string) HP id, value, HpTerm from creation submodule
         """
         return self._excluded_hpo_terms
 
-    def get_total_hpo_count(self):
+    def get_total_hpo_count(self) -> int:
         """
         :return: total count of HPO terms (observed and excluded)
         :rtype: int
@@ -192,10 +192,10 @@ class SimplePatient:
     def get_variant_list(self):
         return self._variant_list
 
-    def has_pmid(self):
+    def has_pmid(self) -> bool:
         return self._pmid is not None
 
-    def get_pmid(self):
+    def get_pmid(self) -> str:
         return self._pmid
 
     def contains_observed_term_id(self, hpo_term_id) -> bool:
@@ -211,7 +211,7 @@ class SimplePatient:
         return self._excluded_hpo_terms.get(hpo_term_id)
     
     
-    def get_term_by_age_dict(self):
+    def get_term_by_age_dict(self) -> typing.Dict[typing.Union[str,TimeElement202], typing.List[HpTerm]]:
         return self._by_age_dictionary
     
     def is_deceased(self) -> bool:
