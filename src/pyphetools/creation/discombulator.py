@@ -39,19 +39,21 @@ class Discombobulator:
         import pandas as pd
         df = pd.read_excel("../../Book2.xlsx")
         from pyphetools.creation import Discombobulator
-        dc = Discombobulator(df=df)
+        dc = Discombobulator(df=df, individual_id="individual column name")
         cardiac = dc.decode(column="Cardiac defect", trueNa={"na", "UN"}, assumeExcluded=True)
         cardiac.to_excel("cardiac.xlsx")
 
     """
     def __init__(self, 
                 df:pd.DataFrame,
+                individual_id:str,
                 hpo_cr:HpoConceptRecognizer = None) -> None:
         if hpo_cr is not None:
             self._hpo_cr = hpo_cr
         else:
             parser = HpoParser()
             self._hpo_cr = parser.get_hpo_concept_recognizer()
+        self._individual_id = individual_id
         self._df = df
 
     def decode(self,  
@@ -129,12 +131,20 @@ class Discombobulator:
         new_column = pd.concat([a, original_column], axis=0, ignore_index=True)
         new_column_header = f"Original:{column}"
         df_out[new_column_header] = new_column
+        df_out[new_column_header] = new_column
+       
+
         # Now replace with na
         # List of columns to exclude
         for na_symbol in self._true_na_set:
             exclude_columns = ['individual_id', new_column_header]
             columns_to_change = df_out.columns.difference(exclude_columns)
             df_out.loc[df_out[new_column_header] == na_symbol, columns_to_change] = "na"
+        # Now add back the original individual labels
+        individual_column = self._df[self._individual_id]
+        a = pd.Series(["Individual"])
+        individual_column = pd.concat([a, individual_column], axis=0, ignore_index=True)
+        df_out["original individual id"] = individual_column
 
         return df_out
         
