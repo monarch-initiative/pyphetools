@@ -191,6 +191,15 @@ class Resource(MessageMixin):
                         version=version)
     
     @staticmethod
+    def loinc(version:str) -> "Resource":
+        return Resource(id="loinc",
+                        name="Logical Observation Identifier Names and Codes",
+                        namespace_prefix="LOINC",
+                        iri_prefix="http://purl.bioontology.org/ontology/LNC/",
+                        url="https://loinc.org/",
+                        version=version)
+    
+    @staticmethod
     def mondo(version:str) -> "Resource":
         """
         Add a resource for Mondo to the current MetaData object
@@ -464,6 +473,8 @@ class MetaData(MessageMixin):
                           pmid:str,
                           citation_title:str,
                           hpo_version:str=None,
+                          include_mondo:bool = False,
+                          include_loinc:bool = False,
                           ):
         import time
         from google import protobuf
@@ -479,6 +490,7 @@ class MetaData(MessageMixin):
         OMIM_DEFAULT_VERSION = 'August 1, 2024'
         MONDO_DEFAULT_VERSION = '2024-08-06'
         SO_DEFAULT_VERSION =  "2021-11-22"
+        LOINC_DEFAULT_VERSION = "2.78"
         if hpo_version is None:
             hpo_version = HPO_DEFAULT_VERSION
         hpo = Resource.hpo(hpo_version)
@@ -486,8 +498,13 @@ class MetaData(MessageMixin):
         hgnc = Resource.hgnc(HGNC_DEFAULT_VERSION)
         omim = Resource.omim(OMIM_DEFAULT_VERSION)
         mondo = Resource.mondo(MONDO_DEFAULT_VERSION)
+        loinc = Resource.loinc(LOINC_DEFAULT_VERSION)
         so = Resource.sequence_ontology(SO_DEFAULT_VERSION)
         resources = [hpo, geno, hgnc, omim, so]
+        if include_mondo:
+            resources.append(mondo)
+        if include_loinc:
+            resources.append(loinc)
 
         from datetime import datetime
         now = datetime.now() # current date and time
