@@ -141,6 +141,76 @@ class Resource(MessageMixin):
                 f'version={self._version}, '
                 f'namespace_prefix={self._namespace_prefix}, '
                 f'iri_prefix={self._iri_prefix})')
+    
+    @staticmethod
+    def hpo(version:str) -> "Resource":
+        """
+        Return a prefabricated Resource object representing HPO
+        """
+        return Resource(id="hp",
+                        name="human phenotype ontology",
+                        namespace_prefix="HP",
+                        iri_prefix="http://purl.obolibrary.org/obo/HP_",
+                        url="http://purl.obolibrary.org/obo/hp.owl",
+                        version=version)
+    
+
+    @staticmethod
+    def geno(version):
+        """_summary_
+        GENO is used for three terms: homozygous, heterozygous, hemizygous
+        For this reason, we use a default version, since we assume these terms will not change.
+        Args:
+            version (str, optional): GENO version. Defaults to "2022-03-05".
+
+        Returns:
+            _type_: Resource object representing GENO
+        """
+        return Resource(id="geno",
+                        name="Genotype Ontology",
+                        namespace_prefix="GENO",
+                        iri_prefix="http://purl.obolibrary.org/obo/GENO_",
+                        url="http://purl.obolibrary.org/obo/geno.owl",
+                        version=version)
+    
+    @staticmethod
+    def hgnc(version:str):
+        return Resource(id="hgnc",
+                        name="HUGO Gene Nomenclature Committee",
+                        namespace_prefix="HGNC",
+                        iri_prefix="https://www.genenames.org/data/gene-symbol-report/#!/hgnc_id/",
+                        url="https://www.genenames.org",
+                        version=version)
+    @staticmethod
+    def omim(version:str) -> "Resource":
+        return Resource(id="omim",
+                        name="An Online Catalog of Human Genes and Genetic Disorders",
+                        namespace_prefix="OMIM",
+                        iri_prefix="https://www.omim.org/entry/",
+                        url="https://www.omim.org",
+                        version=version)
+    
+    @staticmethod
+    def mondo(version:str) -> "Resource":
+        """
+        Add a resource for Mondo to the current MetaData object
+        :param version: the Mondo version
+        """
+        return Resource(id="mondo",
+                        name="Mondo Disease Ontology",
+                        namespace_prefix="MONDO",
+                        iri_prefix="http://purl.obolibrary.org/obo/MONDO_",
+                        url="http://purl.obolibrary.org/obo/mondo.obo",
+                        version=version)
+    
+    @staticmethod
+    def sequence_ontology(version: str) -> "Resource":
+        return Resource(id="so",
+                        name="Sequence types and features ontology",
+                        namespace_prefix="SO",
+                        iri_prefix="http://purl.obolibrary.org/obo/SO_",
+                        url="http://purl.obolibrary.org/obo/so.obo",
+                        version=version)
 
 
 class Update(MessageMixin):
@@ -388,3 +458,41 @@ class MetaData(MessageMixin):
                 f'updates={self._updates}, '
                 f'phenopacket_schema_version={self._phenopacket_schema_version}, '
                 f'external_references={self._external_references})')
+    
+    @staticmethod
+    def metadata_for_pmid(created_by:str,
+                          pmid:str,
+                          citation_title:str,
+                          hpo_version:str=None,
+                          ):
+        import time
+        from google import protobuf
+        pm = pmid.replace("PMID:", "")
+        reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
+        extref = ExternalReference(id=pmid, 
+                                   description=citation_title,
+                                   reference=reference)
+        # default ontology versions
+        HPO_DEFAULT_VERSION = "2024-08-13"
+        GENO_DEFAULT_VERSION = '2022-03-05'
+        HGNC_DEFAULT_VERSION = '06/01/23'
+        OMIM_DEFAULT_VERSION = 'August 1, 2024'
+        MONDO_DEFAULT_VERSION = '2024-08-06'
+        SO_DEFAULT_VERSION =  "2021-11-22"
+        if hpo_version is None:
+            hpo_version = HPO_DEFAULT_VERSION
+        hpo = Resource.hpo(hpo_version)
+        geno = Resource.geno(GENO_DEFAULT_VERSION)
+        hgnc = Resource.hgnc(HGNC_DEFAULT_VERSION)
+        omim = Resource.omim(OMIM_DEFAULT_VERSION)
+        mondo = Resource.mondo(MONDO_DEFAULT_VERSION)
+        so = Resource.sequence_ontology(SO_DEFAULT_VERSION)
+        resources = [hpo, geno, hgnc, omim, so]
+
+        from datetime import datetime
+        now = datetime.now() # current date and time
+        return MetaData(created=Timestamp.from_datetime(dt=now),
+                      created_by=created_by,
+                      resources=resources,
+                      external_references=[extref])
+

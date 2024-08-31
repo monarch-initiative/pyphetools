@@ -32,9 +32,9 @@ class VariantInterpretation(MessageMixin):
 
     def __init__(
             self,
-            acmg_pathogenicity_classification: AcmgPathogenicityClassification,
-            therapeutic_actionability: TherapeuticActionability,
             variation_descriptor: VariationDescriptor,
+            acmg_pathogenicity_classification: AcmgPathogenicityClassification=AcmgPathogenicityClassification.NOT_PROVIDED,
+            therapeutic_actionability: TherapeuticActionability=TherapeuticActionability.UNKNOWN_ACTIONABILITY,
     ):
         self._acmg_pathogenicity_classification = acmg_pathogenicity_classification
         self._therapeutic_actionability = therapeutic_actionability

@@ -20,9 +20,12 @@ from .hpo_parser import HpoParser
 from .hp_term import HpTerm, HpTermBuilder
 from .import_template import TemplateImporter
 from .individual import Individual
+from .measurements import Measurements
 from .metadata import MetaData
 from .mode_of_inheritance import Moi
+from .ontology_terms import OntologyTerms
 from .option_column_mapper import OptionColumnMapper
+from .promoter_variant import PromoterVariant
 from .pyphetools_age import PyPheToolsAge, AgeSorter, HPO_ONSET_TERMS
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
