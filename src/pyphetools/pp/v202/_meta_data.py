@@ -192,10 +192,14 @@ class Resource(MessageMixin):
     
     @staticmethod
     def loinc(version:str) -> "Resource":
+        """
+        LOINC does not offer a resource that we can address as if it were an OBO Foundry ontology
+        but the following should be unique within the Phenopacket ecosystem
+        """
         return Resource(id="loinc",
                         name="Logical Observation Identifier Names and Codes",
                         namespace_prefix="LOINC",
-                        iri_prefix="http://purl.bioontology.org/ontology/LNC/",
+                        iri_prefix="http://purl.bioontology.org/ontology/LOINC_",
                         url="https://loinc.org/",
                         version=version)
     
@@ -219,6 +223,19 @@ class Resource(MessageMixin):
                         namespace_prefix="SO",
                         iri_prefix="http://purl.obolibrary.org/obo/SO_",
                         url="http://purl.obolibrary.org/obo/so.obo",
+                        version=version)
+    
+    @staticmethod
+    def ucum(version: str) -> "Resource":
+        """
+        UCUM does not offer a resource that we can address as if it were an OBO Foundry ontology
+        but the following should be unique within the Phenopacket ecosystem
+        """
+        return Resource(id="ucum",
+                        name="Unified Code for Units of Measure",
+                        namespace_prefix="UCUM",
+                        iri_prefix="https://ucum.org/UCUM_",
+                        url="https://ucum.org/",
                         version=version)
 
 
@@ -491,6 +508,7 @@ class MetaData(MessageMixin):
         MONDO_DEFAULT_VERSION = '2024-08-06'
         SO_DEFAULT_VERSION =  "2021-11-22"
         LOINC_DEFAULT_VERSION = "2.78"
+        UCUM_DEFAULT_VERSION = "1.7"
         if hpo_version is None:
             hpo_version = HPO_DEFAULT_VERSION
         hpo = Resource.hpo(hpo_version)
@@ -499,12 +517,14 @@ class MetaData(MessageMixin):
         omim = Resource.omim(OMIM_DEFAULT_VERSION)
         mondo = Resource.mondo(MONDO_DEFAULT_VERSION)
         loinc = Resource.loinc(LOINC_DEFAULT_VERSION)
+        ucum = Resource.ucum(UCUM_DEFAULT_VERSION)
         so = Resource.sequence_ontology(SO_DEFAULT_VERSION)
         resources = [hpo, geno, hgnc, omim, so]
         if include_mondo:
             resources.append(mondo)
         if include_loinc:
             resources.append(loinc)
+            resources.append(ucum)
 
         from datetime import datetime
         now = datetime.now() # current date and time
