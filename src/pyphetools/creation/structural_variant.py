@@ -122,12 +122,11 @@ class StructuralVariant(Variant):
                                              gene_context=gdesc,
                                              label=self._label,
                                              molecule_context=MoleculeContext202.genomic)
-       
+        # Note that it is possible to first create a StructuralVariant object and later set its genotype
+        # Therefore, it is not an error if gt_term is None
         gt_term = Variant._get_genotype_term(self._genotype)
         if gt_term is not None:
             vdescriptor.allelic_state = gt_term
-        else:
-            print(f"Did not recognize genotype {self._genotype}")
         structural_type = OntologyClass202(id=self._so_id, label=self._so_label)
         vdescriptor.structural_type = structural_type
         vinterpretation = VariantInterpretation202(variation_descriptor=vdescriptor)
