@@ -1,5 +1,11 @@
 import phenopackets
 from .variant import Variant
+from ..pp.v202 import GeneDescriptor as GeneDescriptor202
+from ..pp.v202 import VariantInterpretation as VariantInterpretation202
+from ..pp.v202 import VariationDescriptor as VariationDescriptor202
+from ..pp.v202 import Expression as Expression202
+from ..pp.v202 import MoleculeContext as MoleculeContext202
+from ..pp.v202 import VcfRecord as VcfRecord202
 import string
 from typing import Dict
 import random
@@ -140,4 +146,39 @@ class HgvsVariant(Variant):
         vcf_record.alt = self._alt
         vdescriptor.vcf_record.CopyFrom(vcf_record)
         vinterpretation.variation_descriptor.CopyFrom(vdescriptor)
+        return vinterpretation
+    
+    def to_variant_interpretation_202(self, 
+                                      acmg:str=None) -> VariantInterpretation202:
+        """
+        Transform this Variant object into a "variantInterpretation" message of the GA4GH Phenopacket schema
+        """
+        
+        vcf_record = VcfRecord202(genome_assembly=self._assembly,
+                                  chrom=self._chr,
+                                  pos=self._position,
+                                  ref=self._ref,
+                                  alt=self._alt)
+        vdescriptor = VariationDescriptor202(id=self._variant_id, vcf_record=vcf_record, molecule_context=MoleculeContext202.genomic)
+        if self._hgnc_id is not None and self._symbol is not None:
+            gene_descriptor = GeneDescriptor202(value_id=self._hgnc_id, symbol=self._symbol)
+            vdescriptor.gene_context = gene_descriptor
+        if self._hgvs is not None:
+            hgvs_expression = Expression202(syntax="hgvs.c", value=self._hgvs)
+            vdescriptor.expressions.append(hgvs_expression)
+        if self._g_hgvs is not None:
+            hgvs_expression = Expression202(syntax="hgvs.g", value=self._g_hgvs)
+            vdescriptor.expressions.append(hgvs_expression)
+        gt_term = Variant._get_genotype_term(self._genotype)
+        # it can occur that the genotype is not set when we call this function (it will be set by calling code)
+        # therefore it is not necessarily an error if the genotype is None, calling code needs to check this appropriately
+        if gt_term is not None:
+            vdescriptor.allelic_state = gt_term
+        vinterpretation = VariantInterpretation202(variation_descriptor=vdescriptor)
+        acmg_code = Variant._get_acmg_classification(acmg=acmg)
+        if acmg_code is not None:
+            vinterpretation.acmg_pathogenicity_classification = acmg_code
+        else:
+            print(f"Warning- did not recognize ACMG category {acmg}")
+      
         return vinterpretation

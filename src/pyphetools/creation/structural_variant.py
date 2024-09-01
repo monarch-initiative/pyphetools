@@ -106,6 +106,36 @@ class StructuralVariant(Variant):
                 print(f"Warning- did not recognize ACMG category {acmg}")
         vinterpretation.variation_descriptor.CopyFrom(vdescriptor)
         return vinterpretation
+    
+    def to_variant_interpretation_202(self, acmg=None):
+        """
+        Transform this Variant object into a "variantInterpretation" message of the GA4GH Phenopacket schema
+        """
+        from ..pp.v202 import VariantInterpretation as VariantInterpretation202
+        from ..pp.v202 import VariationDescriptor as VariationDescriptor202
+        from ..pp.v202 import GeneDescriptor as GeneDescriptor202
+        from ..pp.v202 import OntologyClass as OntologyClass202
+        from ..pp.v202 import MoleculeContext as MoleculeContext202
+  
+        gdesc = GeneDescriptor202(value_id=self._hgnc_id, symbol=self._gene_symbol)
+        vdescriptor = VariationDescriptor202(id=self._variant_id,
+                                             gene_context=gdesc,
+                                             label=self._label,
+                                             molecule_context=MoleculeContext202.genomic)
+        # Note that it is possible to first create a StructuralVariant object and later set its genotype
+        # Therefore, it is not an error if gt_term is None
+        gt_term = Variant._get_genotype_term(self._genotype)
+        if gt_term is not None:
+            vdescriptor.allelic_state = gt_term
+        structural_type = OntologyClass202(id=self._so_id, label=self._so_label)
+        vdescriptor.structural_type = structural_type
+        vinterpretation = VariantInterpretation202(variation_descriptor=vdescriptor)
+        acmg_code = Variant._get_acmg_classification(acmg=acmg)
+        if acmg_code is not None:
+            vinterpretation.acmgPathogenicityClassification = acmg_code
+        else:
+            print(f"Warning- did not recognize ACMG category \"{acmg}\"")
+        return vinterpretation
 
     # provide static constructors for most important structural variation types
 
@@ -204,3 +234,4 @@ class StructuralVariant(Variant):
                                  sequence_ontology_id="SO:1000044",
                                  sequence_ontology_label="chromosomal_translocation",
                                  variant_id=variant_id)
+

@@ -2,7 +2,7 @@
 from .hpo_cr import HpoConceptRecognizer
 from .column_mapper import ColumnMapper
 from .simple_column_mapper import SimpleColumnMapper
-from typing import List
+import typing
 import pandas as pd
 import re
 
@@ -34,7 +34,7 @@ class SimpleColumnMapperGenerator:
         self._error_messages = []
 
 
-    def try_mapping_columns(self) -> List[ColumnMapper]:
+    def try_mapping_columns(self) -> typing.List[ColumnMapper]:
         """As a side effect, this class initializes three lists of mapped, unmapped, and error columns
 
         :returns: A dictionary with successfully mapped columns
@@ -71,14 +71,14 @@ class SimpleColumnMapperGenerator:
         return simple_mapper_list
 
 
-    def get_unmapped_columns(self):
+    def get_unmapped_columns(self) -> typing.List[str]:
         """
         :returns: A list of names of the columns that could not be mapped
         :rtype: List[str]
         """
         return self._unmapped_columns
 
-    def get_mapped_columns(self) -> List[str]:
+    def get_mapped_columns(self) -> typing.List[str]:
         """
         :returns: A list of names of the columns that were mapped
         :rtype: List[str]
@@ -88,7 +88,7 @@ class SimpleColumnMapperGenerator:
     @staticmethod
     def from_map(column_name_to_hpo_label_map,
                 observed='+',
-                excluded='-') -> List[SimpleColumnMapper]:
+                excluded='-') -> typing.List[SimpleColumnMapper]:
         """
         Create SimpleColumnMapers from a map like this
 
@@ -121,7 +121,7 @@ class SimpleColumnMapperGenerator:
 
 
 
-    def to_html(self):
+    def to_html(self) -> str:
         """create an HTML table with names of mapped and unmapped columns
         """
         table_items = []

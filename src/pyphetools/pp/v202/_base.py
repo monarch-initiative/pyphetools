@@ -8,6 +8,129 @@ from .._timestamp import Timestamp
 from ..parse import extract_message_scalar, extract_pb_message_scalar, extract_oneof_scalar, extract_pb_oneof_scalar
 
 
+
+def display_time_element(time_element: "TimeElement") -> typing.Optional[str]:
+    """
+    Generate a string representing the age of an individual intended for display in a notebook etc.
+    We determine the type of element and use specialized methods for GestationalAge, Age, AgeRange, and OntologyClass.
+    Timestamp and TimeInterval not supported because they do not represent ages (in general)
+    """
+    if time_element.element is None:
+        return None
+    # try the various kinds of element we support 
+    if time_element.gestational_age:
+        gest_age = time_element.gestational_age
+        weeks = gest_age.weeks
+        days = gest_age.days
+        if days > 0:
+            return f"G{weeks}W{days}D"
+        else:
+            return f"G{weeks}W"
+    if time_element.age:
+        age = time_element.age
+        return age.iso8601duration
+    if time_element.ontology_class:
+        oclass = time_element.ontology_class
+        return f"{oclass.label} ({oclass.id})"
+    if time_element.age_range:
+        age_range = time_element.age_range
+        start_display = display_time_element(time_element=age_range.start)
+        end_display   = display_time_element(time_element=age_range.end)
+        return f"range: {start_display}-{end_display}"
+    # if we get here, we could not identify the type of TimeElement
+    # Timestamp and TimeInterval not supported because they do not represent ages (in general)
+    print((f"Did not recognize type of TimeElement {type(time_element.element)}"))
+    raise ValueError(f"Did not recognize type of TimeElement {type(time_element.element)}")
+
+
+
+def iso_to_days(iso_age:str) -> int:
+    """
+    Transform the ISO8601 age strings (e.g., P3Y2M) into the corresponding number of days to facilitate sorting.
+
+    Note that if age is not provided we want to sort it to the end of the list so we transform to a very high number of days.
+
+    :param iso_age: ISO8601 age string (e.g., P3Y2M)
+    :type iso_age: str
+    :returns: number of days
+    :rtype: int
+    """
+    if not isinstance(iso_age, str):
+        raise ValueError(f"Warning, did not recognize type of iso_age: {iso_age}, type={type(iso_age)}")
+    elif not iso_age.startswith("P"):
+        raise ValueError(f"Invalid age string: {iso_age}")
+    else:
+        days = 0
+        age = iso_age[1:]
+        N = len(age)
+        y = age.find("Y")
+        if y != -1:
+            days = days + int(365.25*int(age[:y]))
+            age = age[y+1:]
+        m = age.find("M")
+        if m != -1:
+            days = days + int(30.436875*int(age[:m]))
+            age = age[m+1:]
+        d = age.find("D")
+        if d != -1:
+            days = days + int(age[:d])
+    return days   
+
+def ontology_class_to_days(oclass: "OntologyClass") -> float:
+       HPO_AGE_TO_DAYS = {
+        "Antenatal onset": -1,
+        "Embryonal onset": -7 * 40,
+        "Fetal onset": -7 * 29,
+        "Late first trimester onset": -7 * 29,
+        "Second trimester onset": -7 * 26,
+        "Third trimester onset": -7 * 22,
+        "Congenital onset": 0,
+        "Neonatal onset": 1,
+        "Pediatrial onset": 29,
+        "Infantile onset": 29,
+        "Childhood onset": 365.25,
+        "Juvenile onset": 5 * 365.25,
+        "Adult onset": 16 * 365.25,
+        "Young adult onset": 16 * 365.25,
+        "Early young adult onset": 16 * 365.25,
+        "Intermediate young adult onset": 19 * 365.25,
+        "Late young adult onset": 25 * 365.25,
+        "Middle age onset": 40 * 365.25,
+        "Late onset": 60 * 365.25,
+    }
+       if oclass.label not in HPO_AGE_TO_DAYS:
+           raise ValueError(f"Did not recongize HPO Onset class: {oclass.label} ({oclass.id})")
+       return HPO_AGE_TO_DAYS.get(oclass.label)
+
+def time_element_to_days(time_element: "TimeElement") -> float:
+    """
+    This function sorts time elements. Note that we make the assumption that any element that is a GestationalAge has the age of -1 day and thus will sort
+    before other elements, but we will not sort the gestational ages more specifically. If a study focuses specifically on gestational age, then a different sorting routine should be implemented.
+    """
+    if time_element.element is None:
+        return -2
+    if time_element.gestational_age:
+        return -1
+    if time_element.age:
+        return iso_to_days(time_element.age.iso8601duration)
+    if time_element.ontology_class:
+        oclass = time_element.ontology_class
+        return ontology_class_to_days(oclass=oclass)
+    if time_element.age_range:
+        age_range = time_element.age_range
+        return time_element_to_days(time_element=age_range.start)
+    # if we get here, we could not identify the type of TimeElement
+    # Timestamp and TimeInterval not supported because they do not represent ages (in general)
+
+    raise ValueError(f"Did not recognize type of TimeElement {type(time_element.element)}")
+
+
+
+
+   
+
+
+
 class OntologyClass(MessageMixin):
     """
     `OntologyClass` represents classes (terms) from ontologies, and is used in many places throughout
