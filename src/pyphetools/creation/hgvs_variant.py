@@ -170,10 +170,10 @@ class HgvsVariant(Variant):
             hgvs_expression = Expression202(syntax="hgvs.g", value=self._g_hgvs)
             vdescriptor.expressions.append(hgvs_expression)
         gt_term = Variant._get_genotype_term(self._genotype)
+        # it can occur that the genotype is not set when we call this function (it will be set by calling code)
+        # therefore it is not necessarily an error if the genotype is None, calling code needs to check this appropriately
         if gt_term is not None:
             vdescriptor.allelic_state = gt_term
-        else:
-            print(f"Did not recognize genotype {self._genotype}")
         vinterpretation = VariantInterpretation202(variation_descriptor=vdescriptor)
         acmg_code = Variant._get_acmg_classification(acmg=acmg)
         if acmg_code is not None:

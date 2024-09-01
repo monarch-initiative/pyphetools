@@ -78,7 +78,7 @@ class TemplateCreator:
         :param disease_label: the corresponding name
         :param HGNC_id: HUGO Gene Nomenclattre Committee identifier, e.g., HGNC:3603
         :param gene_symbol: corresponding gene symbol, e.g., FBN1
-        :transcript: transcript to be used for the HVGC nomenclature. Must be refseq with version number
+        :param transcript: transcript to be used for the HVGC nomenclature. Must be refseq with version number
         """
         H1_Headers = REQUIRED_H1_FIELDS
         H2_Headers = REQUIRED_H2_FIELDS

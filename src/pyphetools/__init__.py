@@ -5,7 +5,7 @@ from . import visualization
 from . import validation
 
 
-__version__ = "0.9.104"
+__version__ = "0.9.105"
 
 
 __all__ = [

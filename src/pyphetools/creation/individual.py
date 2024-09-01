@@ -163,13 +163,13 @@ class Individual:
         """
         self._disease = disease
 
-    def disease_count(self):
+    def disease_count(self) -> int:
         if self._disease is None:
             return 0
         else:
             return 1
 
-    def set_hpo_terms(self, cleansed_hpo_terms: List[HpTerm]):
+    def set_hpo_terms(self, cleansed_hpo_terms: List[HpTerm]) -> None:
         """
         :param cleansed_hpo_terms: a list of HpTerm objects that has been cleansed by OntologyQC
         :type cleansed_hpo_terms: List[pyphetools.creation.HpTerm]
@@ -177,10 +177,10 @@ class Individual:
         self._hpo_terms = cleansed_hpo_terms
 
     @property
-    def pmid(self):
+    def pmid(self) -> str:
         return self._citation.pmid
 
-    def set_citation(self, citation: Citation):
+    def set_citation(self, citation: Citation) -> None:
         """
         :param citation: Object with the title and PubMed identifier for the publication in which this individual was described (e.g. PMID:321..)
         :type citation: Citation
@@ -330,12 +330,8 @@ class Individual:
                 # `protobuf` devs must have removed `clear()` method
                 # This is a workaround to clear the list of external references.
                 _ = metadata.external_references.pop()
-            extref = PPKt.ExternalReference()
-            extref.id = self._citation.pmid
-            pm = self._citation.pmid.replace("PMID:", "")
-            extref.reference = f"https://pubmed.ncbi.nlm.nih.gov/{pm}"
-            extref.description = self._citation.title
-            metadata.external_references.append(extref)
+            extref202 = self._citation.to_external_reference()
+            metadata.external_references.append(extref202.to_message())
         php.meta_data.CopyFrom(metadata)
         return php
 

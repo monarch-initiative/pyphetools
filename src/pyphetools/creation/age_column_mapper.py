@@ -224,7 +224,7 @@ class YearAgeColumnMapper(AgeColumnMapper):
         """
         Extract an iso8601 string for age recorded as a year (either an int such as 4 or a float such as 4.25 for P4Y3M)
         :param age: an int representing years or a float such as 2.5 for two and a half years
-        :return: an ISO 8601 string such as P2Y6M
+        :returns: an ISO 8601 string such as P2Y6M
         """
         if isinstance(cell_contents, int):
             age_str = f"P{cell_contents}Y"
