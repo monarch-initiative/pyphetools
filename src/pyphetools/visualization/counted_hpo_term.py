@@ -3,25 +3,26 @@ from collections import defaultdict
 
 class CountedHpoTerm:
     """
-    This class intends to keep track of the frequzency of an HPO term in a cohort
+    This class intends to keep track of the frequency of an HPO term in a cohort
+    The denominator refers to the total number of observed counts and the numerator is equal to observed+exluded, i.., the total count for which some information was available.
     """
     def __init__(self, hpo_term, numerator, denominator):
         if not isinstance(numerator, int):
             raise ValueError(f"Malformed numerator (must be integer but was {numerator})")
         if not isinstance(denominator, int):
             raise ValueError(f"Malformed denominator (must be integer but was {denominator})")
-        self._onset_term_id = hpo_term.id
-        self._onset_term_label = hpo_term.label
+        self._hpo_term_id = hpo_term.id
+        self._hpo_term_label = hpo_term.label
         self._num = numerator
         self._denom = denominator
 
     @property
     def id(self):
-        return self._onset_term_id
+        return self._hpo_term_id
 
     @property
     def label(self):
-        return self._onset_term_label
+        return self._hpo_term_label
 
     def has_frequency(self):
         return self._num is not None and self._denom is not None
@@ -33,9 +34,6 @@ class CountedHpoTerm:
     @property
     def denominator(self):
         return self._denom
-
-    def increment_numerator(self):
-        self._num += 1
 
 
 class CohortTermCounter:
