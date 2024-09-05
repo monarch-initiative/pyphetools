@@ -7,6 +7,7 @@ from ..creation.hpo_parser import HpoParser
 from ..pp.v202 import Phenopacket as Phenopacket202
 from ..pp.v202 import OntologyClass as OntologyClass202
 
+TARGET_DISEASE_ID = "MONDO:0000001"
 
 class HpoCohortCount:
     """
@@ -56,7 +57,19 @@ class HpoCohortCount:
             return "n/a" # no information available for this
         else:
             percentage = 100 * obs / total
-            return f"{obs}/{total} ({percentage}%)"
+            return f"{obs}/{total} ({int(percentage)}%)"
+        
+
+    def frequency_for_target_disease(self, disease: OntologyClass202) -> str:
+        exc = self._d_to_excluded[disease]
+        obs = self._d_to_observed[disease]
+        total = exc + obs
+        if total == 0:
+            return "n/a" # no information available for this
+        elif obs == 1:
+            return f"observed"
+        else:
+            return "excluded"
         
     def __str__(self):
         items = list()
@@ -69,7 +82,6 @@ class HpoCohortCount:
         We sort with a heuristic that rewards at least one disease with a high frequency AND an overall high number of observed counts.
         """
         frequencies = list() ## here we do not care about the actual order
-        total = self.get_total() ## total number of observations
         for k, v in self._d_to_observed.items():
             if v == 0:
                 frequencies.append(0)
@@ -80,7 +92,15 @@ class HpoCohortCount:
                 frequencies.append(obs/total)
         if len(frequencies) == 0:
             return 0
-        return total * max(frequencies)
+        return max(frequencies)
+    
+    def get_weighted_maximum_frequency(self):
+        """
+        Heuristic for sorting - maximum frequency times toit
+        """
+        total = self.get_total() ## total number of observations
+        max_f = self.get_maximum_frequency()
+        return total * max_f
 
 
 
@@ -88,10 +108,13 @@ class DiseaseSpecificHpoCounter:
 
     def __init__(self, 
                  ppkt_list: typing.List[PPKt.Phenopacket],
+                 target_ppkt: PPKt.Phenopacket = None,
                  hpo: hpotk.MinimalOntology = None) -> None:
         """
         :param ppkt_list: List of Phenopackets we wish to display as a table of HPO term counts
         :type ppkt_list: typing.list[PPKt.Phenopacket]
+        :target_ppkt: Phenopacket of the individual that we wish to compare with the cohort that is represented in ppkt_list. Optional
+        :type target_ppkt: typing.Optional[PPKt.Phenopacket]
         :param hpo: Reference to HPO ontology object (if nulll, will be created in constructor)
         :type hpo: hpotk.MinimalOntology
         """
@@ -107,16 +130,24 @@ class DiseaseSpecificHpoCounter:
                 raise ValueError(f"This class does not support visualization of phenopackets with more than one disease diagnosis")
             disease_term = ppkt.diseases[0]
             disease_dict[disease_term.term].append(ppkt)
+        if target_ppkt is not None:
+            ## We want to show the target as a separate column.
+            ## use this term as a marker, it will not be displayed
+            oclzz = OntologyClass202(id=TARGET_DISEASE_ID, label=target_ppkt.id) 
+            disease_dict[oclzz].append(target_ppkt)
         hpo_to_counter = dict()
         self._hpo_term_ids_for_display = set()
         warn_terms = set() ## to avoid making the same error message multiple times
+        # The following for loop extracts data for each disease one at a time.
         for disease_term, ppkt_list in disease_dict.items():
             for ppkt in ppkt_list:
+                # We count not only explicitly annotated terms but also the ancestor of observed terms
+                # and descendents of excluded terms.
+                # Note that we keep track of explicitly annotated terms and these are the only ones we show in the output table
                 observed_with_ancestors = set()
                 excluded_with_descendants = set()
                 for pf in ppkt.phenotypic_features:
                     oclzz = pf.type
-                    hpo_id = oclzz.id
                     hpo_term = self._hpo.get_term(oclzz.id)
                     if hpo_term.identifier.value != oclzz.id :
                         if hpo_term.identifier.value not in warn_terms:
@@ -125,8 +156,8 @@ class DiseaseSpecificHpoCounter:
                             print(f"Use of outdated id {oclzz.id} ({oclzz.label}). Replacing with {hpo_term.identifier.value}.")
                             print("###################################") 
                         oclzz = OntologyClass202(id=hpo_term.identifier.value, label=hpo_term.name)
-                        hpo_id = oclzz.id
-                    self._hpo_term_ids_for_display.add(oclzz.id)
+                    hpo_id = oclzz.id
+                    self._hpo_term_ids_for_display.add(hpo_id)
                     if pf.excluded:
                         desc_set = self._hpo.graph.get_descendants(hpo_id, include_source=True)
                         excluded_with_descendants.update(desc_set)
@@ -139,7 +170,7 @@ class DiseaseSpecificHpoCounter:
                     if oclzz not in hpo_to_counter:
                         hpo_to_counter[oclzz] = HpoCohortCount(hpo=oclzz)
                     hpo_to_counter.get(oclzz).increment_observed(disease_term)
-                for hpo_term in excluded_with_descendants:
+                for hpo_id in excluded_with_descendants:
                     hpo_label = self._hpo.get_term_name(hpo_id)
                     oclzz = OntologyClass202(id=hpo_id, label=hpo_label)
                     if oclzz not in hpo_to_counter:
@@ -163,9 +194,14 @@ class DiseaseSpecificHpoCounter:
             d = dict()
             d["HPO"] = hpo2c.hpo_display
             for disease in self._disease_list:
-                d[disease.label] = hpo2c.frequency_for_disease(disease)
+                if disease.id == TARGET_DISEASE_ID:
+                    d[disease.label] = hpo2c.frequency_for_target_disease(disease)
+                else:
+                    d[disease.label] = hpo2c.frequency_for_disease(disease)
             items.append(d)
-        return pd.DataFrame(items)
+        df = pd.DataFrame(items)
+        df_reset = df.reset_index(drop=True) # the index is irrelevant
+        return df_reset
 
         
         
