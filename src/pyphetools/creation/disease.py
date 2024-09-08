@@ -16,6 +16,9 @@ class Disease:
             raise ValueError(f"Malformed disease identifier with white space: \"{disease_id}\"")
         if disease_label.startswith(" ") or disease_label.endswith(" "):
             raise ValueError(f"Malformed disease label (starts/ends with whitespace): \"{disease_label}\"")
+        # occasionally, copy-paste error leads to this kind of malformed label:  "Developmental and epileptic encephalopathy 50\t616457\tAR\t3\t"
+        if "\t" in disease_label:
+            raise ValueError(f"Malformed disease label (contains tabs): \"{disease_label}\"")
         self._id = disease_id
         self._label = disease_label
 

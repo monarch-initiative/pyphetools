@@ -66,10 +66,16 @@ def iso_to_days(iso_age:str) -> int:
         y = age.find("Y")
         if y != -1:
             days = days + int(365.25*int(age[:y]))
+            if age.endswith("Y"):
+                return days
             age = age[y+1:]
         m = age.find("M")
         if m != -1:
             days = days + int(30.436875*int(age[:m]))
+            # if the string ends with M, e.g., P3Y2M, then do not look for days
+            if age.endswith("M"):
+                return days
+            # if not, advance the string pointer so we can parse the days
             age = age[m+1:]
         d = age.find("D")
         if d != -1:

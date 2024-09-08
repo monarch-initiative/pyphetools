@@ -208,10 +208,14 @@ class PhenopacketTable:
             y = age.find("Y")
             if y != -1:
                 days = days + int(365.25*int(age[:y]))
+                if age.endswith("Y"):
+                    return days
                 age = age[y+1:]
             m = age.find("M")
-            if m != -1:
+            if m is not None and m != -1:
                 days = days + int(30.436875*int(age[:m]))
+                if age.endswith("M"):
+                    return days
                 age = age[m+1:]
             d = age.find("D")
             if d != -1:
