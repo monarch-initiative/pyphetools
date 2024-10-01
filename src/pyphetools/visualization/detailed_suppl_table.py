@@ -6,9 +6,43 @@ import typing
 from .hpo_category import HpoCategorySet
 from hpotk.model import TermId
 from collections import defaultdict
+import hpotk
+from enum import Enum
+
 
 ALL_ROOT = TermId.from_curie("HP:0000001")
 PHENOTYPIC_ABNORMALITY_ROOT = TermId.from_curie("HP:0000118")
+
+class HpoStatus(Enum):
+    OBSERVED = 1, "observed"
+    EXCLUDED = 2, "excluded"
+    NOT_AVAILABLE = 3, "na"
+
+
+class HpoTableCell:
+    """
+    Represents one cell of the detailed table
+    """
+    def __init__(self, 
+                 hpo_term_id:hpotk.TermId,
+                 status: HpoStatus
+                 ) -> None:
+        self._hpo_id = hpo_term_id
+        self._status = status
+
+    def to_cell(self):
+        return self._status.value
+    
+    def to_cell_pm(self):
+        """
+        Alternative plus-minus (pm) notation
+        """
+        if self._status == HpoStatus.OBSERVED:
+            return "+"
+        elif self._status == HpoStatus.EXCLUDED:
+            return "-"
+        else:
+            return "na"
 
 
 
@@ -19,7 +53,9 @@ class DetailedSupplTable:
     are shown as columns.
     """
 
-    def __init__(self, patient_list: typing.List[PPKt.Phenopacket], hp_json:str=None) -> None:
+    def __init__(self, 
+                 patient_list: typing.List[PPKt.Phenopacket], 
+                 hp_json:str=None) -> None:
         """
         :param patient_d: dictionary of patients to display
         :type patient_d: map with key string and value SimplePatient
@@ -47,6 +83,8 @@ class DetailedSupplTable:
                 # key is a string such as HP:0001234, value is an HpTerm object
                 # we need to convert it to an object from hpo-toolkit because get_ancestors returns HpTerm objects
                 hp_termid = TermId.from_curie(hp_id)
+                if not self._hp_ontology.graph.is_descendant_of(hp_termid, PHENOTYPIC_ABNORMALITY_ROOT):
+                    continue # do not count terms that are not phenotypes
                 ancs = self._hp_ontology.graph.get_ancestors(hp_termid)
                 anc_set.add(hp_termid)
                 anc_set.update(ancs)
@@ -59,9 +97,13 @@ class DetailedSupplTable:
             variants = pat.get_variant_list()
             for var in variants:
                 var_d[var] += 1
-
-            # TODO figure out what to do with biallelic
         self._hpo_category_set = HpoCategorySet(ontology=hp_ontology)
+
+    def _calculate_table(self, patient_list: typing.List[PPKt.Phenopacket], ) -> typing.List[typing.List[str]]:
+        for pat in self._simple_patient_list:
+            hpo_terms = pat.get_observed_hpo_d()
+            anc_set = set() # graph with ancestors induced by all terms of the patient
+
 
 
     def _get_table(self, counts_d):
