@@ -20,3 +20,11 @@ class TestDisease(unittest.TestCase):
         with pytest.raises(Exception) as e_info:
             eri1 = Disease(disease_id='OMIM:608739', disease_label=' ERI1-related disease')
         assert str(e_info.value) == 'Malformed disease label (starts/ends with whitespace): " ERI1-related disease"'
+
+    def test_exception_because_of_stray_tab(self):
+        disease_id = "OMIM:616457"
+        disease_label = "Developmental and epileptic encephalopathy 50\t616457\tAR\t3\t"
+        with pytest.raises(ValueError) as val_error:
+            disease = Disease(disease_id=disease_id, disease_label=disease_label)
+        assert str(val_error.value) == 'Malformed disease label (contains tabs): "Developmental and epileptic encephalopathy 50	616457	AR	3	"'
+

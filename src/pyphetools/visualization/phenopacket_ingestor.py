@@ -68,4 +68,29 @@ class PhenopacketIngestor:
     def get_phenopacket_list(self) -> typing.List:
         ppktd = self.get_phenopacket_dictionary()
         return list(ppktd.values())
+    
+
+    def _ingest(self, indir="phenopackets", recursive:bool=False, disease_id:str=None):
+        for file in os.listdir(indir):
+            fname = os.path.join(indir, file)
+            if fname.endswith(".json") and os.path.isfile(fname):
+                with open(fname) as f:
+                    data = f.read()
+                    jsondata = json.loads(data)
+                    ppack = Parse(json.dumps(jsondata), PPKt.Phenopacket())
+                    if disease_id is not None:
+                        if not PhenopacketIngestor.has_disease_id(ppkt=ppack, disease_id=disease_id):
+                            continue
+                    self._phenopackets.append(ppack)
+
+
+    def ingest_from_directory(self, indir:str):
+        return self._ingest(indir=indir)
+    
+    def ingest_from_file(self, json_file:str) -> PPKt.Phenopacket:
+         with open(json_file) as f:
+            data = f.read()
+            jsondata = json.loads(data)
+            ppack = Parse(json.dumps(jsondata), PPKt.Phenopacket())
+            return ppack
 

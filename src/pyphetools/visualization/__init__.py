@@ -1,4 +1,5 @@
 from .detailed_suppl_table import DetailedSupplTable
+from .disease_specific_hpo_counter import DiseaseSpecificHpoCounter, HpoCohortCount
 from .focus_count_table import FocusCountTable
 from .hpoa_table_creator import HpoaTableCreator, HpoaTableBuilder
 from .individual_table import IndividualTable

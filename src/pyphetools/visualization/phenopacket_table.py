@@ -7,6 +7,7 @@ from ..creation.constants import Constants
 from ..creation import Individual, HpTerm, MetaData
 from .simple_patient import SimplePatient
 from .html_table_generator import HtmlTableGenerator
+from ..pp.v202._base import TimeElement as TimeElement202
 
 
 #
@@ -23,6 +24,15 @@ class Age2Day:
     def __init__(self, age, days) -> None:
         self.key = age
         self.days = days
+
+    def __rep__(self):
+        """
+        self.key can be either a TimeElement or a simple string.
+        """
+        if isinstance(self.key, TimeElement202):
+            return self.key.display_time_element()
+        else:
+            return self.key
 
 
 #@DeprecationWarning("This class will be replaced by IndividualTable and will be deleted in a future version")
@@ -208,10 +218,14 @@ class PhenopacketTable:
             y = age.find("Y")
             if y != -1:
                 days = days + int(365.25*int(age[:y]))
+                if age.endswith("Y"):
+                    return days
                 age = age[y+1:]
             m = age.find("M")
-            if m != -1:
+            if m is not None and m != -1:
                 days = days + int(30.436875*int(age[:m]))
+                if age.endswith("M"):
+                    return days
                 age = age[m+1:]
             d = age.find("D")
             if d != -1:

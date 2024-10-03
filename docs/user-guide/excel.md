@@ -2,7 +2,7 @@
 
 We have designed a format for Excel templates that can be used to quickly and efficiently generate collections of Phenopackets. This is currently the prefered way for clinicians and translational researchers to contribute to this project. The [pyphetools](https://github.com/monarch-initiative/pyphetools){:target="_blank"}  library provides other means for bioinformaticians (please ask us).
 
-The template can be downloaded [here](../_static/template.xlsx){:target="_blank"}.
+The template file is generated for each disease as described in [template](template.md).
 
 # A format for cohort descriptions in excel
 

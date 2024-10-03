@@ -1,6 +1,6 @@
 # Variant Notation
 
-We recommend that users choose one transcript for all HGVS variant descriptions in a project. In general, the most clinicallz relevant transcript should be chosen.
+We recommend that users choose one transcript for all HGVS variant descriptions in a project. In general, the most clinically relevant transcript should be chosen.
 
 
 ### Choosing the reference transcript for a project

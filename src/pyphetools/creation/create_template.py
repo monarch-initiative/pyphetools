@@ -80,6 +80,7 @@ class TemplateCreator:
         :param gene_symbol: corresponding gene symbol, e.g., FBN1
         :param transcript: transcript to be used for the HVGC nomenclature. Must be refseq with version number
         """
+        self._qc_disease_information(disease_id=disease_id, disease_label=disease_label)
         H1_Headers = REQUIRED_H1_FIELDS
         H2_Headers = REQUIRED_H2_FIELDS
         if len(H1_Headers) != len(H2_Headers):
@@ -122,6 +123,23 @@ class TemplateCreator:
             raise FileExistsError(f"Excel file '{fname}' already exists.")
         df.to_excel(fname, index=False)
         print(f"Wrote Excel pyphetools template file to {fname}")
+
+    def _qc_disease_information(self, 
+                                disease_id:str,
+                                disease_label:str) -> None:
+        """
+        Check some common errors in data entry and raise an exception if the disease ID and label are not correct
+        """
+        if ":" not in disease_id:
+            raise ValueError(f"Malformed disease id-not CURIE: \"{disease_id}\"")
+        fields = disease_id.split(":")
+        if len(fields) != 2:
+            raise ValueError(f"Malformed disease id-only one colon allowed: \"{disease_id}\"")
+        disease_db = fields[0]
+        if disease_db != "OMIM" and disease_db != "MONDO":
+            raise ValueError(f"Malformed disease id-did not recognize disease database: \"{disease_id}\"")
+        if "\t" in disease_label:
+            raise ValueError(f"Malformed disease label: \”{disease_label}\"")
 
     def create_from_phenopacket(self, ppkt):
         """

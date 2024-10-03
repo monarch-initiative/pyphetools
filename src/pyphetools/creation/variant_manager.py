@@ -1,7 +1,7 @@
 import os
 import pickle
 import pandas as pd
-from typing import List, Dict
+from typing import List
 from collections import defaultdict
 from .individual import Individual
 from .variant_validator import VariantValidator
@@ -47,6 +47,21 @@ class VariantManager:
     chromosomal variants). Instead, we first map HGVS using VariantValidator, and then we return a Pandas DataFrame that
     shows the other variants. These can be use to create chromosomal deletions, duplications, and inversions. Finally,
     the class can be used to add variants to a list of Individual objects.
+
+    If the Excel template is used, this class will be called internally and users do not need to use the code. If the 
+    data is ingested manually, the class can be used as follows.
+
+        gnas_symbol = "GNAS"
+        gnas_id = "HGNC:4392"
+        gnas_MANE_transcript = "NM_000516.7"
+        vmanager = VariantManager(df=df, 
+                          individual_column_name="individual", 
+                          transcript=gnas_MANE_transcript, 
+                          gene_id=gnas_id, 
+                          gene_symbol=gnas_symbol, 
+                          allele_1_column_name="allele_1")
+
+    See [variant_manager](https://monarch-initiative.github.io/pyphetools/api/creation/variant_manager/) for more information.
 
     :param df: DataFrame representing the input data
     :type df: pd.DataFrame
@@ -99,13 +114,13 @@ class VariantManager:
         self._create_variant_d(overwrite)
 
 
-    def _format_pmid_id(self, identifier, pmid):
+    def _format_pmid_id(self, identifier, pmid) -> str:
         if pmid is not None:
             return f"{pmid}_{identifier}"
         else:
             return identifier
 
-    def _get_identifier_with_pmid(self, row:pd.Series):
+    def _get_identifier_with_pmid(self, row:pd.Series) -> str:
         """Get an identifier such as PMID_33087723_A2 for a daa row with PMID:33087723 and identifier within that publication A2
 
         Identifiers such as P1 are commonly used and there is a risk of a clash with collections of phenopackets from various papers.
@@ -118,7 +133,7 @@ class VariantManager:
         else:
             return individual_id
 
-    def _create_variant_d(self, overwrite):
+    def _create_variant_d(self, overwrite) -> None:
         """
         Creates a dictionary with all HGVS variants, and as a side effect creates a set with variants that
         are not HGVS and need to be mapped manually. This method has the following effects
@@ -182,9 +197,9 @@ class VariantManager:
                 self._unmapped_alleles.add(v) # This allows us to use the chromosomal mappers.
         write_variant_pickle(name=self._gene_symbol, my_object=self._var_d)
 
-    def code_as_chromosomal_deletion(self, allele_set):
+    def code_as_chromosomal_deletion(self, allele_set) -> None:
         """
-        Code as Structural variants - chromosomal deletion (to be added to self._var_d)
+        Code variants with the identifiers in "allele_set" as Structural variants (chromosomal deletion)
         :param allele_set: Set of alleles (strings) for coding as Structural variants (chromosomal deletion)
         """
         # first check that all of the alleles are in self._unmapped_alleles
@@ -200,9 +215,9 @@ class VariantManager:
             self._unmapped_alleles.remove(allele)
             self._var_d[allele] = var
 
-    def code_as_chromosomal_duplication(self, allele_set):
+    def code_as_chromosomal_duplication(self, allele_set) -> None:
         """
-        Code as Structural variants - chromosomal duplication (to be added to self._var_d)
+        Code variants with the identifiers in "allele_set" as Structural variants (chromosomal duplication)
         :param allele_set: Set of alleles (strings) for coding as Structural variants (chromosomal duplication)
         """
         # first check that all of the alleles are in self._unmapped_alleles
@@ -217,7 +232,7 @@ class VariantManager:
 
     def code_as_chromosomal_inversion(self, allele_set) -> None:
         """
-        Code as Structural variants - chromosomal inversion (to be added to self._var_d)
+        Code variants with the identifiers in "allele_set" as Structural variants (chromosomal inversion)
         :param allele_set: Set of alleles (strings) for coding as Structural variants (chromosomal inversion)
         """
         # first check that all of the alleles are in self._unmapped_alleles
@@ -232,8 +247,8 @@ class VariantManager:
 
     def code_as_chromosomal_translocation(self, allele_set) -> None:
         """
-        Code as Structural variants - chromosomal translocation (to be added to self._var_d)
-        :param allele_set: Set of alleles (strings) for coding as Structural variants (chromosomal inversion)
+        Code variants with the identifiers in "allele_set" as Structural variants (chromosomal translocation)
+        :param allele_set: Set of alleles (strings) for coding as Structural variants (chromosomal translocation)
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):

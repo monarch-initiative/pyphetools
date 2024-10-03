@@ -11,16 +11,19 @@ ng_per_ml = OntologyClass202(id="UCUM:ng/mL", label="nanogram per milliliter")
 pg_per_l = OntologyClass202(id="UCUM:pg/L", label="picogram per liter")
 pg_per_ml = OntologyClass202(id="UCUM:pg/mL", label="picogram per milliliter")
 nmol_per_l = OntologyClass202(id="UCUM:nmol/L", label="nanomole per liter")
+mmol_per_l= OntologyClass202(id="UCUM:mmol/L", label="millimole per liter")
+percent = OntologyClass202(id="UCUM:%", label="percent")
 
 
 class Measurements:
-
-    
+    """
+    Convenience class with static methods to create Measurement objects for common units.
+    """
     
 
     @staticmethod
     def _with_reference_range(assay: OntologyClass202,
-                                unit: OntologyClass202,
+                              unit: OntologyClass202,
                               value: float,
                               low: float,
                               high: float) -> Measurement202:
@@ -93,6 +96,27 @@ class Measurements:
                     high: float = None) -> Measurement202:
         assay = OntologyClass202(id=code, label=label)
         return Measurements._from_assay_and_values(assay=assay, unit=nmol_per_l, value=concentration, low=low, high=high)
+    
+    @staticmethod
+    def millimole_per_liter(code: str,
+                    label: str,
+                    concentration: float,
+                    low: float = None,
+                    high: float = None) -> Measurement202:
+        assay = OntologyClass202(id=code, label=label)
+        return Measurements._from_assay_and_values(assay=assay, unit=mmol_per_l, value=concentration, low=low, high=high)
+    
+    @staticmethod
+    def percent(code: str,
+                    label: str,
+                    concentration: float,
+                    low: float = None,
+                    high: float = None) -> Measurement202:
+        assay = OntologyClass202(id=code, label=label)
+        return Measurements._from_assay_and_values(assay=assay, unit=percent, value=concentration, low=low, high=high)
+
+
+  
 
         
 

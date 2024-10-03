@@ -47,6 +47,7 @@ class PromoterVariant(Variant):
         gene_descriptor = GeneDescriptor202(value_id=self._hgnc_id, symbol=self._gene_symbol)
         vdescriptor = VariationDescriptor202(id=self._variant_id, 
                                              molecule_context=MoleculeContext202.genomic,
+                                             description=self._description,
                                              gene_context=gene_descriptor,
                                              label=self._description,
                                              structural_type=self._sequence_ontology_term)
