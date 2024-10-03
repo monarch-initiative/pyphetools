@@ -7,6 +7,7 @@ from ..creation.constants import Constants
 from ..creation import Individual, HpTerm, MetaData
 from .simple_patient import SimplePatient
 from .html_table_generator import HtmlTableGenerator
+from ..pp.v202._base import TimeElement as TimeElement202
 
 
 #
@@ -23,6 +24,15 @@ class Age2Day:
     def __init__(self, age, days) -> None:
         self.key = age
         self.days = days
+
+    def __rep__(self):
+        """
+        self.key can be either a TimeElement or a simple string.
+        """
+        if isinstance(self.key, TimeElement202):
+            return self.key.display_time_element()
+        else:
+            return self.key
 
 
 #@DeprecationWarning("This class will be replaced by IndividualTable and will be deleted in a future version")
