@@ -3,8 +3,6 @@ import pytest
 from pyphetools.creation import Measurements
 from pyphetools.pp.v202 import Measurement as Measurement202
 
-from src.pyphetools.pp.v202 import OntologyClass
-
 
 class TestMeasurements:
 
