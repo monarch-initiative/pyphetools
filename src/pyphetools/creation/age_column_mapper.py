@@ -30,7 +30,7 @@ class AgeColumnMapper(metaclass=abc.ABCMeta):
 
     """
 
-    def __init__(self, column_name:str, string_to_iso_d=None) -> None:
+    def __init__(self, column_name: str, string_to_iso_d=None) -> None:
         """
         :param column_name: Name of the Age column in the original table
         :type column_name: str

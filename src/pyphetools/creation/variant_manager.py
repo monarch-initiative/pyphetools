@@ -306,8 +306,9 @@ class VariantManager:
             raise ValueError(f"Need to map all allele strings before using this method but "
                             f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
         for i in individual_list:
-            if i._citation is not None:
-                pmid = i.get_citation().pmid
+            citation = i.get_citation()
+            if citation is not None:
+                pmid = citation.pmid
                 individual_id = self._format_pmid_id(identifier=i.id, pmid=pmid)
             else:
                 individual_id = self._format_pmid_id(identifier=i.id, pmid=None)

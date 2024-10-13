@@ -98,8 +98,8 @@ class TemplateCreator:
         # add 10 rows with the constant data columns
         for i in range(10):
             new_row = dict()
-            for i in range(len(H1_Headers)):
-                header_field = H1_Headers[i]
+            for j in range(len(H1_Headers)):
+                header_field = H1_Headers[j]
                 if header_field == "disease_id":
                     new_row[header_field] = disease_id
                 elif header_field == "disease_label":

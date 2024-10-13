@@ -29,6 +29,7 @@ class OntologyTerms:
         return OntologyClass202(id="GENO:0000134", label="hemizygous")
     
     ## Onset terms
+    @staticmethod
     def congenital_onset() -> OntologyClass202:
         """
         HPO class for Congenital onset

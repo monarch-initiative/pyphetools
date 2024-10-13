@@ -261,7 +261,7 @@ class CaseTemplateEncoder:
         self._created_by = created_by
         self._metadata_d = {}
         for i in self._individuals:
-            cite = i._citation
+            cite = i.get_citation()
             metadata = MetaData(created_by=created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
@@ -468,7 +468,7 @@ class CaseTemplateEncoder:
     def get_phenopackets(self) -> typing.List[PPKt.Phenopacket]:
         ppack_list = []
         for individual in self._individuals:
-            cite = individual._citation
+            cite = individual.get_citation()
             metadata = MetaData(created_by=self._created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
@@ -492,7 +492,7 @@ class CaseTemplateEncoder:
         else:
             created_by = self._created_by
         for individual in individual_list:
-            cite = individual._citation
+            cite = individual.get_citation()
             metadata = MetaData(created_by=created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
@@ -521,7 +521,7 @@ class CaseTemplateEncoder:
         else:
             created_by = self._created_by
         for individual in individual_list:
-            cite = individual._citation
+            cite = individual.get_citation()
             metadata = MetaData(created_by=created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)

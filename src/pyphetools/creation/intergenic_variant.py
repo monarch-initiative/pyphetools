@@ -70,7 +70,7 @@ class IntergenicVariant(Variant):
         self._sequence_ontology_term = sequence_ontology_term
         self._genotype = genotype
 
-    def to_ga4gh_variant_interpretation():
+    def to_ga4gh_variant_interpretation(self):
         raise NotImplementedError("This method will be deprecated")
 
     def to_variant_interpretation(self, acmg=None) -> VariantInterpretation202:
