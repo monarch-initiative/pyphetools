@@ -93,4 +93,25 @@ class PhenopacketIngestor:
             jsondata = json.loads(data)
             ppack = Parse(json.dumps(jsondata), PPKt.Phenopacket())
             return ppack
+         
+
+    @staticmethod 
+    def from_directory(indir: str, disease_id:str=None) -> typing.List[PPKt.Phenopacket]:
+        if not os.path.isdir(indir):
+            raise FileNotFoundError(f"argument indir={indir} is not a directory")
+        ingestor = PhenopacketIngestor(indir=indir, disease_id=disease_id)
+        return ingestor.get_phenopacket_list()
+    
+    @staticmethod
+    def filter_phenopackets(ppkt_list: typing.List[PPKt.Phenopacket], disease_id:str) -> typing.List[PPKt.Phenopacket]:
+        ppkt_target_disease = list()
+        skipped_count = 0
+        for ppkt in ppkt_list:
+            if PhenopacketIngestor.has_disease_id(ppkt=ppkt, disease_id=disease_id):
+                ppkt_target_disease.append(ppkt)
+            else:
+                skipped_count += 1
+        print(f"Returning {len(ppkt_target_disease)} phenopackets for disease {disease_id}, ommiting {skipped_count} phenopackets.")
+        return ppkt_target_disease
+        
 
