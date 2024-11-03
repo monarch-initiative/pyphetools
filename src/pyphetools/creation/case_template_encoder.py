@@ -228,16 +228,13 @@ class CaseTemplateEncoder:
             # should never happen unless the template file is corrupted
             raise ValueError("headers are different lengths. Check template file for correctness.")
         # check headers are well formed
-        idx = 0
         required_h1 = REQUIRED_H1_FIELDS
         required_h2 = REQUIRED_H2_FIELDS
         for i in range(len(required_h1)):
-            if idx == ALLELE_2_IDX and header_1[idx] != required_h1[idx]:
-                idx += 1 # skip optional index
-            if header_1[idx] != required_h1[idx]:
-                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{required_h1[idx]}\" but got \"{header_1[idx]}\"")
-            if header_2[idx] != required_h2[idx]:
-                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{required_h2[idx]}\" but got \"{header_2[idx]}\"")
+            if header_1[i] != required_h1[i]:
+                raise ValueError(f"Malformed header 1 field at index {i}. Expected \"{required_h1[i]}\" but got \"{header_1[i]}\"")
+            if header_2[i] != required_h2[i]:
+                raise ValueError(f"Malformed header 2 field at index {i}. Expected \"{required_h2[i]}\" but got \"{header_2[i]}\"")
         self._header_fields_1 = header_1
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
