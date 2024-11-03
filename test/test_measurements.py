@@ -3,6 +3,7 @@ import pytest
 from pyphetools.creation import Measurements
 from pyphetools.pp.v202 import Measurement as Measurement202
 
+
 class TestMeasurements:
 
     def test_nanogram_per_milliliter(self):
@@ -22,6 +23,30 @@ class TestMeasurements:
         assert refrange is not None
         assert refrange.low == lower_limit_of_normal
         assert refrange.high == upper_limit_of_normal
+
+
+    def test_percent(self):
+        loinc_code = "LOINC:74892-1"
+        loinc_label = "Medium-chain Acyl CoA dehydrogenase [Enzymatic activity/mass] in Fibroblast"
+        value = 2.0
+        try:
+            concentration = int(value)
+            m = Measurements.percent(code=loinc_code,
+                                     label=loinc_label,
+                                     concentration=concentration)
+        except Exception:
+            pass
+        assert isinstance(m, Measurement202)
+        ontology_class = m.assay
+        assert ontology_class.id == loinc_code
+        assert ontology_class.label == loinc_label
+        test_value = m.value.value.value
+        assert test_value == 2.0
+        unit = m.value.value.unit
+        assert unit.id == "UCUM:%"
+        assert unit.label == "percent"
+
+
 
 
  

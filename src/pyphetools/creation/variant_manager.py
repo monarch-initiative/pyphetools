@@ -7,6 +7,7 @@ from .individual import Individual
 from .variant_validator import VariantValidator
 from .structural_variant import StructuralVariant
 
+
 def get_pickle_filename(name):
     """
     provide standard filenaming convention. We pickle results from VariantValidator to avoid
@@ -14,6 +15,7 @@ def get_pickle_filename(name):
     the SCL4A1 cohort will be called "variant_validator_cache_SLC4A1.pickle"
     """
     return f"variant_validator_cache_{name}.pickle"
+
 
 def load_variant_pickle(name):
     """
@@ -28,6 +30,7 @@ def load_variant_pickle(name):
         loaded_object = pickle.load(f)
         return loaded_object
 
+
 def write_variant_pickle(name, my_object):
     """
     Write a dictionary to pickled file
@@ -36,7 +39,6 @@ def write_variant_pickle(name, my_object):
     fname = get_pickle_filename(name)
     with open(fname, "wb") as f:
         pickle.dump(my_object, f)
-
 
 
 class VariantManager:
@@ -61,7 +63,7 @@ class VariantManager:
                           gene_symbol=gnas_symbol, 
                           allele_1_column_name="allele_1")
 
-    See [variant_manager](https://monarch-initiative.github.io/pyphetools/api/creation/variant_manager/) for more information.
+    See also [variant_manager](https://monarch-initiative.github.io/pyphetools/api/creation/variant_manager/).
 
     :param df: DataFrame representing the input data
     :type df: pd.DataFrame
@@ -73,22 +75,22 @@ class VariantManager:
     :type allele_1_column_name: str
     :param allele_2_column_name: name of the column with alleles (#2), optional
     :type allele_2_column_name: str
-    :param gene_symbol: Symbol of affectged gene (only required if chromosomal variants need to be coded)
+    :param gene_symbol: Symbol of affected gene (only required if chromosomal variants need to be coded)
     :type gene_symbol: str
-    :param gene_id: HGNC identifier of affectged gene (only required if chromosomal variants need to be coded)
+    :param gene_id: HGNC identifier of affected gene (only required if chromosomal variants need to be coded)
     :type gene_id: str
     """
 
     def __init__(self,
-                df:pd.DataFrame,
-                individual_column_name:str,
-                transcript:str,
-                gene_symbol:str,
-                allele_1_column_name:str,
-                allele_2_column_name:str=None,
-                gene_id:str=None,
-                overwrite:bool=False
-                ):
+                 df: pd.DataFrame,
+                 individual_column_name: str,
+                 transcript: str,
+                 gene_symbol: str,
+                 allele_1_column_name: str,
+                 allele_2_column_name: str = None,
+                 gene_id: str = None,
+                 overwrite: bool = False
+                 ):
         if not isinstance(df, pd.DataFrame):
             raise ValueError(f"The \"df\" argument must be a pandas DataFrame but was {type(df)}")
         if individual_column_name not in df.columns:
@@ -96,7 +98,8 @@ class VariantManager:
         if allele_1_column_name not in df.columns:
             raise ValueError(f"The \"allele_1_column_name\" argument must be a a column in df (a pandas DataFrame)")
         if allele_2_column_name is not None and allele_2_column_name not in df.columns:
-            raise ValueError(f"If not None, the \"allele_2_column_name\" argument must be a a column in df (a pandas DataFrame)")
+            raise ValueError(
+                f"If not None, the \"allele_2_column_name\" argument must be a a column in df (a pandas DataFrame)")
         self._dataframe = df
         self._individual_column_name = individual_column_name
         self._transcript = transcript
@@ -113,21 +116,20 @@ class VariantManager:
             self._pmid_column_name = None
         self._create_variant_d(overwrite)
 
-
     def _format_pmid_id(self, identifier, pmid) -> str:
         if pmid is not None:
             return f"{pmid}_{identifier}"
         else:
             return identifier
 
-    def _get_identifier_with_pmid(self, row:pd.Series) -> str:
+    def _get_identifier_with_pmid(self, row: pd.Series) -> str:
         """Get an identifier such as PMID_33087723_A2 for a daa row with PMID:33087723 and identifier within that publication A2
 
         Identifiers such as P1 are commonly used and there is a risk of a clash with collections of phenopackets from various papers.
         Therefore, we use an identifier such as PMID_33087723_A2 if we can find a PMID
         """
         individual_id = row[self._individual_column_name]
-        individual_id = str(individual_id) # prevent automatic conversion into int for patient id 1, 2, 3 etc
+        individual_id = str(individual_id)  # prevent automatic conversion into int for patient id 1, 2, 3 etc
         if self._pmid_column_name is not None:
             return self._format_pmid_id(identifier=individual_id, pmid=row[self._pmid_column_name])
         else:
@@ -153,7 +155,7 @@ class VariantManager:
         variant_set = set()  # we expect HGVS nomenclature. Everything else will be parsed as chromosomal
         vvalidator = VariantValidator(genome_build=genome_assembly, transcript=self._transcript)
         # The DataFrame has two header rows.
-        # For CaseTemplateEncoder, the second header row in effect is the first row of the DataFrame, so we drop it here.
+        # For CaseTemplateEncoder, the second header row is the first row of the DataFrame, so we drop it here.
         # For CaseTemplateEncoder, the second row will contain "str" in the second row of the PMID column
         # For other encoders, there may not be a "PMID" column, and if so it will not contain "CURIE" in the second row
         if "PMID" in self._dataframe.columns and self._dataframe.iloc[0]["PMID"] == "CURIE":
@@ -166,7 +168,8 @@ class VariantManager:
             if allele1.startswith(" ") or allele1.endswith(" "):
                 raise ValueError(f"Malformed allele_1 description that starts/ends with whitespace: \"{allele1}\".")
             self._individual_to_alleles_d[individual_id].append(allele1)
-            if allele1.startswith("c."):
+            # take mRNA (c.) or noncoding RNA (n.)
+            if allele1.startswith("c.") or allele1.startswith("n."):
                 variant_set.add(allele1)
             else:
                 self._unmapped_alleles.add(allele1)
@@ -179,7 +182,7 @@ class VariantManager:
                 self._individual_to_alleles_d[individual_id].append(allele2)
                 if allele2.startswith(" ") or allele2.endswith(" "):
                     raise ValueError(f"Malformed allele_2 description that starts/ends with whitespace: \"{allele2}\".")
-                if allele2.startswith("c."):
+                if allele2.startswith("c.") or allele2.startswith("n."):
                     variant_set.add(allele2)
                 else:
                     self._unmapped_alleles.add(allele2)
@@ -194,7 +197,7 @@ class VariantManager:
                 self._var_d[v] = var
             except Exception as e:
                 print(f"[ERROR] Could not retrieve Variant Validator information for {v}: {str(e)}")
-                self._unmapped_alleles.add(v) # This allows us to use the chromosomal mappers.
+                self._unmapped_alleles.add(v)  # This allows us to use the chromosomal mappers.
         write_variant_pickle(name=self._gene_symbol, my_object=self._var_d)
 
     def code_as_chromosomal_deletion(self, allele_set) -> None:
@@ -207,11 +210,14 @@ class VariantManager:
             for a in allele_set:
                 if not a in self._unmapped_alleles:
                     print(f"Could not find allele \"{a}\"")
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
+            raise ValueError(
+                "[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
-            raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
+            raise ValueError(
+                "[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
-            var = StructuralVariant.chromosomal_deletion(cell_contents=allele, gene_symbol=self._gene_symbol, gene_id=self._gene_id)
+            var = StructuralVariant.chromosomal_deletion(cell_contents=allele, gene_symbol=self._gene_symbol,
+                                                         gene_id=self._gene_id)
             self._unmapped_alleles.remove(allele)
             self._var_d[allele] = var
 
@@ -222,11 +228,14 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
+            raise ValueError(
+                "[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
-            raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
+            raise ValueError(
+                "[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
-            var = StructuralVariant.chromosomal_duplication(cell_contents=allele, gene_symbol=self._gene_symbol, gene_id=self._gene_id)
+            var = StructuralVariant.chromosomal_duplication(cell_contents=allele, gene_symbol=self._gene_symbol,
+                                                            gene_id=self._gene_id)
             self._unmapped_alleles.remove(allele)
             self._var_d[allele] = var
 
@@ -237,11 +246,14 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
+            raise ValueError(
+                "[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
-            raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
+            raise ValueError(
+                "[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
-            var = StructuralVariant.chromosomal_inversion(cell_contents=allele, gene_symbol=self._gene_symbol, gene_id=self._gene_id)
+            var = StructuralVariant.chromosomal_inversion(cell_contents=allele, gene_symbol=self._gene_symbol,
+                                                          gene_id=self._gene_id)
             self._unmapped_alleles.remove(allele)
             self._var_d[allele] = var
 
@@ -252,14 +264,16 @@ class VariantManager:
         """
         # first check that all of the alleles are in self._unmapped_alleles
         if not allele_set.issubset(self._unmapped_alleles):
-            raise ValueError("[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
+            raise ValueError(
+                "[ERROR] We can only map alleles that were passed to the constructor - are you trying to map \"new\" alleles?")
         if self._gene_id is None or self._gene_symbol is None:
-            raise ValueError("[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
+            raise ValueError(
+                "[ERROR] We cannot use this method unless the gene ID (HGNC) and symbol were passed to the constructor")
         for allele in allele_set:
-            var = StructuralVariant.chromosomal_translocation(cell_contents=allele, gene_symbol=self._gene_symbol, gene_id=self._gene_id)
+            var = StructuralVariant.chromosomal_translocation(cell_contents=allele, gene_symbol=self._gene_symbol,
+                                                              gene_id=self._gene_id)
             self._unmapped_alleles.remove(allele)
             self._var_d[allele] = var
-
 
     def to_summary(self) -> pd.DataFrame:
         """
@@ -290,8 +304,7 @@ class VariantManager:
     def get_mapped_allele_count(self):
         return len(self._var_d)
 
-
-    def add_variants_to_individuals(self, individual_list:List[Individual], hemizygous:bool=False):
+    def add_variants_to_individuals(self, individual_list: List[Individual], hemizygous: bool = False):
         """
         Add Variant objects to individuals. Here, we use the map self._individual_to_alleles_d that
         relates the individual IDs to the allele strings in the original data, together with the
@@ -304,15 +317,17 @@ class VariantManager:
         """
         if len(self._unmapped_alleles) > 0:
             raise ValueError(f"Need to map all allele strings before using this method but "
-                            f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
+                             f"{len(self._unmapped_alleles)} were unmapped. Try variantManager.to_summary()")
         for i in individual_list:
-            if i._citation is not None:
-                pmid = i.get_citation().pmid
+            citation = i.get_citation()
+            if citation is not None:
+                pmid = citation.pmid
                 individual_id = self._format_pmid_id(identifier=i.id, pmid=pmid)
             else:
                 individual_id = self._format_pmid_id(identifier=i.id, pmid=None)
             if individual_id not in self._individual_to_alleles_d:
-                raise ValueError(f"Did not find {i.id} in our dictionary of individuals. Note that this function is intended to work with CaseTemplateEncoder")
+                raise ValueError(
+                    f"Did not find {i.id} in our dictionary of individuals. Note that this function is intended to work with CaseTemplateEncoder")
             vlist = self._individual_to_alleles_d.get(individual_id)
             if len(vlist) == 1:
                 # assume monoallelic
@@ -363,8 +378,3 @@ class VariantManager:
         :rtype: Dict[str, Variant]
         """
         return self._var_d
-
-
-
-
-

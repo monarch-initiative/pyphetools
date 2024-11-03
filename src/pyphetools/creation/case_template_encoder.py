@@ -29,6 +29,8 @@ from enum import Enum
 CellType = Enum('Celltype', ['DATA', 'HPO', 'NTR', 'MISC', 'NULL'])
 
 class CellEncoder(metaclass=abc.ABCMeta):
+    """Superclass for classes that help to decode contents of individuals cells in the pyphetools Excel template.
+    """
     def __init__(self, name):
         self._name = name
 
@@ -181,7 +183,7 @@ class NullEncoder(CellEncoder):
 
 EXPECTED_HEADERS = {"PMID", "title", "individual_id", "comment", "disease_id", "disease_label",
                     "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2",
-                    "variant.comment", "age_of_onset", "age_at_last_encounter", "sex"}
+                    "variant.comment", "age_of_onset", "age_at_last_encounter", "deceased", "sex"}
 
 DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "HGNC_id",
                 "gene_symbol", "transcript", "allele_1", "allele_2",  "age_of_onset",
@@ -189,16 +191,14 @@ DATA_ITEMS = {"PMID", "title", "individual_id", "disease_id", "disease_label", "
 
 # note that the allele_2 field is option
 REQUIRED_H1_FIELDS = ["PMID", "title", "individual_id",	"comment", "disease_id", "disease_label",
-                    "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2", "variant.comment", "age_of_onset", "age_at_last_encounter", "sex", "HPO"]
+                    "HGNC_id", "gene_symbol", "transcript", "allele_1", "allele_2", "variant.comment", 
+                    "age_of_onset", "age_at_last_encounter", "deceased", "sex", "HPO"]
 ALLELE_2_IDX = 8
 
 REQUIRED_H2_FIELDS = ["CURIE", "str",	"str", "optional", "CURIE", "str", "CURIE",	"str",
-                    "str","str","str","optional",  "age", "age", "M:F:O:U", "na"]
+                    "str","str","str","optional",  "age", "age", "yes/no/na", "M:F:O:U", "na"]
 
-OPTIONAL_H1_FIELDS = REQUIRED_H1_FIELDS
-OPTIONAL_H1_FIELDS.insert(14, "deceased")
-OPTIONAL_H2_FIELDS = REQUIRED_H2_FIELDS
-OPTIONAL_H2_FIELDS.insert(14, "yes/no/na")
+
 
 
 class CaseTemplateEncoder:
@@ -228,21 +228,13 @@ class CaseTemplateEncoder:
             # should never happen unless the template file is corrupted
             raise ValueError("headers are different lengths. Check template file for correctness.")
         # check headers are well formed
-        idx = 0
-        ## The deceased field is optional
-        if "deceased" in header_1:
-            required_h1 = OPTIONAL_H1_FIELDS
-            required_h2 = OPTIONAL_H2_FIELDS
-        else:
-            required_h1 = REQUIRED_H1_FIELDS
-            required_h2 = REQUIRED_H2_FIELDS
+        required_h1 = REQUIRED_H1_FIELDS
+        required_h2 = REQUIRED_H2_FIELDS
         for i in range(len(required_h1)):
-            if idx == ALLELE_2_IDX and header_1[idx] != required_h1[idx]:
-                idx += 1 # skip optional index
-            if header_1[idx] != required_h1[idx]:
-                raise ValueError(f"Malformed header 1 field at index {idx}. Expected \"{required_h1[idx]}\" but got \"{header_1[idx]}\"")
-            if header_2[idx] != required_h2[idx]:
-                raise ValueError(f"Malformed header 2 field at index {idx}. Expected \"{required_h2[idx]}\" but got \"{header_2[idx]}\"")
+            if header_1[i] != required_h1[i]:
+                raise ValueError(f"Malformed header 1 field at index {i}. Expected \"{required_h1[i]}\" but got \"{header_1[i]}\"")
+            if header_2[i] != required_h2[i]:
+                raise ValueError(f"Malformed header 2 field at index {i}. Expected \"{required_h2[i]}\" but got \"{header_2[i]}\"")
         self._header_fields_1 = header_1
         self._n_columns = len(header_1)
         self._index_to_decoder = self._process_header(header_1=header_1, header_2=header_2, hpo_cr=hpo_cr)
@@ -261,7 +253,7 @@ class CaseTemplateEncoder:
         self._created_by = created_by
         self._metadata_d = {}
         for i in self._individuals:
-            cite = i._citation
+            cite = i.get_citation()
             metadata = MetaData(created_by=created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             self._metadata_d[i.id] = metadata
@@ -285,8 +277,6 @@ class CaseTemplateEncoder:
                 index_to_decoder_d[i] = MiscEncoder(h1=h1, h2=h2, hpo_cr=hpo_cr)
             elif not in_hpo_range:
                 if h1 in EXPECTED_HEADERS:
-                    index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
-                elif h1 == "deceased":
                     index_to_decoder_d[i] = DataEncoder(h1=h1, h2=h2)
                 else:
                     raise ValueError(f"Malformed template header at column {i}: \"{h1}\"")
@@ -417,14 +407,14 @@ class CaseTemplateEncoder:
         else:
             encounter_age = None
         vitStat = None
-        if "deceased" in data_items:
-            decsd = data_items.get("deceased")
-            if decsd == "yes" and encounter_age is not None:
-                vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=encounter_age)
-            elif decsd == "no":
-                vitStat = VitalStatus(status=VitalStatus.Status.ALIVE)
-            else:
-                vitStat = VitalStatus(status=VitalStatus.Status.UNKNOWN_STATUS)
+        # deceased is a required field from version 0.9.112 on
+        decsd = data_items.get("deceased")
+        if decsd == "yes" and encounter_age is not None:
+            vitStat = VitalStatus(status=VitalStatus.Status.DECEASED, time_of_death=encounter_age)
+        elif decsd == "no":
+            vitStat = VitalStatus(status=VitalStatus.Status.ALIVE)
+        else:
+            vitStat = VitalStatus(status=VitalStatus.Status.UNKNOWN_STATUS)
         disease_id = data_items.get("disease_id")
         disease_label = data_items.get("disease_label")
         # common error -- e.g. PMID: 3000312 or OMIM: 600123 (whitespace after colon)
@@ -468,7 +458,7 @@ class CaseTemplateEncoder:
     def get_phenopackets(self) -> typing.List[PPKt.Phenopacket]:
         ppack_list = []
         for individual in self._individuals:
-            cite = individual._citation
+            cite = individual.get_citation()
             metadata = MetaData(created_by=self._created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
@@ -492,7 +482,7 @@ class CaseTemplateEncoder:
         else:
             created_by = self._created_by
         for individual in individual_list:
-            cite = individual._citation
+            cite = individual.get_citation()
             metadata = MetaData(created_by=created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)
@@ -521,7 +511,7 @@ class CaseTemplateEncoder:
         else:
             created_by = self._created_by
         for individual in individual_list:
-            cite = individual._citation
+            cite = individual.get_citation()
             metadata = MetaData(created_by=created_by, citation=cite)
             metadata.default_versions_with_hpo(CaseTemplateEncoder.HPO_VERSION)
             phenopckt = individual.to_ga4gh_phenopacket(metadata=metadata)

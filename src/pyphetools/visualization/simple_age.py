@@ -20,7 +20,7 @@ class SimpleAge:
             raise ValueError(f"Malformed age string (must be iso8601 or gestational age) : {age_string}")
 
 
-    def _parse_gestational_age():
+    def _parse_gestational_age(self):
         raise ValueError("not implemented yet")
 
 

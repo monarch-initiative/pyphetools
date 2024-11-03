@@ -3,6 +3,7 @@ import typing
 from ..pp.v202 import OntologyClass as OntologyClass202
 from ..pp.v202 import AcmgPathogenicityClassification as ACMG202
 
+
 class Variant(metaclass=abc.ABCMeta):
     """
     Superclass for classes that create GA4GH VariantInterpretationObjects.
@@ -10,7 +11,7 @@ class Variant(metaclass=abc.ABCMeta):
     Subclass StructuralVariant is used for structural variants that are likely to completely disrupt a gene.
     
     """
-    
+
     def __init__(self):
         self._genotype = None
 
@@ -27,28 +28,28 @@ class Variant(metaclass=abc.ABCMeta):
         :type acmg: str
         """
         pass
-    
+
     def set_heterozygous(self):
         """
         Assign heterozygous allele status to this variant
 
         """
         self._genotype = 'heterozygous'
-    
+
     def set_homozygous(self):
         """
         Assign homozygous allele status to this variant
 
         """
         self._genotype = 'homozygous'
-        
+
     def set_hemizygous(self):
         """
         Assign hemizygous allele status to this variant
 
         """
         self._genotype = 'hemizygous'
-        
+
     def set_genotype(self, gt):
         """
         Assign an allele status to this variant
@@ -65,19 +66,17 @@ class Variant(metaclass=abc.ABCMeta):
     def _get_genotype_term(genotype: str) -> typing.Optional[OntologyClass202]:
         if genotype is None:
             return None
-        gt = OntologyClass202(label=genotype)
         if genotype == "heterozygous":
-            gt.id = "GENO:0000135"
+            return OntologyClass202(id="GENO:0000135", label=genotype)
         elif genotype == "homozygous":
-            gt.id = "GENO:0000136"
+            return OntologyClass202(id="GENO:0000136", label=genotype)
         elif genotype == "hemizygous":
-            gt.id = "GENO:0000134"
+            return OntologyClass202(id="GENO:0000134", label=genotype)
         else:
-            print(f"Did not recognize genotype {genotype}")
-            return None
-        
+            raise ValueError(f"Did not recognize genotype {genotype}")
+
     @staticmethod
-    def _get_acmg_classification(acmg: str=None) -> ACMG202:
+    def _get_acmg_classification(acmg: str = None) -> ACMG202:
         """
         Get the Phenopacket Schema code for ACMG variant pathogenicity classification.
         """
@@ -90,9 +89,9 @@ class Variant(metaclass=abc.ABCMeta):
             'likely_benign': ACMG202.LIKELY_BENIGN,
             'uncertain significance': ACMG202.UNCERTAIN_SIGNIFICANCE,
             'uncertain_significance': ACMG202.UNCERTAIN_SIGNIFICANCE,
-            'likely pathogenic':ACMG202.LIKELY_PATHOGENIC,
-            'likely_pathogenic':ACMG202.LIKELY_PATHOGENIC,
-            'pathogenic':  ACMG202.PATHOGENIC 
+            'likely pathogenic': ACMG202.LIKELY_PATHOGENIC,
+            'likely_pathogenic': ACMG202.LIKELY_PATHOGENIC,
+            'pathogenic': ACMG202.PATHOGENIC
         }
         if acmg in acmg_d:
             return acmg_d.get(acmg)

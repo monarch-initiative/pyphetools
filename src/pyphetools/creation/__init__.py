@@ -25,7 +25,7 @@ from .metadata import MetaData
 from .mode_of_inheritance import Moi
 from .ontology_terms import OntologyTerms
 from .option_column_mapper import OptionColumnMapper
-from .promoter_variant import PromoterVariant
+from .intergenic_variant import IntergenicVariant
 from .pyphetools_age import PyPheToolsAge, AgeSorter, HPO_ONSET_TERMS
 from .sex_column_mapper import SexColumnMapper
 from .simple_column_mapper import SimpleColumnMapper

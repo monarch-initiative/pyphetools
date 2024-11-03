@@ -14,9 +14,9 @@ class TemplateImporter:
 
     ORCID_regex = r"^\d{4}-\d{4}-\d{4}-\d{4}$"
 
-    def __init__(self,template:str,
-                created_by:str,
-                hp_json:str=None) -> None:
+    def __init__(self, template: str,
+                 created_by: str,
+                 hp_json: str = None) -> None:
         """Constructor
 
         :param template: path to Excel template file
@@ -46,7 +46,7 @@ class TemplateImporter:
         self._moi_list = list()
 
     @staticmethod
-    def _get_data_from_template(df:pd.DataFrame) -> typing.Tuple[str,str,str,str,str]:
+    def _get_data_from_template(df: pd.DataFrame) -> typing.Tuple[str, str, str, str, str]:
         """Check that the template (dataframe) has the columns
         "HGNC_id", "gene_symbol", "transcript",
         If each row has the same value for these columns, then the template is valid
@@ -62,7 +62,7 @@ class TemplateImporter:
             if item not in df.columns:
                 raise ValueError(f"Invalid template -- could not find the \"{item}\" column")
         ## We need to skip the first row (second row of excel file), which has the datatypes
-        for _, row in df.iloc[1: , :].iterrows():
+        for _, row in df.iloc[1:, :].iterrows():
             contents_d["disease_id"].add(row["disease_id"])
             contents_d["disease_label"].add(row["disease_label"])
             contents_d["HGNC_id"].add(row["HGNC_id"])
@@ -84,7 +84,7 @@ class TemplateImporter:
         return disease_id, disease_label, HGNC_id, gene_symbol, transcript
 
     @staticmethod
-    def _get_allelic_requirement(df:pd.DataFrame):
+    def _get_allelic_requirement(df: pd.DataFrame):
         """Determine allelic requirement
         Note that we always expect the column allele_1 to have content.
         If each row of allele_2 is "na", then the allelic requirement is MONO_ALLELIC
@@ -99,7 +99,7 @@ class TemplateImporter:
         from pyphetools.creation import AllelicRequirement
         total_row_count = 0
         total_allele_2_na_count = 0
-        for _, row in df.iloc[1: , :].iterrows():
+        for _, row in df.iloc[1:, :].iterrows():
             a1 = row["allele_1"]
             a2 = row["allele_2"]
             if a1 == "na":
@@ -116,15 +116,13 @@ class TemplateImporter:
         else:
             raise ValueError(f"Error: {total_allele_2_na_count} rows with two alleles but {total_row_count} total rows")
 
-
-
     def import_phenopackets_from_template(self,
-                                        deletions:typing.Set[str]=set(),
-                                        duplications:typing.Set[str]=set(),
-                                        inversions:typing.Set[str]=set(),
-                                        translocations:typing.Set[str]=set(),
-                                        hemizygous:bool=False,
-                                        leniant_MOI:bool=False):
+                                          deletions: typing.Set[str] = set(),
+                                          duplications: typing.Set[str] = set(),
+                                          inversions: typing.Set[str] = set(),
+                                          translocations: typing.Set[str] = set(),
+                                          hemizygous: bool = False,
+                                          leniant_MOI: bool = False):
         """Import the data from an Excel template and create a collection of Phenopackets
         This method writes the individuals as Phenopackets to file and also returns Individuals and the CValidator.
         ToDo -- refactor to avoid side effects.
@@ -147,7 +145,7 @@ class TemplateImporter:
         :returns: tuple with individual list and CohortValidator that optionally can be used to display in a notebook
         :rtype: typing.Tuple[typing.List[pyphetools.creation.Individual], pyphetools.validation.CohortValidator]
         """
-        from pyphetools.creation  import HpoParser
+        from pyphetools.creation import HpoParser
         from pyphetools.creation import CaseTemplateEncoder
         from pyphetools.creation import VariantManager
         from pyphetools.validation import CohortValidator
@@ -161,11 +159,11 @@ class TemplateImporter:
         disease_id, disease_label, HGNC_id, gene_symbol, transcript = TemplateImporter._get_data_from_template(df)
         print(f"Importing {disease_id}, {disease_label}, {HGNC_id}, {gene_symbol},  {transcript}")
         vman = VariantManager(df=df, individual_column_name="individual_id",
-                                allele_1_column_name="allele_1",
-                                allele_2_column_name="allele_2",
-                                gene_id=HGNC_id,
-                                gene_symbol=gene_symbol,
-                                transcript=transcript)
+                              allele_1_column_name="allele_1",
+                              allele_2_column_name="allele_2",
+                              gene_id=HGNC_id,
+                              gene_symbol=gene_symbol,
+                              transcript=transcript)
         if len(deletions) > 0:
             vman.code_as_chromosomal_deletion(deletions)
         if len(duplications) > 0:
@@ -177,12 +175,18 @@ class TemplateImporter:
         if vman.has_unmapped_alleles():
             mapped = vman.get_mapped_allele_count()
             print(f"We were able to map {mapped} alleles.")
-            print("The following alleles could not be mapped. Either there is an error or the variants are structural and require special treatment (see documentation)")
+            print("The following alleles could not be mapped.")
+            print("Either there is an error or the variants are structural and require special treatment.")
+            struct_vars = list()
             for uma in vman.get_unmapped_alleles():
                 if uma.startswith("c."):
                     print(f"- {transcript}:{uma}")
                 else:
-                    print(f"- {uma} (may require coding as structural variant)")
+                    struct_vars.append(uma)
+            if len(struct_vars) > 0:
+                print("The following may require coding as a structural variant)")
+                for struct_var in struct_vars:
+                    print(struct_var)
             print("Fix this error and then try again!")
             sys.exit(1)
         vman.add_variants_to_individuals(individuals, hemizygous=hemizygous)
@@ -193,17 +197,16 @@ class TemplateImporter:
             cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1)
         else:
             all_req = TemplateImporter._get_allelic_requirement(df)
-            cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1, allelic_requirement=all_req)
+            cvalidator = CohortValidator(cohort=individuals, ontology=hpo_ontology, min_hpo=1,
+                                         allelic_requirement=all_req)
         if cvalidator.n_removed_individuals() > 0:
             print(f"Removed {cvalidator.n_removed_individuals()} individuals with unfixable errors")
         ef_individuals = cvalidator.get_error_free_individual_list()
         encoder.output_individuals_as_phenopackets(individual_list=ef_individuals)
         return individuals, cvalidator
 
-
-
     @staticmethod
-    def check_disease_entries(ppkt_list:typing.List[PPKt.Phenopacket]) -> None:
+    def check_disease_entries(ppkt_list: typing.List[PPKt.Phenopacket]) -> None:
         disease_count_d = defaultdict(int)
         for ppkt in ppkt_list:
             # Each phenopacket must have one disease
@@ -245,12 +248,11 @@ class TemplateImporter:
         print(f"[INFO] Extracted {(len(target_list))} from {(len(ppkt_list))} phenopackets with {disease_id}\n")
         return target_list
 
-
     def create_hpoa_from_phenopackets(self,
-                                    pmid:str,
-                                    mode_of_inheritance:Moi, 
-                                    ppkt_dir:str="phenopackets",
-                                    target:str=None) -> pd.DataFrame:
+                                      pmid: str,
+                                      mode_of_inheritance: Moi,
+                                      ppkt_dir: str = "phenopackets",
+                                      target: str = None) -> pd.DataFrame:
         """Create an HPO annotation (HPOA) file from the current cohort
 
         :param pmid: PubMed id for the mode of inheritance

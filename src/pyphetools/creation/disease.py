@@ -35,7 +35,7 @@ class Disease:
         return hash((self._id, self._label))
 
     def __eq__(self, other):
-        return (self._id, self._label) == (other._id, other._label)
+        return (self.id, self.label) == (other.id, other.label)
 
     def __repr__(self):
-        return f'{self._label} ({self._id})'
+        return f'{self.label} ({self.id})'

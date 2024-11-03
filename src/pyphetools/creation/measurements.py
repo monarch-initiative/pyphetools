@@ -28,15 +28,15 @@ class Measurements:
                               low: float,
                               high: float) -> Measurement202:
         refrange = ReferenceRange202(unit=unit, low=low, high=high)
-        val = Value202(Quantity202(unit=ng_per_dl, value=value,reference_range=refrange))
-        return Measurement202(assay=assay,measurement_value=val)
+        val = Value202(Quantity202(unit=unit, value=value, reference_range=refrange))
+        return Measurement202(assay=assay, measurement_value=val)
 
     @staticmethod
     def _without_reference_range(assay: OntologyClass202,
                                 unit: OntologyClass202,
                                 value: float) -> Measurement202:
-        val = Value202(Quantity202(unit=ng_per_dl, value=value))
-        return Measurement202(assay=assay,measurement_value=val)
+        val = Value202(Quantity202(unit=unit, value=value))
+        return Measurement202(assay=assay, measurement_value=val)
     
     @staticmethod
     def _from_assay_and_values(assay: OntologyClass202,
@@ -45,9 +45,9 @@ class Measurements:
                             low: float,
                             high: float) -> Measurement202:
         if low is not None and high is not None:
-            return Measurements._with_reference_range(assay=assay, unit=ng_per_dl, value=value, low=low, high=high)
+            return Measurements._with_reference_range(assay=assay, unit=unit, value=value, low=low, high=high)
         else:
-            return Measurements._without_reference_range(assay=assay, unit=ng_per_dl, value=value)
+            return Measurements._without_reference_range(assay=assay, unit=unit, value=value)
     
     @staticmethod
     def nanogram_per_deciliter(code: str,

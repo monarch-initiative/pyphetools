@@ -149,7 +149,7 @@ class Discombobulator:
         return df_out
         
     def write(self, df:pd.DataFrame, column:str, delim:str=",", assumeExcluded=False):
-        df = self.decode(df=df, column=column, delim=delim, assumeExcluded=assumeExcluded)
+        df = self.decode(column=column, delim=delim, assumeExcluded=assumeExcluded)
         fname = column.replace(" ", "_") + ".xlsx"
         df.to_excel(fname, index=False)
         print(f"Wrote Excel File with parsed columns to {fname}")
