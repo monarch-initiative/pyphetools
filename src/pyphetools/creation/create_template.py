@@ -190,7 +190,7 @@ class TemplateCreator:
         df.to_excel(fname, index=False)
         print(f"Wrote excel pyphetools template file to {fname}")
 
-    def template():
+    def template(self):
         print("""\
     tc.create_template(disease_id="",
                    disease_label="",
