@@ -189,3 +189,12 @@ class TemplateCreator:
         fname = ppkt_id + "_phenopacket_template.xlsx"
         df.to_excel(fname, index=False)
         print(f"Wrote excel pyphetools template file to {fname}")
+
+    def template():
+        print("""\
+    tc.create_template(disease_id="",
+                   disease_label="",
+                   HGNC_id="",
+                   gene_symbol="",
+                   transcript="")
+                   """)
