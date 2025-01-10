@@ -1,3 +1,0 @@
-# SimpleColumnMapper
-
-::: pyphetools.creation.SimpleColumnMapper
