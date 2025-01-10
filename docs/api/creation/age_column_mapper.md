@@ -1,4 +1,0 @@
-# AgeColumnMapper
-
-
-::: pyphetools.creation.AgeColumnMapper
