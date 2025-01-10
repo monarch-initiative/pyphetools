@@ -1,6 +1,5 @@
 from .age_column_mapper import AgeColumnMapper
 from .age_isoformater import AgeIsoFormater
-from .age_of_death_mapper import AgeOfDeathColumnMapper
 from .allelic_requirement import AllelicRequirement
 from .case_template_encoder import CaseTemplateEncoder
 from .citation import Citation
