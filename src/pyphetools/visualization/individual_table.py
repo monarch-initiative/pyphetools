@@ -1,6 +1,7 @@
 from collections import defaultdict
 import phenopackets as PPKt
 import typing
+import sys
 
 
 from ..creation.constants import Constants
@@ -77,10 +78,18 @@ class IndividualTable:
                 self._caption = f"{n_phenopackets} phenopackets - {pmid_str}"
 
 
-    def to_html(self) -> str:
+    def to_html(self, max_rows_to_show: int = None) -> str:
         header_items = ["Individual", "Disease", "Genotype", "Phenotypic features"]
         rows = []
+        MAX_INT = sys.maxsize
+        if max_rows_to_show is None:
+            max_rows_to_show = MAX_INT #  show all rows
+        n_rows = 0
         for spat in self._spat_list:
+            if n_rows >= max_rows_to_show:
+                break
+            else:
+                n_rows += 1
             rows.append(self._simple_patient_to_table_row(spat))
         generator = HtmlTableGenerator(caption=self._caption, header_items=header_items, rows=rows)
         return generator.get_html()
