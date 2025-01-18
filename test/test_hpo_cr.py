@@ -107,21 +107,6 @@ class TestOptionMapper(unittest.TestCase):
         self.assertIn("Micropenis", label_set, "Could not find Micropenis in results")
         self.assertEqual(3, len(label_set))
 
-    def test_initialize_cr(self):
-        items = {
-            'regression': ["Developmental regression", "HP:0002376"],
-            'autism': ['Autism', 'HP:0000717'],
-            'hypotonia': ['Hypotonia', 'HP:0001252'],
-            'movement disorder': ['Abnormality of movement', 'HP:0100022'],
-            'CVI': ['Cerebral visual impairment', 'HP:0100704'],  # CVI stands for Cortical visual impairment HP:0100704
-            'seizures': ['Seizure', 'HP:0001250']
-        }
-        item_column_mapper_d = self.hpo_cr.initialize_simple_column_maps(column_name_to_hpo_label_map=items,
-                                                                        observed='yes',
-                                                                        excluded='no')
-        self.assertEqual(6, len(item_column_mapper_d))
-
-
     def test_pica_not_at_boundary(self):
         """
         We do not want Pica HP:0011856 to match with typical

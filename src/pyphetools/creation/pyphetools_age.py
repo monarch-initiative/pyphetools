@@ -7,7 +7,7 @@ import numpy as np
 DAYS_IN_WEEK = 7
 AVERAGE_DAYS_IN_MONTH = 30.437
 AVERAGE_DAYS_IN_YEAR = 365.25
-
+ISO8601_REGEX = r"^P(\d+Y)?(\d+M)?(\d+D)?"
 
 from ..pp.v202 import OntologyClass as OntologyClass202
 from ..pp.v202 import TimeElement as TimeElement202
@@ -255,7 +255,10 @@ class PyPheToolsAge(metaclass=abc.ABCMeta):
         if isinstance(age_string, float) and math.isnan(age_string):
             return None  # sometimes pandas returns an empty cell as a float NaN
         if age_string.startswith("P"):
-            return TimeElement202(Age202(age_string))
+            if re.fullmatch(ISO8601_REGEX, age_string):
+                return TimeElement202(Age202(age_string))
+            else:
+                raise ValueError(f"Invalid ISO8601 expression: '{age_string}'")
         elif age_string in HPO_ONSET_TERMS:
             hpo_id = HPO_ONSET_TERMS.get(age_string)
             onsetClz = OntologyClass202(id=hpo_id, label=age_string)

@@ -3,10 +3,8 @@ import typing
 import abc
 from collections import defaultdict
 
-from .column_mapper import ColumnMapper
 from .hp_term import HpTerm
 from .hpo_cr import HpoConceptRecognizer
-from .simple_column_mapper import SimpleColumnMapper
 
 
 class ConceptMatch:
@@ -165,7 +163,7 @@ class HpoBaseConceptRecognizer(HpoConceptRecognizer):
             results.extend(self._get_non_overlapping_matches(hits=hits))
         return
 
-    def _get_non_overlapping_matches(self, hits: [typing.List[ConceptMatch]]) -> typing.List[HpTerm]:
+    def _get_non_overlapping_matches(self, hits: typing.List[ConceptMatch]) -> typing.List[HpTerm]:
         """The prupose of this method is to choose a list of non-overlapping matches
 
         Sometimes, we get multiple matches that partially overlap. We will greedily take the longest matches and discard overlaps.
@@ -225,21 +223,3 @@ class HpoBaseConceptRecognizer(HpoConceptRecognizer):
         """
         return hpo_label.lower() in self._label_to_id
 
-    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded):
-        if observed is None or excluded is None:
-            raise ValueError("Symbols for observed (e.g., +, Y, yes) and excluded (e.g., -, N, no) required")
-        if not isinstance(column_name_to_hpo_label_map, dict):
-            raise ValueError("column_name_to_hpo_label_map must be a dict with column to HPO label mappings")
-        simple_mapper_d = defaultdict(ColumnMapper)
-        for column_name, hpo_label_and_id in column_name_to_hpo_label_map.items():
-            if not isinstance(hpo_label_and_id, list):
-                raise ValueError(f"Expected {hpo_label_and_id} to be a two-item list with HPO label and id")
-            hpo_label = hpo_label_and_id[0]
-            expected_id = hpo_label_and_id[1]
-            hp_term = self.get_term_from_label(hpo_label)
-            if hp_term.id != expected_id:
-                raise ValueError(f"Got {hp_term.id} but was expecting {expected_id} for {hpo_label}")
-            mpr = SimpleColumnMapper(column_name=column_name, hpo_id=hp_term.id, hpo_label=hp_term.label,
-                                     observed=observed, excluded=excluded)
-            simple_mapper_d[column_name] = mpr
-        return simple_mapper_d

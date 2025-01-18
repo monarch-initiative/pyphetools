@@ -24,6 +24,14 @@ class TestSimpleAge(unittest.TestCase):
         self.assertEqual('P2M', onset_age.age.iso8601duration)
         self.assertTrue(isinstance(onset_age, TimeElement202))
 
+    def test_malformed_6M(self):
+        """
+        A common error is P0.5Y, which should be P6M. This should throw an Exception
+        """
+        with pytest.raises(ValueError, match="Invalid ISO8601 expression: 'P0.5Y'") as excinfo:
+            onset_age = PyPheToolsAge.get_age_pp201('P0.5Y')
+        assert "Invalid ISO8601 expression: 'P0.5Y'" == str(excinfo.value)
+
 
     def test_age_key_converter_iso(self):
         time_elem202 = PyPheToolsAge.get_age_pp201("P41Y")

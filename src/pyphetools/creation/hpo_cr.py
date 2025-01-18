@@ -53,10 +53,3 @@ class HpoConceptRecognizer(metaclass=abc.ABCMeta):
         :rtype: HpTerm
         """
         pass
-
-    @abc.abstractmethod
-    def initialize_simple_column_maps(self, column_name_to_hpo_label_map, observed, excluded, non_measured=None):
-        """
-        Create a dictionary of SimpleColumnMappers
-        """
-        pass
